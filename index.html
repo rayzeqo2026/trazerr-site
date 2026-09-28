@@ -12,8 +12,10 @@
 <meta property="og:url" content="https://www.trazerr.com/">
 <meta property="og:title" content="Trazerr · What could your career become?">
 <meta property="og:description" content="Your resume is evidence. Trazerr shows you what it's evidence of, and where it can take you.">
-<meta property="og:image" content="https://www.trazerr.com/logo.png">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://www.trazerr.com/img/og-career-dna.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -100,6 +102,36 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .sheet .actions .btn{flex:1 1 220px}
 .fine{margin-top:16px; font-size:13.5px; color:var(--ink-2); border-top:1px solid var(--line-soft); padding-top:14px}
 .saved-note{margin-top:14px; padding:12px 14px; background:var(--blue-soft); border-radius:10px; font-size:15px}
+
+/* Showcase: full-bleed image band. The image's left third is empty dark space, so on wide screens the copy sits there;
+   on narrow screens the image is cropped toward its subject and the copy stacks below it. */
+.showcase{--night:#02060F; position:relative; background:var(--night); color:#fff; overflow:hidden}
+.showcase-media{position:relative; max-width:1760px; margin:0 auto; aspect-ratio:1672/941}
+.showcase-media img{width:100%; height:100%; object-fit:cover; object-position:70% 50%}
+.showcase-copy{position:absolute; inset:0; display:flex; align-items:center}
+.showcase-copy .wrap{width:100%}
+.showcase-text{max-width:min(40%,440px)}
+.kicker{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#9DB0FF}
+.kicker::before{content:""; width:22px; height:1.5px; background:currentColor}
+.showcase h2{color:#fff; font-size:clamp(34px,3.6vw,52px); max-width:13ch; margin-top:14px}
+.showcase p{color:#C9CFDD; font-size:18px; margin-top:16px; max-width:36ch}
+.showcase .btn{margin-top:28px}
+@media (min-width:1761px){
+  .showcase-media{-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+}
+@media (max-width:1000px){
+  .showcase-media{aspect-ratio:16/10}
+  .showcase-media::after{content:""; position:absolute; inset:auto 0 0; height:35%; background:linear-gradient(transparent,var(--night))}
+  .showcase-copy{position:static; padding:8px 0 64px}
+  .showcase-text{max-width:560px}
+}
+@media (max-width:600px){
+  .showcase-media{aspect-ratio:1/1}
+  .showcase-media img{object-position:74% 50%}
+  .showcase-copy{margin-top:-24px; position:relative; padding-bottom:56px}
+  .showcase p{font-size:17px}
+  .showcase .btn{width:100%}
+}
 
 section.block{padding:88px 0; border-top:1px solid var(--line-soft)}
 .split{display:grid; grid-template-columns:.9fr 1.1fr; gap:56px; align-items:start}
@@ -310,6 +342,28 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
         </div>
         <p class="status" id="status" role="status" aria-live="polite"></p>
         <p class="fine">Your resume is sent securely to be analyzed by Claude, Anthropic's AI, and is not stored on our servers. <a href="#privacy">How we handle your data</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="showcase" aria-labelledby="showcaseTitle">
+    <div class="showcase-media">
+      <picture>
+        <source type="image/avif" srcset="/img/career-dna-640.avif 640w, /img/career-dna-960.avif 960w, /img/career-dna-1280.avif 1280w, /img/career-dna-1672.avif 1672w" sizes="(min-width:1760px) 1760px, 100vw">
+        <source type="image/webp" srcset="/img/career-dna-640.webp 640w, /img/career-dna-960.webp 960w, /img/career-dna-1280.webp 1280w, /img/career-dna-1672.webp 1672w" sizes="(min-width:1760px) 1760px, 100vw">
+        <img src="/img/career-dna-1280.jpg" srcset="/img/career-dna-640.jpg 640w, /img/career-dna-960.jpg 960w, /img/career-dna-1280.jpg 1280w, /img/career-dna-1672.jpg 1672w" sizes="(min-width:1760px) 1760px, 100vw"
+          width="1672" height="941" loading="lazy" decoding="async"
+          alt="A professional walks forward as their resume turns into a glowing DNA strand that branches into many career paths.">
+      </picture>
+    </div>
+    <div class="showcase-copy">
+      <div class="wrap">
+        <div class="showcase-text">
+          <span class="kicker">Career DNA</span>
+          <h2 id="showcaseTitle">One resume. Many possible careers.</h2>
+          <p>Trazerr reads the evidence in your experience and traces where it can take you, including roles you've never thought to search for.</p>
+          <a class="btn btn-primary" href="#try">Build my Career DNA</a>
+        </div>
       </div>
     </div>
   </section>
