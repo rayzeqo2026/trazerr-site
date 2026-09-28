@@ -230,10 +230,43 @@ section.block{padding:88px 0; border-top:1px solid var(--line-soft)}
 .trap{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
 @media (max-width:800px){ .join{grid-template-columns:1fr; padding:32px 24px} }
 
+/* Resume coach */
+.eyebrow{display:block; font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--blue-deep); margin-bottom:12px}
+.ba{margin-top:32px; display:grid; gap:12px}
+.ba div{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+.ba small{display:block; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); margin-bottom:4px}
+.ba p{font-family:var(--serif); font-size:19px; line-height:1.4}
+.ba .before p{color:var(--ink-2)}
+.ba .after{border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft)}
+mark.ph{background:var(--brass-soft); color:var(--brass); padding:0 4px; border-radius:4px; font-family:var(--sans); font-size:.85em; white-space:nowrap}
+.coach-out{margin-top:6px}
+.coach-out .verdict{color:var(--ink-2); font-size:15.5px; padding-top:14px; border-top:1px solid var(--line-soft)}
+.rewrites{list-style:none; padding:0; margin:8px 0 0}
+.rewrites li{display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:start; padding:14px 0; border-bottom:1px solid var(--line-soft)}
+.rewrites small{color:var(--ink-2); font-size:13.5px}
+.rewrites p{grid-column:1; font-family:var(--serif); font-size:19px; line-height:1.4}
+.rewrites .btn{grid-column:2; grid-row:1 / span 2}
+.coach-out h4{margin:18px 0 4px; font-size:15px; font-weight:600}
+@media (max-width:480px){ .rewrites li{grid-template-columns:1fr} .rewrites .btn{grid-column:1; grid-row:auto; justify-self:start} }
+
+/* FAQ */
+.faq{margin-top:32px; border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:16px; align-items:center; padding:20px 0; font-family:var(--serif); font-size:21px; line-height:1.3}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+"; font-family:var(--sans); font-size:24px; color:var(--blue); flex:none; transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{color:var(--ink-2); padding:0 0 20px; max-width:70ch}
+
 .privacy{max-width:68ch}
 .privacy p{color:var(--ink-2); margin-top:14px}
-footer{padding:36px 0 48px; color:var(--ink-2); font-size:14px}
-footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-between}
+footer{padding:40px 0 48px; color:var(--ink-2); font-size:14px; border-top:1px solid var(--line-soft)}
+footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-between; align-items:center}
+.foot-brand{display:flex; align-items:center; gap:10px}
+.foot-brand img{width:28px; height:28px}
+.foot-links{display:flex; flex-wrap:wrap; gap:8px 22px}
+.foot-links a{color:var(--ink-2); text-decoration:none}
+.foot-links a:hover{color:var(--ink); text-decoration:underline}
 
 /* Overlay */
 .overlay{position:fixed; inset:0; z-index:50; background:var(--paper); overflow-y:auto; -webkit-overflow-scrolling:touch; display:none}
@@ -242,6 +275,15 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 .o-bar .inner{max-width:760px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; gap:12px}
 .o-bar img{width:34px; height:34px}
 .o-bar .who{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1}
+@media print{
+  body.has-overlay > *:not(.overlay){display:none !important}
+  body.has-overlay{background:#fff}
+  body.has-overlay .overlay{position:static; display:block; overflow:visible; background:#fff}
+  .o-bar, .o-foot, .o-note, .goal-form, .row-actions, #goalStatus{display:none !important}
+  .o-body{padding:0; max-width:none}
+  .o-sec, .items li, .fit-row, .vpath li, .score{break-inside:avoid}
+  *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+}
 .o-body{max-width:760px; margin:0 auto; padding:28px 20px 72px}
 .flag{display:inline-block; font-size:14px; background:var(--brass-soft); color:var(--brass); padding:6px 10px; border-radius:6px; margin-bottom:16px}
 .greet{color:var(--ink-2); font-size:17px}
@@ -303,10 +345,11 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
     <nav class="site-nav" aria-label="Main">
       <a href="#try">Career DNA</a>
       <a href="#jobs">Jobs</a>
-      <a href="#employers">For employers</a>
-      <a href="#now">What's live</a>
+      <a href="#coach">Resume coach</a>
+      <a href="#employers">Job DNA</a>
+      <a href="#faq">FAQ</a>
     </nav>
-    <a class="btn btn-primary" href="#join">Join the waitlist</a>
+    <a class="btn btn-primary" href="#try">Try it free</a>
   </div>
 </header>
 
@@ -361,7 +404,7 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
         <div class="showcase-text">
           <span class="kicker">Career DNA</span>
           <h2 id="showcaseTitle">One resume. Many possible careers.</h2>
-          <p>Trazerr reads the evidence in your experience and traces where it can take you, including roles you've never thought to search for.</p>
+          <p>The same experience can lead to very different roles. Trazerr shows which ones your record already supports, and what it would take to reach the rest.</p>
           <a class="btn btn-primary" href="#try">Build my Career DNA</a>
         </div>
       </div>
@@ -379,9 +422,9 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
         <li><b>Career DNA</b><span>A clear picture of what you can do, and how we know.</span></li>
         <li><b>Discover</b><span>Directions your experience supports that you may not have considered.</span></li>
         <li><b>Match</b><span>Live job openings, with an honest fit check for each one.</span></li>
-        <li><b>Optimize</b><span>Specific tips to show your real evidence for a specific role.</span></li>
+        <li><b>Optimize</b><span>Stronger resume lines and role-specific tips, using only what you've really done.</span></li>
         <li><b>Plan</b><span>A step-by-step path from where you are to where you want to be.</span></li>
-        <li><b>Evolve</b><span>Update your resume and your Career DNA grows with you.</span></li>
+        <li><b>Evolve</b><span>Update your resume and rebuild your Career DNA any time. Keeping its history across devices comes with accounts, soon.</span></li>
       </ol>
     </div>
   </section>
@@ -436,6 +479,31 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
     </div>
   </section>
 
+  <section class="block" id="coach">
+    <div class="wrap split">
+      <div>
+        <span class="eyebrow">Resume coach</span>
+        <h2>Make every line prove more.</h2>
+        <p class="lede">Paste one line from your resume. Trazerr rewrites it to lead with the result, keeps only the facts you gave, and asks for the details that would make it stronger.</p>
+        <div class="ba" aria-label="Example">
+          <div class="before"><small>Before</small><p>Responsible for training new employees.</p></div>
+          <div class="after"><small>After</small><p>Trained <mark class="ph">number</mark> new hires in their first 90 days, cutting the time it took them to work on their own.</p></div>
+        </div>
+      </div>
+      <div class="sheet">
+        <h2>Strengthen a resume line</h2>
+        <p class="sub">Free. Nothing is added that you didn't write.</p>
+        <div class="field" style="margin-top:18px"><label for="bLine">One line from your resume</label>
+          <textarea id="bLine" style="min-height:96px" maxlength="600" placeholder="e.g. Responsible for training new staff and handling customer complaints"></textarea></div>
+        <div class="field" style="margin-top:14px"><label for="bRole">Role you're aiming for (optional)</label>
+          <input class="input" id="bRole" type="text" maxlength="100" placeholder="e.g. Operations manager" autocomplete="off"></div>
+        <div class="actions"><button class="btn btn-primary" id="bBtn" type="button">Strengthen this line</button></div>
+        <p class="status" id="bStatus" role="status" aria-live="polite"></p>
+        <div class="coach-out" id="bOut"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="block" id="paths">
     <div class="wrap">
       <h2>Not just the next job. The one after that.</h2>
@@ -453,8 +521,9 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
     <div class="wrap">
       <div class="split">
         <div>
-          <h2>For employers: matches you can explain.</h2>
-          <p class="lede">Paste a job posting and Trazerr builds its Job DNA: what the role truly requires, what it quietly expects, and the resume evidence that would prove a fit.</p>
+          <span class="eyebrow">For employers and job seekers</span>
+          <h2>See what a job really asks for.</h2>
+          <p class="lede">Paste a job posting and Trazerr builds its Job DNA: what the role truly requires, what it quietly expects, and the resume evidence that would prove a fit. Hiring managers get matches they can explain. Applicants learn what to show.</p>
         </div>
         <div class="fit" aria-label="Example fit breakdown">
           <div class="fit-head"><span>Example candidate fit<br><small style="color:var(--ink-2)">Regional Sales Manager</small></span><b>82</b></div>
@@ -513,12 +582,29 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
     </div>
   </section>
 
+  <section class="block" id="faq">
+    <div class="wrap">
+      <h2>Questions, answered.</h2>
+      <div class="faq">
+        <details><summary>Is Trazerr free?</summary><p>Yes. Career DNA, job search, fit checks, career paths, the resume coach and Job DNA are all free to use right now. You don't need an account.</p></details>
+        <details><summary>What kind of resume can I use?</summary><p>A PDF, a Word (.docx) file or a plain text file up to 3 MB. You can also paste the text straight in. Scanned images of a resume usually don't work well, so use the original file if you have it.</p></details>
+        <details><summary>Do you keep my resume?</summary><p>No. Your resume is sent over an encrypted connection to be analyzed by Claude, Anthropic's AI, and Trazerr doesn't store a copy. If you choose to save your Career DNA, it stays in your browser on this device. <a href="/privacy.html">Read the privacy policy</a>.</p></details>
+        <details><summary>How accurate is it?</summary><p>Trazerr is careful, but it's AI and it can get things wrong. That's why every strength is marked as verified or inferred, and shows the resume line it's based on. Check anything that matters before you rely on it, especially before you put it on an application.</p></details>
+        <details><summary>Will it make up skills or experience?</summary><p>No. Trazerr only works from what your resume says. The resume coach leaves a marked blank, like <mark class="ph">number</mark>, where a real detail would help, and asks you for it instead of guessing.</p></details>
+        <details><summary>I'm changing careers, or just starting out. Is it still useful?</summary><p>Yes. "Directions worth exploring" suggests roles your experience already supports, and "Plan a path" shows the steps toward a new one. If your resume is short, your evidence score will be lower. That score measures how specific the document is, not how good you are.</p></details>
+        <details><summary>Where do the jobs come from?</summary><p>Live listings from Adzuna, plus remote roles from Remotive. When you open a job, you apply on that site, not through Trazerr.</p></details>
+        <details><summary>Can I use my Career DNA on another device?</summary><p>Not yet. Today it's saved only in the browser where you built it. Accounts that keep your Career DNA across devices are coming. Join the waitlist below to hear first.</p></details>
+        <details><summary>How do I contact you?</summary><p>Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything, including feedback on results that seemed off.</p></details>
+      </div>
+    </div>
+  </section>
+
   <section class="block" id="join" style="border-top:0">
     <div class="wrap">
       <div class="join">
         <div>
-          <h2>Your resume is evidence. Find out what it proves.</h2>
-          <p>Join the waitlist for early access to accounts, the Career Passport and employer tools.</p>
+          <h2>Be first in line for what's next.</h2>
+          <p>Everything above is free to use today. Join the waitlist for early access to accounts, the Career Passport and employer tools.</p>
         </div>
         <form id="waitlist" novalidate>
           <label for="wlEmail">Email address</label>
@@ -538,18 +624,28 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
       <p>If you choose to save your Career DNA, it's stored in this browser only. It never leaves your device except when you ask for a fit check or a path, and you can remove it at any time from your results.</p>
       <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
       <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
+      <p><a href="/privacy.html">Read the full privacy policy</a> · <a href="/terms.html">Terms of use</a></p>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="wrap"><span>© 2026 Trazerr</span><span>Career intelligence, built on evidence.</span></div>
+  <div class="wrap">
+    <span class="foot-brand"><img src="/logo.png" alt="" width="28" height="28">© 2026 Trazerr · Career intelligence, built on evidence.</span>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="#faq">FAQ</a>
+      <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>
+    </nav>
+  </div>
 </footer>
 
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="oTitle">
   <div class="o-bar"><div class="inner">
     <img src="/logo.png" alt="">
     <span class="who" id="oTitle">Trazerr</span>
+    <button class="btn btn-quiet btn-sm" id="printBtn" type="button" hidden>Save PDF</button>
     <button class="btn btn-quiet btn-sm" id="closeBtn" type="button">Close</button>
   </div></div>
   <div class="o-body" id="oBody"></div>
@@ -665,16 +761,26 @@ function openOverlay(title, html){
   const o = $("overlay");
   o.classList.add("open"); o.scrollTop = 0;
   document.body.style.overflow = "hidden";
+  document.body.classList.add("has-overlay");
+  $("printBtn").hidden = !!$("oBody").querySelector(":scope > .loading");
   $("closeBtn").focus();
 }
 function closeOverlay(){
   $("overlay").classList.remove("open");
   document.body.style.overflow = "";
+  document.body.classList.remove("has-overlay");
   if (lastFocus && lastFocus.focus) lastFocus.focus();
 }
 function loadingHTML(msg){ return '<div class="loading"><div class="spinner" aria-hidden="true"></div><p id="loadMsg">' + esc(msg) + "</p></div>"; }
 function errorHTML(msg, retryLabel){ return '<div class="loading"><p style="color:var(--err)">' + esc(msg) + '</p><div class="o-foot" style="justify-content:center"><button class="btn btn-quiet" type="button" data-close>Close</button>' + (retryLabel ? '<button class="btn btn-primary" type="button" id="retryBtn">' + esc(retryLabel) + "</button>" : "") + "</div></div>"; }
 $("closeBtn").addEventListener("click", closeOverlay);
+$("printBtn").addEventListener("click", () => {
+  // The browser uses the page title as the PDF's file name.
+  const was = document.title;
+  document.title = "Trazerr - " + $("oTitle").textContent;
+  window.print();
+  document.title = was;
+});
 $("oBody").addEventListener("click", e => { if (e.target.closest("[data-close]")) closeOverlay(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("overlay").classList.contains("open")) closeOverlay(); });
 
@@ -825,6 +931,7 @@ function showProfile(p){
   else {
     if (p.directions.length) h += '<button class="btn btn-primary" type="button" data-findjobs="0">Find jobs that fit</button>';
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
+    h += '<button class="btn btn-quiet" type="button" id="coachBtn">Strengthen my resume lines</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
   h += '</div><p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
@@ -842,6 +949,12 @@ function showProfile(p){
     runJobSearch(true);
   });
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
+  const c = $("coachBtn"); if (c) c.onclick = () => {
+    closeOverlay();
+    if (!$("bRole").value && p.directions[0]) $("bRole").value = p.directions[0].role;
+    $("coach").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+    $("bLine").focus({ preventScroll: true });
+  };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const s = $("saveBtn"); if (s) s.onclick = () => { if (saveProfile(p)) { $("oNote").textContent = "Saved on this device."; s.remove(); refreshProfileUI(); } else $("oNote").textContent = "This browser blocked saving. Private browsing mode can cause this."; };
   const u = $("unsaveBtn"); if (u) u.onclick = () => { removeProfile(); refreshProfileUI(); $("oNote").textContent = "Removed from this device. It stays available until you close this page."; u.remove(); };
@@ -1010,6 +1123,36 @@ function renderJobDna(d){
   openOverlay("Job DNA", h);
   const b = $("dnaFitBtn"); if (b) b.onclick = () => $("postingFitBtn").click();
 }
+
+/* ---------- resume coach ---------- */
+// Show [placeholders] the coach leaves for missing details as highlighted blanks.
+function withBlanks(t){ return esc(t).replace(/\[([^\]]{1,40})\]/g, '<mark class="ph">$1</mark>'); }
+async function copyText(text, btn){
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (err) {}
+    ta.remove();
+  }
+  btn.textContent = "Copied"; setTimeout(() => { btn.textContent = "Copy"; }, 1800);
+}
+$("bBtn").addEventListener("click", async () => {
+  const line = $("bLine").value.trim(), role = $("bRole").value.trim(), st = $("bStatus"), btn = $("bBtn"), out = $("bOut");
+  if (line.length < 12) { setStatus(st, "Paste one line from your resume, like a bullet point under a job.", true); $("bLine").focus(); return; }
+  btn.disabled = true; setStatus(st, "Working on it…"); out.innerHTML = "";
+  try {
+    const { coach } = await api("bullet", { body: { line, role } });
+    setStatus(st, "");
+    let h = coach.verdict ? '<p class="verdict">' + esc(coach.verdict) + "</p>" : "";
+    h += '<ul class="rewrites">' + coach.rewrites.map((r, i) =>
+      "<li>" + (r.angle ? "<small>" + esc(r.angle) + "</small>" : "") + "<p>" + withBlanks(r.text) + '</p><button class="btn btn-quiet btn-sm" type="button" data-copy="' + i + '">Copy</button></li>').join("") + "</ul>";
+    if (coach.questions.length) h += "<h4>Fill in the blanks with real details</h4><ul class=\"plain\">" + coach.questions.map(q => '<li><i class="mark unknown" aria-hidden="true"></i>' + esc(q) + "</li>").join("") + "</ul>";
+    out.innerHTML = h;
+    out.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => copyText(coach.rewrites[+b.dataset.copy].text, b));
+  } catch (e) { setStatus(st, e.message, true); }
+  finally { btn.disabled = false; }
+});
 
 /* ---------- waitlist ---------- */
 $("waitlist").addEventListener("submit", async e => {

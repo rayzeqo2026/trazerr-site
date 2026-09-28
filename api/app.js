@@ -1,8 +1,8 @@
 // Trazerr server: one Vercel function for every feature.
-// Route: /api/app?action=analyze | jobs | match | jobdna | path | waitlist
+// Route: /api/app?action=analyze | jobs | match | jobdna | path | bullet | waitlist
 //
 // Environment variables (Vercel > Project > Settings > Environment Variables):
-//   ANTHROPIC_API_KEY   required: Career DNA, fit checks, Job DNA, career paths
+//   ANTHROPIC_API_KEY   required: Career DNA, fit checks, Job DNA, career paths, resume line coach
 //   ADZUNA_APP_ID       optional: local job search (free at developer.adzuna.com)
 //   ADZUNA_APP_KEY      optional: local job search
 //   ADZUNA_COUNTRY      optional: defaults to "us"
@@ -52,7 +52,7 @@ function getQuery(req) {
 
 // Simple per-visitor limit to protect your API budget (per server instance).
 const hits = new Map();
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, jobs: 60, waitlist: 10 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, bullet: 20, jobs: 60, waitlist: 10 };
 function limited(req, action) {
   const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
   const key = ip + ":" + action;
@@ -415,6 +415,43 @@ async function path(req, res) {
   return res.status(200).json({ plan });
 }
 
+/* ---------------- Resume line coach ---------------- */
+
+const BULLET_SYSTEM = `You are Trazerr's resume coach. You make one resume line stronger without making anything up.
+
+Rules:
+- Evidence before inference. Keep every fact from the original line and add NO new facts: no numbers, tools, titles, results or scope the person didn't write.
+- Where a specific detail would make the line stronger, put a short placeholder in square brackets, e.g. [number of customers] or [% increase], and ask for it in "questions".
+- Lead with a strong, plain verb. Show the outcome, not just the duty. One line each, max 30 words.
+- If a target role is given, lean each rewrite toward what that role values, still using only the person's facts.
+- ${PLAIN}
+
+${JSON_ONLY} Use exactly this shape:
+{
+  "verdict": "one sentence on what the original line does well or where it falls short",
+  "rewrites": [ { "text": "the rewritten line", "angle": "2-5 words on what this version emphasizes" } ],
+  "questions": [ "one short question asking for a real detail that would make the line stronger" ]
+}
+Give 2-3 rewrites and 1-3 questions.
+If the text is not a line from a resume or work history, return exactly {"error":"not_a_line"}.`;
+
+async function bullet(req, res) {
+  const body = getBody(req);
+  const line = str(body?.line, 600);
+  const role = str(body?.role, 100);
+  if (line.length < 12) throw new UserError(400, "Paste one line from your resume, like a bullet point under a job.");
+  const content = [{ type: "text", text: "Resume line:\n" + line + (role ? "\n\nTarget role: " + role : "") + "\n\nReturn the JSON object." }];
+  const p = await askClaude(BULLET_SYSTEM, content, 1200);
+  if (p.error === "not_a_line") throw new UserError(422, "That doesn't look like a resume line. Paste one bullet point that describes your work.");
+  const coach = {
+    verdict: str(p.verdict, 300),
+    rewrites: list(p.rewrites, 3).map(r => ({ text: str(r?.text, 300), angle: str(r?.angle, 60) })).filter(r => r.text),
+    questions: list(p.questions, 3).map(q => str(q, 200)).filter(Boolean)
+  };
+  if (!coach.rewrites.length) throw new UserError(502, "The suggestions came back incomplete. Try again.");
+  return res.status(200).json({ coach });
+}
+
 /* ---------------- Waitlist ---------------- */
 
 async function waitlist(req, res) {
@@ -440,7 +477,7 @@ async function waitlist(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, waitlist };
+const ACTIONS = { analyze, jobs, match, jobdna, path, bullet, waitlist };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
