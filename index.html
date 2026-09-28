@@ -28,7 +28,7 @@
   --brass:#8F6419; --brass-soft:#F5ECDA; --grey:#8A91A3; --err:#A12622;
   --serif:"Newsreader", Georgia, "Times New Roman", serif;
   --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --wrap:1120px;
+  --wrap:1240px;
 }
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none !important}
@@ -154,17 +154,28 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .saved-note{margin-top:14px; padding:12px 14px; background:var(--blue-soft); border-radius:10px; font-size:15px}
 
 
-section.block{padding:88px 0; border-top:1px solid var(--line-soft)}
+section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
+/* Section header: heading on the left, intro on the right, so short headings don't leave a gap beside them */
+.sec-head{display:grid; grid-template-columns:1fr 1fr; gap:20px 64px; align-items:end}
+.sec-head h2{max-width:none}
+.sec-head .lede{margin-top:0; max-width:52ch}
+@media (max-width:900px){ .sec-head{grid-template-columns:1fr} }
 .split{display:grid; grid-template-columns:.9fr 1.1fr; gap:56px; align-items:start}
 @media (max-width:900px){ section.block{padding:64px 0} .split{grid-template-columns:1fr; gap:28px} }
 
-.loop{list-style:none; padding:0; margin:0; counter-reset:step}
-.loop li{counter-increment:step; display:grid; grid-template-columns:48px 1fr; gap:4px 16px; padding:16px 0; border-bottom:1px solid var(--line-soft)}
-.loop li::before{content:counter(step); grid-row:span 2; font-family:var(--serif); font-size:30px; line-height:1; color:var(--blue)}
-.loop b{font-weight:600}
-.loop span{color:var(--ink-2); font-size:16px}
+.steps{list-style:none; padding:0; margin:40px 0 0; counter-reset:step; display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+.steps li{counter-increment:step; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px 22px 24px; display:flex; flex-direction:column; gap:6px}
+.steps li::before{content:counter(step); font-family:var(--serif); font-size:34px; line-height:1; color:var(--blue); margin-bottom:10px}
+.steps b{font-weight:600; font-size:17px}
+.steps span{color:var(--ink-2); font-size:15.5px}
+.steps li.step-cta{counter-increment:none; background:var(--ink); border-color:var(--ink); justify-content:flex-end; gap:12px}
+.steps li.step-cta::before{content:none}
+.steps li.step-cta span{color:#C9CFDD}
+@media (max-width:1000px){ .steps{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:520px){ .steps{gap:10px; margin-top:28px} .steps li{padding:16px 14px 18px} .steps li::before{font-size:28px; margin-bottom:4px} .steps b{font-size:16px} .steps span{font-size:14px} .steps li.step-cta .btn{padding:10px 12px; font-size:14.5px} }
 
-.levels{display:grid; grid-template-columns:repeat(2,1fr); gap:28px 36px; margin-top:36px}
+.levels{display:grid; grid-template-columns:repeat(4,1fr); gap:28px 32px; margin-top:40px}
+@media (max-width:1000px){ .levels{grid-template-columns:repeat(2,1fr)} }
 .level{display:grid; grid-template-columns:22px 1fr; gap:4px 12px}
 .level p{grid-column:2; color:var(--ink-2); font-size:16px}
 @media (max-width:600px){ .levels{grid-template-columns:1fr} }
@@ -227,8 +238,11 @@ section.block{padding:88px 0; border-top:1px solid var(--line-soft)}
 .bar.soft i{background:var(--blue)}
 .fit-row.unk .bar{background:repeating-linear-gradient(90deg,var(--grey) 0 4px,transparent 4px 8px); opacity:.6}
 
-.tool{margin-top:48px}
 .tool .actions .btn{flex:0 1 auto}
+.pair{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:40px; align-items:stretch}
+.pair .sheet{display:flex; flex-direction:column}
+.pair .sheet textarea{flex:1; min-height:160px}
+@media (max-width:900px){ .pair{grid-template-columns:1fr} }
 
 .two-col{display:grid; grid-template-columns:1fr 1fr; gap:48px; margin-top:36px}
 .two-col h3{font-size:20px; margin-bottom:10px}
@@ -251,8 +265,11 @@ section.block{padding:88px 0; border-top:1px solid var(--line-soft)}
 .trap{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
 @media (max-width:800px){ .join{grid-template-columns:1fr; padding:32px 24px} }
 
-.privacy{max-width:68ch}
+.privacy{display:grid; grid-template-columns:.8fr 1.2fr; gap:24px 64px}
+.privacy-text{display:grid; grid-template-columns:1fr 1fr; gap:0 40px}
 .privacy p{color:var(--ink-2); margin-top:14px}
+@media (max-width:900px){ .privacy{grid-template-columns:1fr} }
+@media (max-width:640px){ .privacy-text{grid-template-columns:1fr} }
 footer{padding:36px 0 48px; color:var(--ink-2); font-size:14px}
 footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-between}
 
@@ -372,12 +389,12 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
   </section>
 
   <section class="block" id="how">
-    <div class="wrap split">
-      <div>
+    <div class="wrap">
+      <div class="sec-head">
         <h2>Your resume is the start, not the finished product.</h2>
         <p class="lede">Trazerr treats your history as evidence and carries it through every step of your search.</p>
       </div>
-      <ol class="loop">
+      <ol class="steps">
         <li><b>Resume</b><span>Your work history, read as raw evidence.</span></li>
         <li><b>Career DNA</b><span>A clear picture of what you can do, and how we know.</span></li>
         <li><b>Discover</b><span>Directions your experience supports that you may not have considered.</span></li>
@@ -385,14 +402,17 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
         <li><b>Optimize</b><span>Specific tips to show your real evidence for a specific role.</span></li>
         <li><b>Plan</b><span>A step-by-step path from where you are to where you want to be.</span></li>
         <li><b>Evolve</b><span>Update your resume and your Career DNA grows with you.</span></li>
+        <li class="step-cta"><span>It starts with step 1, and takes about 20 seconds.</span><a class="btn btn-primary" href="#try">Build my Career DNA</a></li>
       </ol>
     </div>
   </section>
 
   <section class="block" id="jobs">
     <div class="wrap">
-      <h2>Find jobs, then see how you fit.</h2>
-      <p class="lede">Search live openings. With your Career DNA saved, every job gets a fit check that shows what you already prove, what's missing, and how to apply well.</p>
+      <div class="sec-head">
+        <h2>Find jobs, then see how you fit.</h2>
+        <p class="lede">Search live openings. With your Career DNA saved, every job gets a fit check that shows what you already prove, what's missing, and how to apply well.</p>
+      </div>
       <form class="jobs-form" id="jobsForm" novalidate>
         <div class="field"><label for="jq">Job title or keyword</label><input class="input" id="jq" type="search" placeholder="e.g. hotel operations manager" autocomplete="off"></div>
         <div class="field"><label for="jw">Location</label><input class="input" id="jw" type="text" placeholder="City, state or ZIP" autocomplete="address-level2"></div>
@@ -412,8 +432,10 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 
   <section class="block" id="dna">
     <div class="wrap">
-      <h2>Evidence before inference.</h2>
-      <p class="lede">Every part of your Career DNA is marked by how sure we are, so Trazerr never pretends to know something it doesn't.</p>
+      <div class="sec-head">
+        <h2>Evidence before inference.</h2>
+        <p class="lede">Every part of your Career DNA is marked by how sure we are, so Trazerr never pretends to know something it doesn't.</p>
+      </div>
       <div class="levels">
         <div class="level"><i class="mark verified" aria-hidden="true"></i><h3>Verified</h3><p>Stated directly in your resume.</p></div>
         <div class="level"><i class="mark inferred" aria-hidden="true"></i><h3>Inferred</h3><p>A reasonable conclusion from your evidence, with the reasoning shown.</p></div>
@@ -441,8 +463,10 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 
   <section class="block" id="paths">
     <div class="wrap">
-      <h2>Not just the next job. The one after that.</h2>
-      <p class="lede">Name a goal and Trazerr maps what you've already proven, what's missing, and the steps in between. Build your Career DNA, then use "Plan a path" in your results.</p>
+      <div class="sec-head">
+        <h2>Not just the next job. The one after that.</h2>
+        <p class="lede">Name a goal and Trazerr maps what you've already proven, what's missing, and the steps in between. Build your Career DNA, then use "Plan a path" in your results.</p>
+      </div>
       <ol class="path">
         <li class="done"><small>Where you are</small><b>Sales Representative</b></li>
         <li class="next"><small>Next step</small><b>Senior Account Executive</b></li>
@@ -454,11 +478,11 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 
   <section class="block" id="employers">
     <div class="wrap">
-      <div class="split">
-        <div>
-          <h2>For employers: matches you can explain.</h2>
-          <p class="lede">Paste a job posting and Trazerr builds its Job DNA: what the role truly requires, what it quietly expects, and the resume evidence that would prove a fit.</p>
-        </div>
+      <div class="sec-head">
+        <h2>For employers: matches you can explain.</h2>
+        <p class="lede">Paste a job posting and Trazerr builds its Job DNA: what the role truly requires, what it quietly expects, and the resume evidence that would prove a fit.</p>
+      </div>
+      <div class="pair">
         <div class="fit" aria-label="Example fit breakdown">
           <div class="fit-head"><span>Example candidate fit<br><small style="color:var(--ink-2)">Regional Sales Manager</small></span><b>82</b></div>
           <div class="fit-row"><b>Experience</b><div class="bar"><i style="width:85%"></i></div><small>6 years in role scope, territory ownership</small></div>
@@ -468,7 +492,6 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
           <div class="fit-row"><b>Growth</b><div class="bar soft"><i style="width:78%"></i></div><small>Steady progression toward the role</small></div>
           <div class="fit-row unk"><b>Unknowns</b><div class="bar"></div><small>No evidence yet of budget ownership</small></div>
         </div>
-      </div>
 
       <div class="sheet tool" id="jobdnaTool">
         <h2>Try Job DNA</h2>
@@ -480,12 +503,16 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
         </div>
         <p class="status" id="jobdnaStatus" role="status" aria-live="polite"></p>
       </div>
+      </div>
     </div>
   </section>
 
   <section class="block" id="now">
     <div class="wrap">
-      <h2>What's live, and what's next.</h2>
+      <div class="sec-head">
+        <h2>What's live, and what's next.</h2>
+        <p class="lede">Trazerr is early, and honest about it. Here's what you can use today and what's on the way.</p>
+      </div>
       <div class="two-col">
         <div><h3>Available now <span class="live-tag">Live</span></h3>
           <ul>
@@ -537,10 +564,12 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
   <section class="block" id="privacy">
     <div class="wrap privacy">
       <h2>How we handle your data.</h2>
+      <div class="privacy-text">
       <p>When you build your Career DNA, check a fit or plan a path, the text is sent over an encrypted connection to Claude, an AI model made by Anthropic, which returns the result. Trazerr does not keep a copy of your resume on its servers.</p>
       <p>If you choose to save your Career DNA, it's stored in this browser only. It never leaves your device except when you ask for a fit check or a path, and you can remove it at any time from your results.</p>
       <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
       <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
+      </div>
     </div>
   </section>
 </main>
