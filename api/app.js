@@ -69,7 +69,12 @@ class UserError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
-async function askClaude(system, content, maxTokens = 3000) {
+// Current Claude models think before answering, and that thinking counts toward max_tokens.
+// Keep effort low (these are straightforward extraction tasks) and leave plenty of room so the
+// JSON answer is never cut off partway.
+const MAX_TOKENS = 16000;
+
+async function askClaude(system, content) {
   if (!process.env.ANTHROPIC_API_KEY) throw new UserError(503, "This feature isn't switched on yet. Try again later.");
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -78,7 +83,7 @@ async function askClaude(system, content, maxTokens = 3000) {
       "x-api-key": process.env.ANTHROPIC_API_KEY,
       "anthropic-version": "2023-06-01"
     },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content }] })
+    body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, output_config: { effort: "low" }, system, messages: [{ role: "user", content }] })
   });
   if (!r.ok) {
     const detail = await r.text().catch(() => "");
@@ -87,9 +92,14 @@ async function askClaude(system, content, maxTokens = 3000) {
     throw new UserError(502, "The analysis didn't finish. Try again in a moment.");
   }
   const data = await r.json();
+  if (data.stop_reason === "refusal") throw new UserError(422, "This couldn't be analyzed. Try removing any unusual content and try again.");
   const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
   const parsed = extractJson(text);
-  if (!parsed) throw new UserError(502, "The analysis came back in an unexpected format. Try again.");
+  if (!parsed) {
+    console.error("Unreadable model reply", data.stop_reason, JSON.stringify(data.usage || {}), text.slice(0, 200));
+    if (data.stop_reason === "max_tokens") throw new UserError(502, "The analysis ran too long and didn't finish. Try again, or paste a shorter version.");
+    throw new UserError(502, "The analysis came back in an unexpected format. Try again.");
+  }
   return parsed;
 }
 
@@ -172,7 +182,7 @@ async function analyze(req, res) {
     if (text.length < 80) throw new UserError(400, "Paste at least a few lines of your resume.");
     content = [{ type: "text", text: "Resume:\n\n" + text + "\n\nAnalyze this resume and return the JSON object." }];
   }
-  const parsed = await askClaude(ANALYZE_SYSTEM, content, 3000);
+  const parsed = await askClaude(ANALYZE_SYSTEM, content);
   if (parsed.error === "not_a_resume") throw new UserError(422, "That doesn't look like a resume. Upload a resume with your work history.");
   const profile = cleanProfile(parsed);
   if (!profile.headline) throw new UserError(502, "The analysis came back incomplete. Try again.");
@@ -317,7 +327,7 @@ async function match(req, res) {
       "\n\nJob posting:\nTitle: " + job.title + "\nCompany: " + job.company + "\nLocation: " + job.location +
       "\n\n" + job.description + "\n\nCompare them and return the JSON object."
   }];
-  const p = await askClaude(MATCH_SYSTEM, content, 2000);
+  const p = await askClaude(MATCH_SYSTEM, content);
   const names = ["Experience", "Skills", "Industry", "Leadership", "Growth"];
   const factors = names.map(name => {
     const f = list(p.factors, 8).find(x => String(x?.name || "").toLowerCase() === name.toLowerCase()) || {};
@@ -363,7 +373,7 @@ async function jobdna(req, res) {
   const body = getBody(req);
   const text = str(stripHtml(body?.text), 12000);
   if (text.length < 120) throw new UserError(400, "Paste the full job posting, at least a few lines.");
-  const p = await askClaude(JOBDNA_SYSTEM, [{ type: "text", text: "Job posting:\n\n" + text + "\n\nReturn the JSON object." }], 1800);
+  const p = await askClaude(JOBDNA_SYSTEM, [{ type: "text", text: "Job posting:\n\n" + text + "\n\nReturn the JSON object." }]);
   if (p.error === "not_a_job") throw new UserError(422, "That doesn't look like a job posting. Paste the full posting text.");
   const dna = {
     title: str(p.title, 120), summary: str(p.summary, 400), level: str(p.level, 80),
@@ -404,7 +414,7 @@ async function path(req, res) {
   const goal = str(body.goal, 100);
   if (goal.length < 2) throw new UserError(400, "Type the role you'd like to reach.");
   const content = [{ type: "text", text: "Career DNA:\n" + JSON.stringify(compactProfile(body.profile)) + "\n\nGoal role: " + goal + "\n\nReturn the JSON object." }];
-  const p = await askClaude(PATH_SYSTEM, content, 1800);
+  const p = await askClaude(PATH_SYSTEM, content);
   const plan = {
     current: str(p.current, 100), goal: str(p.goal, 100) || goal, outlook: str(p.outlook, 400), timeline: str(p.timeline, 60),
     proven: list(p.proven, 5).map(x => str(x, 140)).filter(Boolean),
