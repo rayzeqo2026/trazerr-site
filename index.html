@@ -24,8 +24,8 @@
 <style>
 :root{
   --paper:#F4F5F1; --surface:#FFFFFF; --ink:#15203A; --ink-2:#4A5470;
-  --line:#DADDE3; --line-soft:#E9EBEF; --blue:#2B50E6; --blue-deep:#1E3BB3; --blue-soft:#E8EDFF;
-  --brass:#8F6419; --brass-soft:#F5ECDA; --grey:#8A91A3; --err:#A12622;
+  --line:#DADDE3; --line-soft:#E9EBEF; --blue:#0066E0; --blue-deep:#004FB0; --blue-soft:#E6F0FF;
+  --brass:#8F6419; --brass-soft:#F5ECDA; --gold:#E0B070; --gold-deep:#B07A28; --night:#02060F; --navy:#0B1528; --grey:#8A91A3; --err:#A12622;
   --serif:"Newsreader", Georgia, "Times New Roman", serif;
   --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --wrap:1240px;
@@ -76,7 +76,7 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .site-head .btn{padding:10px 16px; min-height:42px; font-size:15px}
 @media (max-width:820px){ .site-nav{display:none} .site-head .btn{margin-left:auto} }
 .site-head{transition:background-color .25s, border-color .25s}
-.site-head.on-dark{background:transparent; border-bottom-color:transparent; backdrop-filter:none; -webkit-backdrop-filter:none}
+.site-head.on-dark{background:linear-gradient(rgba(2,6,15,.6), rgba(2,6,15,0)); border-bottom-color:transparent; backdrop-filter:none; -webkit-backdrop-filter:none}
 .site-head.on-dark.scrolled{background:rgba(2,6,15,.62); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px)}
 .site-head.on-dark .brand{color:#fff}
 .site-head.on-dark .site-nav a{color:#C9D1E3}
@@ -100,7 +100,7 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .hero-notes{margin-top:28px; display:grid; gap:10px; color:#B9C2D6; font-size:15px; max-width:40ch}
 .hero-notes span{display:flex; gap:10px; align-items:baseline}
 .hero .mark.verified{background:#fff}
-.hero .mark.inferred{border-color:#8FA5FF}
+.hero .mark.inferred{border-color:#6FB4FF}
 .hero .mark.potential{border-color:#E0B25A}
 
 /* Upload window: small and see-through, bottom-right. Just an upload button, a one-line paste box and go. */
@@ -109,28 +109,28 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
   box-shadow:0 20px 50px -20px rgba(0,0,0,.65)}
 .hero-card > *{min-width:0}
 .hero-card h2{color:#fff; font-size:18px; max-width:none}
-.hero-card .saved-note{margin:0; background:rgba(43,80,230,.22); color:#E4E9F7; font-size:13px; padding:8px 10px; border-radius:8px}
+.hero-card .saved-note{margin:0; background:rgba(0,102,224,.22); color:#E4E9F7; font-size:13px; padding:8px 10px; border-radius:8px}
 .hero-card .saved-note .linkish{color:#fff}
 .upload{display:flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:8px 12px; border-radius:10px; cursor:pointer;
   border:1.5px dashed rgba(255,255,255,.32); color:#fff; font:600 14.5px/1.2 var(--sans); text-align:center; transition:border-color .15s, background .15s}
-.upload:hover, .upload.over{border-color:#7D95FF; background:rgba(43,80,230,.18)}
+.upload:hover, .upload.over{border-color:#5CA8FF; background:rgba(0,102,224,.18)}
 .upload svg{width:16px; height:16px; flex:none}
-.upload .file-name{color:#B7C5FF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+.upload .file-name{color:#A9D2FF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
 .upload:has(.file-name:not([hidden])) .upload-text{display:none}
 .hero-card textarea{min-height:0; height:38px; padding:8px 12px; font-size:14px; line-height:1.4; resize:none; overflow:hidden;
   background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); color:#fff; transition:height .15s}
 .hero-card textarea:focus, .hero-card textarea:not(:placeholder-shown){height:88px; overflow:auto}
 .hero-card textarea::placeholder{color:#8C97AE}
-.hero-card textarea:focus{border-color:#7D95FF; box-shadow:0 0 0 3px rgba(125,149,255,.3)}
+.hero-card textarea:focus{border-color:#5CA8FF; box-shadow:0 0 0 3px rgba(92,168,255,.3)}
 .hero-card .btn{width:100%; min-height:42px; padding:10px 16px; font-size:15px}
 .hero-card .mini{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; color:#98A3BA; white-space:nowrap}
-.hero-card .mini .linkish{color:#B7C5FF; font-size:12.5px}
+.hero-card .mini .linkish{color:#A9D2FF; font-size:12.5px}
 .hero-card .mini a{color:#98A3BA}
 .hero-card .status{margin:0; color:#D5DBE8; font-size:13.5px; min-height:0}
 .hero-card .status:empty{display:none}
 .hero-card .status.err{color:#FFB4AE}
 
-.hero-link{display:inline-block; margin-top:18px; color:#B7C5FF; font-weight:600; text-decoration:none; border-bottom:1px solid rgba(183,197,255,.4)}
+.hero-link{display:inline-block; margin-top:18px; color:var(--gold); font-weight:600; text-decoration:none; border-bottom:1px solid rgba(224,176,112,.45)}
 .hero-link:hover{color:#fff; border-color:#fff}
 .welcome{margin-top:22px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:12px 14px; max-width:520px;
   background:rgba(8,14,30,.66); border:1px solid rgba(255,255,255,.16); border-radius:12px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#E4E9F7; font-size:15px}
@@ -138,7 +138,7 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .btn-ghost{background:transparent; color:#fff; border-color:rgba(255,255,255,.35)}
 .btn-ghost:hover{border-color:#fff}
 .hero-progress{height:4px; background:rgba(255,255,255,.14); border-radius:2px; overflow:hidden}
-.hero-progress i{display:block; height:100%; width:0; background:#7D95FF; transition:width .5s ease}
+.hero-progress i{display:block; height:100%; width:0; background:#5CA8FF; transition:width .5s ease}
 .hero-card .btn:disabled{opacity:.85}
 
 /* Narrow screens: the image becomes a band at the top, the headline sits on its lower edge,
@@ -176,10 +176,10 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 
 .steps{list-style:none; padding:0; margin:40px 0 0; counter-reset:step; display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
 .steps li{counter-increment:step; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px 22px 24px; display:flex; flex-direction:column; gap:6px}
-.steps li::before{content:counter(step); font-family:var(--serif); font-size:34px; line-height:1; color:var(--blue); margin-bottom:10px}
+.steps li::before{content:counter(step); font-family:var(--serif); font-size:34px; line-height:1; color:var(--gold-deep); margin-bottom:10px}
 .steps b{font-weight:600; font-size:17px}
 .steps span{color:var(--ink-2); font-size:15.5px}
-.steps li.step-cta{counter-increment:none; background:var(--ink); border-color:var(--ink); justify-content:flex-end; gap:12px}
+.steps li.step-cta{counter-increment:none; background:var(--navy); border-color:var(--navy); border-top:3px solid var(--gold); justify-content:flex-end; gap:12px}
 .steps li.step-cta::before{content:none}
 .steps li.step-cta span{color:#C9CFDD}
 @media (max-width:1000px){ .steps{grid-template-columns:repeat(2,1fr)} }
@@ -264,13 +264,13 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 .live-tag{display:inline-block; font-size:13px; font-weight:600; color:var(--blue-deep); background:var(--blue-soft); padding:2px 8px; border-radius:5px; margin-left:8px; vertical-align:2px}
 @media (max-width:700px){ .two-col{grid-template-columns:1fr; gap:28px} }
 
-.join{background:var(--ink); color:#fff; border-radius:18px; padding:56px; display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:end}
+.join{background:var(--navy); border-top:3px solid var(--gold); color:#fff; border-radius:18px; padding:56px; display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:end}
 .join h2{color:#fff; max-width:16ch}
 .join p{color:#C9CFDD; margin-top:14px}
 .join form{display:grid; gap:12px}
 .join label{font-size:14px; color:#C9CFDD}
 .join .input{border-color:#3A4666; background:#1D2A48; color:#fff}
-.join .input:focus{border-color:#7D95FF; box-shadow:0 0 0 3px rgba(125,149,255,.3)}
+.join .input:focus{border-color:#5CA8FF; box-shadow:0 0 0 3px rgba(92,168,255,.3)}
 .join .status{color:#C9CFDD}
 .join .status.err{color:#FFB4AE}
 .trap{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
@@ -288,6 +288,13 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
 .foot-links{display:flex; flex-wrap:wrap; gap:8px 22px}
 .foot-links a{color:var(--ink-2); text-decoration:none}
 .foot-links a:hover{color:var(--ink); text-decoration:underline}
+section#tailor{background:var(--navy); color:#fff; border-top:0}
+section#tailor h2{color:#fff}
+section#tailor .lede{color:#C9D1E3}
+section#tailor .trio li{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12)}
+section#tailor .trio li::before{color:var(--gold)}
+section#tailor .trio span{color:#AEB8CC}
+section#tailor .hint-sm{color:#AEB8CC}
 .trio{list-style:none; padding:0; margin:36px 0 0; counter-reset:t; display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
 .trio li{counter-increment:t; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; display:grid; gap:6px}
 .trio li::before{content:counter(t); font-family:var(--serif); font-size:32px; line-height:1; color:var(--blue); margin-bottom:6px}
@@ -331,13 +338,18 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
 @media (max-width:480px){ .score{grid-template-columns:1fr; justify-items:start} }
 .o-sec{margin-top:40px}
 /* DNA band at the top of Career DNA results: the same personal strand as the share card */
-.dna-band{margin-top:24px; background:#02060F; border-radius:14px; padding:14px 18px 16px; color:#fff}
+.o-hero{background:var(--navy); color:#fff; border-radius:16px; padding:26px 26px 18px; border-top:3px solid var(--gold)}
+.o-hero .greet{color:#AEB8CC}
+.o-hero .o-headline{color:#fff}
+.o-hero .flag{margin-bottom:12px}
+.dna-band{margin-top:18px; color:#fff}
+@media (max-width:480px){ .o-hero{padding:20px 16px 14px} }
 .dna-band canvas{display:block; width:100%; height:auto}
 .tally{display:flex; flex-wrap:wrap; gap:6px 20px; font-size:14.5px; font-weight:600; margin-top:6px}
 .tally span{display:inline-flex; align-items:center; gap:8px}
 .tally .mark{margin-top:0; width:12px; height:12px}
 .tally .mark.verified{background:#fff}
-.tally .mark.inferred{border-color:#8FA5FF}
+.tally .mark.inferred{border-color:#6FB4FF}
 .tally .mark.potential{border-color:#E0B25A; border-style:solid; background:#E0B25A}
 /* What to do next */
 .next-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px}
@@ -1026,14 +1038,15 @@ function greeting(){ const h = new Date().getHours(); return h < 12 ? "Good morn
 
 function showProfile(p){
   const ex = p.isExample;
-  let h = "";
+  let h = '<div class="o-hero">';
   if (ex) h += '<span class="flag">Example profile. Build your own to see yours.</span>';
   h += '<p class="greet">' + greeting() + (p.firstName && !ex ? ", " + esc(p.firstName) : "") + ". Here is what " + (ex ? "this resume" : "your resume") + " shows.</p>";
   h += '<h2 class="o-headline">' + esc(p.headline) + "</h2>";
-  if (p.experience || p.stage) h += '<div class="facts"><div><small>Experience</small><b>' + esc(p.experience || "Not stated") + '</b></div><div><small>Career stage</small><b>' + esc(p.stage || "Not stated") + "</b></div></div>";
+  const factsHTML = (p.experience || p.stage) ? '<div class="facts"><div><small>Experience</small><b>' + esc(p.experience || "Not stated") + '</b></div><div><small>Career stage</small><b>' + esc(p.stage || "Not stated") + "</b></div></div>" : "";
   const ver = p.strengths.filter(s => s.level !== "inferred").length, inf = p.strengths.length - ver;
   const tally = [ver ? '<span><i class="mark verified" aria-hidden="true"></i>' + ver + " verified</span>" : "", inf ? '<span><i class="mark inferred" aria-hidden="true"></i>' + inf + " inferred</span>" : "", p.directions.length ? '<span><i class="mark potential" aria-hidden="true"></i>' + p.directions.length + (p.directions.length === 1 ? " direction" : " directions") + "</span>" : ""].join("");
-  h += '<div class="dna-band"><canvas id="dnaCanvas" width="1360" height="300" aria-hidden="true"></canvas><div class="tally">' + tally + "</div></div>";
+  h += '<div class="dna-band"><canvas id="dnaCanvas" width="1360" height="300" aria-hidden="true"></canvas><div class="tally">' + tally + "</div></div></div>";
+  h += factsHTML;
   h += '<div class="score">' + ringHTML("ev", p.evidenceScore) + '<div><h3>Evidence score</h3><p>How specific and provable the resume is, out of 100. It measures the document, not the person.</p>' + (p.scoreNote ? '<p class="tip">' + esc(p.scoreNote) + "</p>" : "") + "</div></div>";
   if (!ex) {
     h += '<div class="o-sec"><h3>What to do next</h3><div class="next-grid">';
@@ -1144,7 +1157,7 @@ function drawHelix(ctx, p, x0, x1, cy){
   strengths.forEach((st, i) => { const idx = Math.round((i + 0.6) * (total * 0.66) / strengths.length) - 1; rungs[Math.max(0, Math.min(total - 1, idx))].kind = st.level === "inferred" ? "inferred" : "verified"; });
   dirs.forEach((d, i) => { rungs[total - 1 - i * 2].kind = "direction"; });
   // faint particles
-  for (let i = 0; i < 46; i++) { const x = x0 + rnd() * span, y = cy + (rnd() - 0.5) * A * 3.2; ctx.fillStyle = "rgba(157,176,255," + (0.08 + rnd() * 0.25) + ")"; ctx.beginPath(); ctx.arc(x, y, 1 + rnd() * 2.2, 0, Math.PI * 2); ctx.fill(); }
+  for (let i = 0; i < 46; i++) { const x = x0 + rnd() * span, y = cy + (rnd() - 0.5) * A * 3.2; ctx.fillStyle = "rgba(140,196,255," + (0.08 + rnd() * 0.25) + ")"; ctx.beginPath(); ctx.arc(x, y, 1 + rnd() * 2.2, 0, Math.PI * 2); ctx.fill(); }
   // rungs
   for (const r of rungs) {
     const ya = at(r.x, 0), yb = at(r.x, Math.PI);
@@ -1155,9 +1168,9 @@ function drawHelix(ctx, p, x0, x1, cy){
     ctx.beginPath(); ctx.moveTo(r.x, ya); ctx.lineTo(r.x, yb); ctx.stroke(); ctx.restore();
   }
   // strands, with a soft glow; the color shifts from blue to gold toward the future end
-  const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, "#3F63F0"); g.addColorStop(0.62, "#7D95FF"); g.addColorStop(1, "#E0B25A");
+  const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, "#0A6CF0"); g.addColorStop(0.62, "#5CA8FF"); g.addColorStop(1, "#E0B25A");
   for (const [off, alpha] of [[Math.PI, 0.45], [0, 1]]) {
-    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = g; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.shadowColor = "rgba(91,123,255,.9)"; ctx.shadowBlur = 18;
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = g; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.shadowColor = "rgba(46,139,255,.9)"; ctx.shadowBlur = 18;
     ctx.beginPath(); for (let x = x0; x <= x1; x += 4) { const y = at(x, off); x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); ctx.restore();
   }
   // nodes on the highlighted rungs
@@ -1167,7 +1180,7 @@ function drawHelix(ctx, p, x0, x1, cy){
       ctx.beginPath(); ctx.arc(r.x, y, 8, 0, Math.PI * 2);
       if (r.kind === "verified") { ctx.fillStyle = "#fff"; ctx.fill(); }
       else if (r.kind === "direction") { ctx.fillStyle = "#E0B25A"; ctx.fill(); }
-      else { ctx.fillStyle = "#02060F"; ctx.fill(); ctx.strokeStyle = "#8FA5FF"; ctx.lineWidth = 3; ctx.stroke(); }
+      else { ctx.fillStyle = "#02060F"; ctx.fill(); ctx.strokeStyle = "#6FB4FF"; ctx.lineWidth = 3; ctx.stroke(); }
     }
   }
 }
@@ -1191,7 +1204,7 @@ async function drawCard(p){
   // header
   if (logo) ctx.drawImage(logo, M - 6, 50, 64, 64);
   ctx.fillStyle = "#fff"; ctx.font = "500 40px " + serif; ctx.fillText("Trazerr", M + 70, 96);
-  ctx.textAlign = "right"; ctx.font = "600 22px " + sans; ctx.fillStyle = "#9DB0FF"; spaced("4px");
+  ctx.textAlign = "right"; ctx.font = "600 22px " + sans; ctx.fillStyle = "#8CC4FF"; spaced("4px");
   ctx.fillText(p.isExample ? "EXAMPLE · CAREER DNA" : "CAREER DNA", W - M, 92); spaced("0px"); ctx.textAlign = "left";
   // name and headline
   let y = 238;
@@ -1205,7 +1218,7 @@ async function drawCard(p){
   const ver = p.strengths.filter(s => s.level !== "inferred").length, inf = p.strengths.length - ver;
   const parts = [];
   if (ver) parts.push([ver + " verified", "#fff", "v"]);
-  if (inf) parts.push([inf + " inferred", "#8FA5FF", "i"]);
+  if (inf) parts.push([inf + " inferred", "#6FB4FF", "i"]);
   if (p.directions.length) parts.push([p.directions.length + (p.directions.length === 1 ? " direction" : " directions"), "#E0B25A", "d"]);
   ctx.font = "600 26px " + sans; let x = M;
   for (const [t, col, k] of parts) {
@@ -1227,7 +1240,7 @@ async function drawCard(p){
     if (y + 96 > footerTop - nextH) break;
     y += 54;
     ctx.beginPath(); ctx.arc(M + 10, y - 12, 10, 0, Math.PI * 2);
-    if (st.level === "inferred") { ctx.strokeStyle = "#8FA5FF"; ctx.lineWidth = 3; ctx.stroke(); } else { ctx.fillStyle = "#fff"; ctx.fill(); }
+    if (st.level === "inferred") { ctx.strokeStyle = "#6FB4FF"; ctx.lineWidth = 3; ctx.stroke(); } else { ctx.fillStyle = "#fff"; ctx.fill(); }
     ctx.fillStyle = "#fff"; ctx.font = "600 35px " + sans; ctx.fillText(fitLine(ctx, st.name, CW - 44), M + 40, y);
     if (st.evidence) { ctx.fillStyle = "#AEB8CC"; ctx.font = "400 25px " + sans; ctx.fillText(fitLine(ctx, st.evidence, CW - 44), M + 40, y + 38); }
     y += 50;
@@ -1241,7 +1254,7 @@ async function drawCard(p){
   // footer
   ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(M, H - 104, CW, 1);
   ctx.font = "400 23px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("Every strength backed by evidence from a real resume", M, H - 56);
-  ctx.textAlign = "right"; ctx.font = "600 26px " + sans; ctx.fillStyle = "#9DB0FF"; ctx.fillText("trazerr.com", W - M, H - 56); ctx.textAlign = "left";
+  ctx.textAlign = "right"; ctx.font = "600 26px " + sans; ctx.fillStyle = "#8CC4FF"; ctx.fillText("trazerr.com", W - M, H - 56); ctx.textAlign = "left";
   return new Promise(res => c.toBlob(res, "image/png"));
 }
 
@@ -1398,7 +1411,7 @@ function resumeDocHTML(r){
   return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(r.name || "Resume") + '</title><style>' +
     'body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.4;color:#1b2233;max-width:7.5in;margin:.6in auto}' +
     'h4{font-family:Georgia,serif;font-weight:normal;font-size:22pt;margin:0}.contact{color:#56607a;font-size:10pt}.headline{font-weight:bold;margin-top:6pt}' +
-    'h5{font-size:10pt;letter-spacing:1px;text-transform:uppercase;color:#1E3BB3;border-bottom:1px solid #ccc;margin:14pt 0 4pt;padding-bottom:2pt}' +
+    'h5{font-size:10pt;letter-spacing:1px;text-transform:uppercase;color:#004FB0;border-bottom:1px solid #ccc;margin:14pt 0 4pt;padding-bottom:2pt}' +
     '.rjob{margin-top:8pt}.rjob-h span{color:#56607a;font-size:10pt;margin-left:8pt}ul{margin:3pt 0 0;padding-left:16pt}li{margin-top:2pt}p{margin:0 0 3pt}' +
     '@page{margin:.5in}</style></head><body>' + resumeBody(r, "text") + "</body></html>";
 }
