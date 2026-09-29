@@ -327,12 +327,16 @@ async function jobs(req, res) {
   if (!query && !where) throw new UserError(400, "Enter a job title or keyword to search.");
 
   const hasAdzuna = !!(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
-  let result;
-  if (hasAdzuna && !remote) result = await searchAdzuna(query, where, page);
-  else result = await searchRemotive(query);
+  let result, fellBack = false;
+  if (hasAdzuna && !remote) {
+    // If Adzuna is down or over its daily limit, show remote jobs rather than an error.
+    try { result = await searchAdzuna(query, where, page); }
+    catch (e) { console.error("Adzuna unavailable, falling back to Remotive:", e.message); result = await searchRemotive(query); fellBack = true; }
+  } else result = await searchRemotive(query);
   result.localSearch = hasAdzuna;
 
-  res.setHeader("Cache-Control", "public, s-maxage=900, stale-while-revalidate=3600");
+  // Cache results briefly to save API calls, but never cache a fallback, so local results return quickly.
+  res.setHeader("Cache-Control", fellBack ? "no-store" : "public, s-maxage=900, stale-while-revalidate=3600");
   return res.status(200).json(result);
 }
 
