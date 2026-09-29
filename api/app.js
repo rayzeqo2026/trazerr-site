@@ -8,10 +8,16 @@
 //   ADZUNA_COUNTRY      optional: defaults to "us"
 //   KV_REST_API_URL     waitlist storage, added automatically when you connect Upstash Redis in Vercel Storage
 //   KV_REST_API_TOKEN   waitlist storage, added automatically with the line above
+//   ANTHROPIC_FALLBACK_MODEL optional: backup model if the main one keeps failing (default claude-sonnet-5-5)
+//   AI_DAILY_LIMIT      optional: most AI requests per day across all visitors (default 500; needs storage)
 //   STATS_KEY           optional: a long random password for viewing usage counts at
 //                       /api/app?action=stats&key=YOUR_STATS_KEY
 
+import { createHash } from "node:crypto";
+
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
+const FALLBACK_MODEL = process.env.ANTHROPIC_FALLBACK_MODEL || "claude-sonnet-5-5";
+const AI_DAILY_LIMIT = parseInt(process.env.AI_DAILY_LIMIT, 10) || 500;
 
 /* ---------------- helpers ---------------- */
 
@@ -52,19 +58,50 @@ function getQuery(req) {
   try { return Object.fromEntries(new URL(req.url, "http://localhost").searchParams); } catch { return {}; }
 }
 
-// Simple per-visitor limit to protect your API budget (per server instance).
-const hits = new Map();
+// Per-visitor limits to protect the API budget. With storage connected they're shared by every server
+// instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
+// address, and stored counters expire with the 10-minute window.
+const WINDOW_SEC = 600;
 const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30 };
-function limited(req, action) {
+const MEMORY_ONLY = new Set(["track", "jobs"]); // cheap requests; not worth a storage round trip
+const hits = new Map();
+
+function visitorId(req) {
   const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
-  const key = ip + ":" + action;
+  return createHash("sha256").update("trazerr:" + (process.env.STATS_KEY || "") + ":" + ip).digest("hex").slice(0, 24);
+}
+
+function limitedInMemory(key, max) {
   const now = Date.now();
-  const recent = (hits.get(key) || []).filter(t => now - t < 10 * 60 * 1000);
-  if (recent.length >= (LIMITS[action] || 20)) { hits.set(key, recent); return true; }
+  const recent = (hits.get(key) || []).filter(t => now - t < WINDOW_SEC * 1000);
+  if (recent.length >= max) { hits.set(key, recent); return true; }
   recent.push(now);
   hits.set(key, recent);
   if (hits.size > 5000) hits.clear();
   return false;
+}
+
+async function limited(req, action) {
+  const max = LIMITS[action] || 20, id = visitorId(req), cfg = redisConfig();
+  if (cfg && !MEMORY_ONLY.has(action)) {
+    const key = "trazerr:rl:" + action + ":" + id + ":" + Math.floor(Date.now() / (WINDOW_SEC * 1000));
+    try {
+      const out = await redisPipeline(cfg, [["INCR", key], ["EXPIRE", key, WINDOW_SEC]]);
+      return Number(out[0]?.result) > max;
+    } catch (e) { console.error("Rate limit storage error", e.message); }
+  }
+  return limitedInMemory(id + ":" + action, max);
+}
+
+// A cap on AI requests per day across all visitors, so a traffic spike can't run up the bill.
+async function withinDailyBudget() {
+  const cfg = redisConfig();
+  if (!cfg) return true;
+  const key = "trazerr:ai:" + new Date().toISOString().slice(0, 10);
+  try {
+    const out = await redisPipeline(cfg, [["INCR", key], ["EXPIRE", key, 172800]]);
+    return Number(out[0]?.result) <= AI_DAILY_LIMIT;
+  } catch (e) { console.error("Daily budget storage error", e.message); return true; }
 }
 
 class UserError extends Error {
@@ -76,33 +113,59 @@ class UserError extends Error {
 // JSON answer is never cut off partway.
 const MAX_TOKENS = 16000;
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Tries the main model, retries it once after a short pause, then tries the backup model.
+// Retries stop after about 20 seconds so the whole request fits in the server's time limit.
 async function askClaude(system, content) {
   if (!process.env.ANTHROPIC_API_KEY) throw new UserError(503, "This feature isn't switched on yet. Try again later.");
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01"
-    },
-    body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, output_config: { effort: "low" }, system, messages: [{ role: "user", content }] })
-  });
-  if (!r.ok) {
-    const detail = await r.text().catch(() => "");
-    console.error("Anthropic API error", r.status, detail.slice(0, 500));
-    if (r.status === 429 || r.status === 529) throw new UserError(503, "Trazerr is busy right now. Try again in a minute.");
-    throw new UserError(502, "The analysis didn't finish. Try again in a moment.");
+  if (!(await withinDailyBudget())) throw new UserError(503, "Trazerr has reached its limit for today. Please try again tomorrow.");
+  const plan = FALLBACK_MODEL && FALLBACK_MODEL !== MODEL ? [MODEL, MODEL, FALLBACK_MODEL] : [MODEL, MODEL];
+  const started = Date.now();
+  let lastErr = null;
+  for (let i = 0; i < plan.length; i++) {
+    if (i > 0) {
+      if (Date.now() - started > 20000) break;
+      if (plan[i] === plan[i - 1]) await sleep(1200);
+    }
+    const model = plan[i];
+    let r;
+    try {
+      r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model, max_tokens: MAX_TOKENS, output_config: { effort: "low" }, system, messages: [{ role: "user", content }] })
+      });
+    } catch (e) {
+      console.error("Anthropic network error", model, e.message);
+      lastErr = new UserError(503, "Trazerr couldn't reach its AI service. Try again in a moment.");
+      continue;
+    }
+    if (!r.ok) {
+      const detail = await r.text().catch(() => "");
+      console.error("Anthropic API error", model, r.status, detail.slice(0, 500));
+      if (r.status === 401 || r.status === 403) throw new UserError(503, "This feature isn't working right now. Please try again later.");
+      lastErr = r.status === 429 || r.status === 529
+        ? new UserError(503, "Trazerr is busy right now. Try again in a minute.")
+        : new UserError(502, "The analysis didn't finish. Try again in a moment.");
+      // A request the main model rejects outright won't pass on a retry, so go straight to the backup.
+      if ((r.status === 400 || r.status === 404) && model === MODEL) i = Math.max(i, plan.length - 2);
+      continue;
+    }
+    const data = await r.json();
+    if (data.stop_reason === "refusal") throw new UserError(422, "This couldn't be analyzed. Try removing any unusual content and try again.");
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const parsed = extractJson(text);
+    if (parsed) {
+      if (i > 0) console.error("Recovered on attempt", i + 1, "with", model);
+      return parsed;
+    }
+    console.error("Unreadable model reply", model, data.stop_reason, JSON.stringify(data.usage || {}), text.slice(0, 200));
+    lastErr = data.stop_reason === "max_tokens"
+      ? new UserError(502, "The analysis ran too long and didn't finish. Try again, or paste a shorter version.")
+      : new UserError(502, "The analysis came back in an unexpected format. Try again.");
   }
-  const data = await r.json();
-  if (data.stop_reason === "refusal") throw new UserError(422, "This couldn't be analyzed. Try removing any unusual content and try again.");
-  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
-  const parsed = extractJson(text);
-  if (!parsed) {
-    console.error("Unreadable model reply", data.stop_reason, JSON.stringify(data.usage || {}), text.slice(0, 200));
-    if (data.stop_reason === "max_tokens") throw new UserError(502, "The analysis ran too long and didn't finish. Try again, or paste a shorter version.");
-    throw new UserError(502, "The analysis came back in an unexpected format. Try again.");
-  }
-  return parsed;
+  throw lastErr || new UserError(502, "The analysis didn't finish. Try again in a moment.");
 }
 
 const PLAIN = "Write in plain, warm, everyday language for someone who may not work in tech. No jargon, no buzzwords.";
@@ -647,7 +710,7 @@ export default async function handler(req, res) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });
   }
-  if (limited(req, action)) {
+  if (await limited(req, action)) {
     return res.status(429).json({ error: "You've made a lot of requests in a short time. Please wait a few minutes and try again." });
   }
   try {

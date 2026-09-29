@@ -270,8 +270,19 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 .privacy p{color:var(--ink-2); margin-top:14px}
 @media (max-width:900px){ .privacy{grid-template-columns:1fr} }
 @media (max-width:640px){ .privacy-text{grid-template-columns:1fr} }
-footer{padding:36px 0 48px; color:var(--ink-2); font-size:14px}
-footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-between}
+footer{padding:40px 0 48px; color:var(--ink-2); font-size:14px; border-top:1px solid var(--line-soft)}
+footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-between; align-items:center}
+.foot-brand{display:flex; align-items:center; gap:10px}
+.foot-brand img{width:28px; height:28px}
+.foot-links{display:flex; flex-wrap:wrap; gap:8px 22px}
+.foot-links a{color:var(--ink-2); text-decoration:none}
+.foot-links a:hover{color:var(--ink); text-decoration:underline}
+.principles{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:40px}
+.principles div{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px}
+.principles b{font-family:var(--serif); font-weight:500; font-size:21px; display:block}
+.principles p{color:var(--ink-2); font-size:15.5px; margin-top:8px}
+@media (max-width:1000px){ .principles{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .principles{grid-template-columns:1fr} }
 
 /* Overlay */
 .overlay{position:fixed; inset:0; z-index:50; background:var(--paper); overflow-y:auto; -webkit-overflow-scrolling:touch; display:none}
@@ -301,6 +312,29 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 .score .tip{color:var(--ink); margin-top:10px}
 @media (max-width:480px){ .score{grid-template-columns:1fr; justify-items:start} }
 .o-sec{margin-top:40px}
+/* DNA band at the top of Career DNA results: the same personal strand as the share card */
+.dna-band{margin-top:24px; background:#02060F; border-radius:14px; padding:14px 18px 16px; color:#fff}
+.dna-band canvas{display:block; width:100%; height:auto}
+.tally{display:flex; flex-wrap:wrap; gap:6px 20px; font-size:14.5px; font-weight:600; margin-top:6px}
+.tally span{display:inline-flex; align-items:center; gap:8px}
+.tally .mark{margin-top:0; width:12px; height:12px}
+.tally .mark.verified{background:#fff}
+.tally .mark.inferred{border-color:#8FA5FF}
+.tally .mark.potential{border-color:#E0B25A; border-style:solid; background:#E0B25A}
+/* What to do next */
+.next-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px}
+.next-grid button{text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; cursor:pointer; font:inherit; color:var(--ink); display:grid; gap:4px}
+.next-grid button:hover{border-color:var(--blue)}
+.next-grid button.primary{background:var(--ink); border-color:var(--ink); color:#fff}
+.next-grid button.primary span{color:#C9CFDD}
+.next-grid b{font-weight:600}
+.next-grid span{color:var(--ink-2); font-size:14.5px}
+@media (max-width:620px){ .next-grid{grid-template-columns:1fr} }
+/* Loading with steps */
+.progress{height:4px; background:var(--line-soft); border-radius:2px; overflow:hidden; max-width:320px; margin:14px auto 0}
+.progress i{display:block; height:100%; width:0; background:var(--blue); transition:width .6s ease}
+.skip{position:absolute; left:-9999px; top:8px; z-index:100; background:var(--ink); color:#fff; padding:10px 14px; border-radius:8px}
+.skip:focus{left:12px}
 /* Tailor my DNA */
 .t-field{margin-top:18px}
 .t-field label{display:block; font-size:14px; color:var(--ink-2); margin-bottom:6px}
@@ -371,6 +405,7 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 </head>
 <body>
 
+<a class="skip" href="#top">Skip to content</a>
 <header class="site-head on-dark">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
@@ -380,7 +415,7 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
       <a href="#employers">For employers</a>
       <a href="#now">What's live</a>
     </nav>
-    <a class="btn btn-primary" href="#join">Join the waitlist</a>
+    <a class="btn btn-primary" href="#try">Try it free</a>
   </div>
 </header>
 
@@ -579,6 +614,21 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
     </div>
   </section>
 
+  <section class="block" id="about">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Why Trazerr exists.</h2>
+        <p class="lede">Resumes undersell people, and hiring tools reward keywords over evidence. Trazerr reads a career the way a good mentor would: carefully, honestly, and on your side.</p>
+      </div>
+      <div class="principles">
+        <div><b>Evidence first</b><p>Every strength points to a line in your resume. Anything we infer is labeled, with the reasoning shown.</p></div>
+        <div><b>Honest about what we don't know</b><p>Gaps and unknowns are shown, not hidden. We never add a skill, title or number you didn't give us.</p></div>
+        <div><b>Yours to keep</b><p>We don't store your resume. Your Career DNA stays on your device unless you ask for something that needs it.</p></div>
+        <div><b>Talk to us</b><p>Questions, feedback, or a result that seemed off? Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything.</p></div>
+      </div>
+    </div>
+  </section>
+
   <section class="block" id="join" style="border-top:0">
     <div class="wrap">
       <div class="join">
@@ -606,13 +656,22 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
       <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
       <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
       <p>Career DNA cards are made on your device and never uploaded. To improve Trazerr, we count anonymous events, like how many Career DNAs are built each day. Those counts include no cookies, names, IP addresses or resume content.</p>
+      <p><a href="/privacy.html">Read the full privacy policy</a> · <a href="/terms.html">Terms of use</a></p>
       </div>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="wrap"><span>© 2026 Trazerr</span><span>Career intelligence, built on evidence.</span></div>
+  <div class="wrap">
+    <span class="foot-brand"><img src="/logo.png" alt="" width="28" height="28">© 2026 Trazerr · Career intelligence, built on evidence.</span>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="#about">About</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>
+    </nav>
+  </div>
 </footer>
 
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="oTitle">
@@ -754,11 +813,35 @@ function closeOverlay(){
   document.body.style.overflow = "";
   if (lastFocus && lastFocus.focus) lastFocus.focus();
 }
-function loadingHTML(msg){ return '<div class="loading"><div class="spinner" aria-hidden="true"></div><p id="loadMsg">' + esc(msg) + "</p></div>"; }
+// Optional steps advance every few seconds with a progress bar, so a long wait feels like progress.
+let loadTimer = null;
+function loadingHTML(msg, steps){
+  clearInterval(loadTimer);
+  if (!steps || !steps.length) return '<div class="loading" aria-busy="true"><div class="spinner" aria-hidden="true"></div><p id="loadMsg">' + esc(msg) + "</p></div>";
+  let i = 0;
+  loadTimer = setInterval(() => {
+    const m = $("loadMsg"), bar = $("loadBar");
+    if (!m || !bar) { clearInterval(loadTimer); return; }
+    i = Math.min(i + 1, steps.length - 1);
+    m.textContent = steps[i]; bar.style.width = Math.round((i + 1) / (steps.length + 1) * 100) + "%";
+    if (i === steps.length - 1) clearInterval(loadTimer);
+  }, 5000);
+  return '<div class="loading" aria-busy="true"><div class="spinner" aria-hidden="true"></div><p id="loadMsg">' + esc(steps[0]) + '</p><div class="progress" aria-hidden="true"><i id="loadBar" style="width:' + Math.round(100 / (steps.length + 1)) + '%"></i></div></div>';
+}
 function errorHTML(msg, retryLabel){ return '<div class="loading"><p style="color:var(--err)">' + esc(msg) + '</p><div class="o-foot" style="justify-content:center"><button class="btn btn-quiet" type="button" data-close>Close</button>' + (retryLabel ? '<button class="btn btn-primary" type="button" id="retryBtn">' + esc(retryLabel) + "</button>" : "") + "</div></div>"; }
 $("closeBtn").addEventListener("click", closeOverlay);
 $("oBody").addEventListener("click", e => { if (e.target.closest("[data-close]")) closeOverlay(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("overlay").classList.contains("open")) closeOverlay(); });
+document.addEventListener("keydown", e => {
+  const o = $("overlay");
+  if (!o.classList.contains("open")) return;
+  if (e.key === "Escape") { closeOverlay(); return; }
+  if (e.key !== "Tab") return;
+  const f = [...o.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),textarea,select,[tabindex]:not([tabindex="-1"])')].filter(el => el.offsetParent !== null);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 
 function ringHTML(id, value){
   const known = value !== null && value !== undefined;
@@ -879,7 +962,17 @@ function showProfile(p){
   h += '<p class="greet">' + greeting() + (p.firstName && !ex ? ", " + esc(p.firstName) : "") + ". Here is what " + (ex ? "this resume" : "your resume") + " shows.</p>";
   h += '<h2 class="o-headline">' + esc(p.headline) + "</h2>";
   if (p.experience || p.stage) h += '<div class="facts"><div><small>Experience</small><b>' + esc(p.experience || "Not stated") + '</b></div><div><small>Career stage</small><b>' + esc(p.stage || "Not stated") + "</b></div></div>";
+  const ver = p.strengths.filter(s => s.level !== "inferred").length, inf = p.strengths.length - ver;
+  const tally = [ver ? '<span><i class="mark verified" aria-hidden="true"></i>' + ver + " verified</span>" : "", inf ? '<span><i class="mark inferred" aria-hidden="true"></i>' + inf + " inferred</span>" : "", p.directions.length ? '<span><i class="mark potential" aria-hidden="true"></i>' + p.directions.length + (p.directions.length === 1 ? " direction" : " directions") + "</span>" : ""].join("");
+  h += '<div class="dna-band"><canvas id="dnaCanvas" width="1360" height="300" aria-hidden="true"></canvas><div class="tally">' + tally + "</div></div>";
   h += '<div class="score">' + ringHTML("ev", p.evidenceScore) + '<div><h3>Evidence score</h3><p>How specific and provable the resume is, out of 100. It measures the document, not the person.</p>' + (p.scoreNote ? '<p class="tip">' + esc(p.scoreNote) + "</p>" : "") + "</div></div>";
+  if (!ex) {
+    h += '<div class="o-sec"><h3>What to do next</h3><div class="next-grid">';
+    h += '<button type="button" class="primary" id="nxTailor"><b>Tailor my DNA</b><span>Reshape your resume for a role you want, using only your real evidence.</span></button>';
+    if (p.directions.length) h += '<button type="button" data-findjobs="0"><b>Find jobs that fit</b><span>Live openings for ' + esc(p.directions[0].role) + ", with a fit check for each.</span></button>";
+    h += '<button type="button" id="nxPath"><b>Plan a path</b><span>Map the steps from where you are to a bigger goal.</span></button>';
+    h += "</div></div>";
+  }
 
   if (p.strengths.length) {
     h += '<div class="o-sec"><h3>Strengths</h3><div class="legend"><span><i class="mark verified"></i>Verified in the resume</span><span><i class="mark inferred"></i>Inferred from evidence</span></div><ul class="items">';
@@ -909,8 +1002,6 @@ function showProfile(p){
   h += '<div class="o-foot">';
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
   else {
-    h += '<button class="btn btn-primary" type="button" id="tailorBtn">Tailor my DNA</button>';
-    if (p.directions.length) h += '<button class="btn btn-quiet" type="button" data-findjobs="0">Find jobs that fit</button>';
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
@@ -930,7 +1021,9 @@ function showProfile(p){
     runJobSearch(true);
   });
   body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
-  const tb = $("tailorBtn"); if (tb) tb.onclick = () => openTailor(p, {});
+  const tb = $("nxTailor"); if (tb) tb.onclick = () => openTailor(p, {});
+  const np = $("nxPath"); if (np) np.onclick = () => { $("pathSec").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); $("goalInput").focus({ preventScroll: true }); };
+  const dc = $("dnaCanvas"); if (dc) { const ctx = dc.getContext("2d"); drawHelix(ctx, p, 40, dc.width - 40, dc.height / 2); }
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const s = $("saveBtn"); if (s) s.onclick = () => { if (saveProfile(p)) { $("oNote").textContent = "Saved on this device."; s.remove(); refreshProfileUI(); } else $("oNote").textContent = "This browser blocked saving. Private browsing mode can cause this."; };
@@ -1145,7 +1238,7 @@ function showTailorStart(){
 
 async function runTailorSkills(){
   const st = tailorState;
-  openOverlay("Tailor my DNA", loadingHTML("Finding the skills that matter for " + (st.role || "this role") + "…"));
+  openOverlay("Tailor my DNA", loadingHTML("", ["Reading your resume…", "Studying what " + (st.role || "this role") + " needs…", "Matching your evidence to each skill…", "Almost done…"]));
   try {
     const { skills } = await api("tailor", { body: { stage: "skills", role: st.role, posting: st.posting, resume: resumeSrc } });
     st.skills = skills; if (!st.role) st.role = skills.role;
@@ -1185,7 +1278,7 @@ function renderTailorSkills(){
 
 async function runTailorBuild(confirmed){
   const st = tailorState; st.confirmed = confirmed;
-  openOverlay("Tailor my DNA", loadingHTML("Rewriting your resume for " + (st.role || "this role") + ". This can take up to a minute…"));
+  openOverlay("Tailor my DNA", loadingHTML("", ["Rewriting your resume for " + (st.role || "this role") + "…", "Leading each job with your most relevant results…", "Keeping every employer, title and date as written…", "Marking details worth adding…", "Checking your fit again…", "Almost done. Longer resumes can take up to a minute…"]));
   try {
     const { resume } = await api("tailor", { body: { stage: "build", role: st.role, posting: st.posting, resume: resumeSrc, confirmed } });
     st.resume = resume; st.values = {};
@@ -1241,6 +1334,60 @@ function resumeDocHTML(r){
     '@page{margin:.5in}</style></head><body>' + resumeBody(r, "text") + "</body></html>";
 }
 
+// ---- Word (.docx) export, built in the browser ----
+// A .docx file is a zip of XML files. This writes an uncompressed zip with just the parts Word needs.
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(bytes){ let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files){
+  const enc = new TextEncoder(), parts = [], central = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(8, 0, true);
+    local.setUint32(14, crc, true); local.setUint32(18, data.length, true); local.setUint32(22, data.length, true); local.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(local.buffer), name, data);
+    const cen = new DataView(new ArrayBuffer(46));
+    cen.setUint32(0, 0x02014b50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true);
+    cen.setUint32(16, crc, true); cen.setUint32(20, data.length, true); cen.setUint32(24, data.length, true); cen.setUint16(28, name.length, true); cen.setUint32(42, offset, true);
+    central.push(new Uint8Array(cen.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const cenSize = central.reduce((n, a) => n + a.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cenSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+}
+function resumeDocx(r){
+  const x = (t) => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[c]));
+  const plain = (t) => { const d = document.createElement("div"); d.innerHTML = fillBlanks(t, "text"); return d.textContent; };
+  const run = (t, o = {}) => '<w:r><w:rPr><w:rFonts w:ascii="' + (o.serif ? "Georgia" : "Arial") + '" w:hAnsi="' + (o.serif ? "Georgia" : "Arial") + '"/>' + (o.b ? "<w:b/>" : "") + (o.color ? '<w:color w:val="' + o.color + '"/>' : "") + '<w:sz w:val="' + (o.size || 21) + '"/></w:rPr><w:t xml:space="preserve">' + x(t) + "</w:t></w:r>";
+  const para = (runs, o = {}) => "<w:p><w:pPr>" + (o.border ? '<w:pBdr><w:bottom w:val="single" w:sz="4" w:space="2" w:color="C8CCD6"/></w:pBdr>' : "") + '<w:spacing w:before="' + (o.before || 0) + '" w:after="' + (o.after ?? 60) + '"/>' + (o.bullet ? '<w:ind w:left="360" w:hanging="220"/>' : "") + "</w:pPr>" + runs + "</w:p>";
+  const heading = (t) => para(run(t.toUpperCase(), { b: true, size: 19, color: "1E3BB3" }), { border: true, before: 240, after: 80 });
+  let b = para(run(r.name, { serif: true, size: 44 }), { after: 20 });
+  if (r.contact) b += para(run(r.contact, { size: 19, color: "56607A" }));
+  if (r.headline) b += para(run(plain(r.headline), { b: true }), { before: 60 });
+  if (r.summary) b += heading("Summary") + para(run(plain(r.summary)));
+  if (r.skills.length) b += heading("Skills") + para(run(r.skills.join(" · ")));
+  if (r.experience.length) {
+    b += heading("Experience");
+    r.experience.forEach(j => {
+      const meta = [j.location, j.dates].filter(Boolean).join(" · ");
+      b += para(run([j.title, j.company].filter(Boolean).join(", "), { b: true }) + (meta ? run("   " + meta, { size: 19, color: "56607A" }) : ""), { before: 120, after: 40 });
+      j.bullets.forEach(bl => { b += para(run("•  " + plain(bl.text)), { bullet: true, after: 30 }); });
+    });
+  }
+  if (r.education.length) { b += heading("Education"); r.education.forEach(e => { b += para(run(e)); }); }
+  r.extras.forEach(e => { b += heading(e.heading) + para(run(e.items.join(" · "))); });
+  const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + b +
+    '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1008" w:right="1080" w:bottom="1008" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  return zipStore([
+    { name: "[Content_Types].xml", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+    { name: "_rels/.rels", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+    { name: "word/document.xml", text: doc }
+  ]);
+}
+
 function renderTailored(){
   const st = tailorState, r = st.resume;
   let h = '<span class="flag">Tailored for ' + esc(st.role) + '</span><h2 class="o-headline">Your resume, shaped for ' + esc(st.role) + ".</h2>";
@@ -1257,9 +1404,9 @@ function renderTailored(){
   const left = () => { const n = (resumeText(r).match(/\[[^\]]{1,60}\]/g) || []).length; return n ? " " + n + (n === 1 ? " blank is" : " blanks are") + " still marked in [brackets]." : ""; };
   const fileBase = (r.name || "Resume") + " - " + (st.role || "tailored");
   $("tWord").onclick = () => {
-    const blob = new Blob(["﻿" + resumeDocHTML(r)], { type: "application/msword" });
+    const blob = resumeDocx(r);
     const url = URL.createObjectURL(blob), a = document.createElement("a");
-    a.href = url; a.download = fileBase.replace(/[^\w .-]/g, "") + ".doc"; document.body.appendChild(a); a.click(); a.remove();
+    a.href = url; a.download = fileBase.replace(/[^\w .-]/g, "") + ".docx"; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
     $("oNote").textContent = "Downloaded. It opens in Word or Google Docs." + left();
   };
@@ -1362,7 +1509,7 @@ async function checkFit(job){
     return;
   }
   track("fit_check");
-  openOverlay(job.title || "Fit check", loadingHTML("Comparing this job with your Career DNA…"));
+  openOverlay(job.title || "Fit check", loadingHTML("", ["Reading the job…", "Comparing it with your Career DNA…", "Scoring each part of the fit…", "Writing tips for applying…"]));
   try {
     const { fit } = await api("match", { body: { profile: p, job: { title: job.title, company: job.company, location: job.location, description: job.description } } });
     renderFit(job, fit);
