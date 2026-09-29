@@ -918,81 +918,124 @@ function fitLine(ctx, text, maxW){
 }
 function pill(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
+// Small seeded random generator, so each person's DNA strand has its own shape but is the same every time.
+function seeded(str){
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+}
+
+// The signature: a DNA strand built from this person's evidence. One highlighted rung per strength
+// (solid = verified, outlined = inferred), gold rungs toward the end for directions to explore.
+function drawHelix(ctx, p, x0, x1, cy){
+  const rnd = seeded((p.fullName || "") + "|" + p.headline + "|" + p.strengths.map(s => s.name).join(","));
+  const A = 62 + rnd() * 18, cycles = 2.1 + rnd() * 0.9, phase = rnd() * Math.PI * 2, span = x1 - x0;
+  const at = (x, off) => cy + A * Math.sin(phase + off + (x - x0) / span * cycles * Math.PI * 2);
+  const strengths = p.strengths.slice(0, 7), dirs = p.directions.slice(0, 3);
+  const total = Math.max(15, strengths.length + dirs.length + 6) + Math.floor(rnd() * 4);
+  const rungs = Array.from({ length: total }, (_, i) => ({ x: x0 + span * (i + 0.5) / total, kind: "plain" }));
+  // strengths spread through the first two thirds, directions near the end
+  strengths.forEach((st, i) => { const idx = Math.round((i + 0.6) * (total * 0.66) / strengths.length) - 1; rungs[Math.max(0, Math.min(total - 1, idx))].kind = st.level === "inferred" ? "inferred" : "verified"; });
+  dirs.forEach((d, i) => { rungs[total - 1 - i * 2].kind = "direction"; });
+  // faint particles
+  for (let i = 0; i < 46; i++) { const x = x0 + rnd() * span, y = cy + (rnd() - 0.5) * A * 3.2; ctx.fillStyle = "rgba(157,176,255," + (0.08 + rnd() * 0.25) + ")"; ctx.beginPath(); ctx.arc(x, y, 1 + rnd() * 2.2, 0, Math.PI * 2); ctx.fill(); }
+  // rungs
+  for (const r of rungs) {
+    const ya = at(r.x, 0), yb = at(r.x, Math.PI);
+    ctx.save();
+    if (r.kind === "plain") { ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 2; }
+    else if (r.kind === "direction") { ctx.strokeStyle = "#E0B25A"; ctx.lineWidth = 3; ctx.setLineDash([7, 6]); }
+    else { ctx.strokeStyle = r.kind === "verified" ? "rgba(255,255,255,.85)" : "rgba(143,165,255,.9)"; ctx.lineWidth = 3; }
+    ctx.beginPath(); ctx.moveTo(r.x, ya); ctx.lineTo(r.x, yb); ctx.stroke(); ctx.restore();
+  }
+  // strands, with a soft glow; the color shifts from blue to gold toward the future end
+  const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, "#3F63F0"); g.addColorStop(0.62, "#7D95FF"); g.addColorStop(1, "#E0B25A");
+  for (const [off, alpha] of [[Math.PI, 0.45], [0, 1]]) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = g; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.shadowColor = "rgba(91,123,255,.9)"; ctx.shadowBlur = 18;
+    ctx.beginPath(); for (let x = x0; x <= x1; x += 4) { const y = at(x, off); x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); ctx.restore();
+  }
+  // nodes on the highlighted rungs
+  for (const r of rungs) {
+    if (r.kind === "plain") continue;
+    for (const y of [at(r.x, 0), at(r.x, Math.PI)]) {
+      ctx.beginPath(); ctx.arc(r.x, y, 8, 0, Math.PI * 2);
+      if (r.kind === "verified") { ctx.fillStyle = "#fff"; ctx.fill(); }
+      else if (r.kind === "direction") { ctx.fillStyle = "#E0B25A"; ctx.fill(); }
+      else { ctx.fillStyle = "#02060F"; ctx.fill(); ctx.strokeStyle = "#8FA5FF"; ctx.lineWidth = 3; ctx.stroke(); }
+    }
+  }
+}
+
 async function drawCard(p){
   const W = 1080, H = 1350, M = 72, CW = W - M * 2;
   const serif = '"Newsreader", Georgia, serif', sans = '"Instrument Sans", system-ui, sans-serif';
-  try { await Promise.all([document.fonts.load("500 72px Newsreader"), document.fonts.load('600 28px "Instrument Sans"'), document.fonts.load('400 28px "Instrument Sans"')]); } catch (e) {}
+  try { await Promise.all([document.fonts.load("500 80px Newsreader"), document.fonts.load('600 34px "Instrument Sans"'), document.fonts.load('400 28px "Instrument Sans"')]); } catch (e) {}
   const [bg, logo] = await Promise.all([loadImg("/img/career-dna-1280.jpg").catch(() => null), loadImg("/logo.png").catch(() => null)]);
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const ctx = c.getContext("2d");
+  const spaced = (px) => { if ("letterSpacing" in ctx) ctx.letterSpacing = px; };
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
+  // faint brand image in the top corner, faded out
   if (bg) {
-    const bh = 720, scale = Math.max(W / bg.width, bh / bg.height), sw = W / scale, sh = bh / scale;
-    ctx.globalAlpha = 0.6; ctx.drawImage(bg, (bg.width - sw) * 0.7, (bg.height - sh) * 0.5, sw, sh, 0, 0, W, bh); ctx.globalAlpha = 1;
-    let g = ctx.createLinearGradient(0, 0, 0, bh); g.addColorStop(0, "rgba(2,6,15,.35)"); g.addColorStop(0.55, "rgba(2,6,15,.7)"); g.addColorStop(1, "#02060F");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, bh);
-    g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(2,6,15,.85)"); g.addColorStop(0.6, "rgba(2,6,15,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, bh);
+    const bh = 560, scale = Math.max(W / bg.width, bh / bg.height), sw = W / scale, sh = bh / scale;
+    ctx.globalAlpha = 0.32; ctx.drawImage(bg, (bg.width - sw) * 0.75, (bg.height - sh) * 0.4, sw, sh, 0, 0, W, bh); ctx.globalAlpha = 1;
+    let g = ctx.createLinearGradient(0, 0, 0, bh); g.addColorStop(0, "rgba(2,6,15,.2)"); g.addColorStop(1, "#02060F"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, bh);
+    g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(2,6,15,.9)"); g.addColorStop(0.7, "rgba(2,6,15,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, bh);
   }
-  ctx.textBaseline = "alphabetic";
   // header
   if (logo) ctx.drawImage(logo, M - 6, 50, 64, 64);
   ctx.fillStyle = "#fff"; ctx.font = "500 40px " + serif; ctx.fillText("Trazerr", M + 70, 96);
-  ctx.textAlign = "right"; ctx.font = "600 22px " + sans; ctx.fillStyle = "#9DB0FF";
-  if ("letterSpacing" in ctx) ctx.letterSpacing = "4px";
-  ctx.fillText(p.isExample ? "EXAMPLE · CAREER DNA" : "CAREER DNA", W - M, 92);
-  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
-  ctx.textAlign = "left";
+  ctx.textAlign = "right"; ctx.font = "600 22px " + sans; ctx.fillStyle = "#9DB0FF"; spaced("4px");
+  ctx.fillText(p.isExample ? "EXAMPLE · CAREER DNA" : "CAREER DNA", W - M, 92); spaced("0px"); ctx.textAlign = "left";
   // name and headline
-  let y = 250;
-  ctx.fillStyle = "#fff"; ctx.font = "500 76px " + serif;
-  for (const l of wrapLines(ctx, p.fullName || "My Career DNA", CW, 2)) { ctx.fillText(l, M, y); y += 80; }
-  y += 6; ctx.font = "400 30px " + sans; ctx.fillStyle = "#D5DBE8";
-  const head = wrapLines(ctx, p.headline, CW, 4);
-  for (const l of head) { ctx.fillText(l, M, y); y += 44; }
-  // evidence score
+  let y = 238;
+  ctx.fillStyle = "#fff"; ctx.font = "500 82px " + serif;
+  for (const l of wrapLines(ctx, p.fullName || "My Career DNA", CW, 2)) { ctx.fillText(l, M, y); y += 86; }
+  ctx.font = "400 31px " + sans; ctx.fillStyle = "#C9D1E3"; y += 2;
+  for (const l of wrapLines(ctx, p.headline, CW, 3)) { ctx.fillText(l, M, y); y += 44; }
+  // signature helix
+  const hy = y + 118; drawHelix(ctx, p, M, W - M, hy); y = hy + 142;
+  // evidence tally and score
+  const ver = p.strengths.filter(s => s.level !== "inferred").length, inf = p.strengths.length - ver;
+  const parts = [];
+  if (ver) parts.push([ver + " verified", "#fff", "v"]);
+  if (inf) parts.push([inf + " inferred", "#8FA5FF", "i"]);
+  if (p.directions.length) parts.push([p.directions.length + (p.directions.length === 1 ? " direction" : " directions"), "#E0B25A", "d"]);
+  ctx.font = "600 26px " + sans; let x = M;
+  for (const [t, col, k] of parts) {
+    ctx.beginPath(); ctx.arc(x + 8, y - 9, 8, 0, Math.PI * 2);
+    if (k === "i") { ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.stroke(); } else { ctx.fillStyle = col; ctx.fill(); }
+    ctx.fillStyle = "#fff"; ctx.fillText(t, x + 26, y); x += 26 + ctx.measureText(t).width + 34;
+  }
   if (p.evidenceScore !== null && p.evidenceScore !== undefined) {
-    y += 34; const cx = M + 48, cy = y + 44;
-    ctx.lineWidth = 10; ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.arc(cx, cy, 44, 0, Math.PI * 2); ctx.stroke();
-    ctx.strokeStyle = "#5B7BFF"; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(cx, cy, 44, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p.evidenceScore / 100); ctx.stroke();
-    ctx.fillStyle = "#fff"; ctx.font = "500 38px " + serif; ctx.textAlign = "center"; ctx.fillText(String(p.evidenceScore), cx, cy + 13); ctx.textAlign = "left";
-    ctx.font = "600 28px " + sans; ctx.fillText("Evidence score", M + 124, cy - 6);
-    ctx.font = "400 22px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("How specific and provable the resume is, out of 100", M + 124, cy + 28);
-    y = cy + 44;
+    ctx.textAlign = "right"; ctx.fillStyle = "#98A3BA"; ctx.font = "400 24px " + sans;
+    const n = String(p.evidenceScore); ctx.font = "500 40px " + serif; ctx.fillStyle = "#fff"; ctx.fillText(n, W - M, y + 4);
+    const nw = ctx.measureText(n).width; ctx.font = "400 24px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("Evidence score", W - M - nw - 14, y); ctx.textAlign = "left";
   }
-  const label = (t) => { ctx.font = "600 20px " + sans; ctx.fillStyle = "#9DB0FF"; if ("letterSpacing" in ctx) ctx.letterSpacing = "3px"; ctx.fillText(t, M, y); if ("letterSpacing" in ctx) ctx.letterSpacing = "0px"; };
-  const footerTop = H - 150;
-  // strengths
-  const dirs = p.directions.slice(0, 3);
-  const room = footerTop - (dirs.length ? 150 : 0) - (y + 64);
-  const strengths = p.strengths.slice(0, Math.max(0, Math.min(5, Math.floor(room / 80))));
-  if (strengths.length) {
-    y += 64; label("PROVEN STRENGTHS"); y += 22;
-    for (const st of strengths) {
-      y += 34;
-      if (st.level === "inferred") { ctx.strokeStyle = "#8FA5FF"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(M + 9, y - 9, 8, 0, Math.PI * 2); ctx.stroke(); }
-      else { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(M + 9, y - 9, 9, 0, Math.PI * 2); ctx.fill(); }
-      ctx.fillStyle = "#fff"; ctx.font = "600 28px " + sans; ctx.fillText(fitLine(ctx, st.name, CW - 40), M + 36, y);
-      if (st.evidence) { ctx.fillStyle = "#AEB8CC"; ctx.font = "italic 400 22px " + serif; ctx.fillText(fitLine(ctx, st.evidence, CW - 40), M + 36, y + 32); }
-      y += 46;
-    }
+  // top strengths, large enough to read in a feed
+  const next = p.directions[0];
+  const footerTop = H - 128, nextH = next ? 128 : 0;
+  const top = p.strengths.slice(0, 3);
+  y += 42; ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(M, y, CW, 1); y += 8;
+  for (const st of top) {
+    if (y + 96 > footerTop - nextH) break;
+    y += 54;
+    ctx.beginPath(); ctx.arc(M + 10, y - 12, 10, 0, Math.PI * 2);
+    if (st.level === "inferred") { ctx.strokeStyle = "#8FA5FF"; ctx.lineWidth = 3; ctx.stroke(); } else { ctx.fillStyle = "#fff"; ctx.fill(); }
+    ctx.fillStyle = "#fff"; ctx.font = "600 35px " + sans; ctx.fillText(fitLine(ctx, st.name, CW - 44), M + 40, y);
+    if (st.evidence) { ctx.fillStyle = "#AEB8CC"; ctx.font = "400 25px " + sans; ctx.fillText(fitLine(ctx, st.evidence, CW - 44), M + 40, y + 38); }
+    y += 50;
   }
-  // directions
-  if (dirs.length) {
-    y = Math.max(y + 40, footerTop - 150); label("WORTH EXPLORING"); y += 22;
-    ctx.font = "500 24px " + sans; let x = M;
-    for (const d of dirs) {
-      const t = fitLine(ctx, d.role, CW - 40), w = ctx.measureText(t).width + 40;
-      if (x + w > W - M) { x = M; y += 62; }
-      if (y > footerTop - 20) break;
-      ctx.setLineDash([6, 5]); ctx.strokeStyle = "#E0B25A"; ctx.lineWidth = 2; pill(ctx, x, y, w, 48, 24); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = "#fff"; ctx.fillText(t, x + 20, y + 32); x += w + 14;
-    }
+  // next move
+  if (next) {
+    y = Math.max(y + 36, footerTop - nextH + 10);
+    ctx.font = "600 22px " + sans; ctx.fillStyle = "#E0B25A"; spaced("4px"); ctx.fillText("NEXT MOVE", M, y); spaced("0px");
+    ctx.font = "500 50px " + serif; ctx.fillStyle = "#fff"; ctx.fillText(fitLine(ctx, next.role + "  →", CW), M, y + 58);
   }
   // footer
-  ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(M, H - 110, CW, 1);
-  ctx.font = "400 22px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("Every strength is backed by evidence from the resume.", M, H - 60);
-  ctx.textAlign = "right"; ctx.font = "600 24px " + sans; ctx.fillStyle = "#9DB0FF"; ctx.fillText("trazerr.com", W - M, H - 60); ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(M, H - 104, CW, 1);
+  ctx.font = "400 23px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("Every strength backed by evidence from a real resume", M, H - 56);
+  ctx.textAlign = "right"; ctx.font = "600 26px " + sans; ctx.fillStyle = "#9DB0FF"; ctx.fillText("trazerr.com", W - M, H - 56); ctx.textAlign = "left";
   return new Promise(res => c.toBlob(res, "image/png"));
 }
 
