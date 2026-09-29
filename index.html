@@ -505,6 +505,10 @@ section#tailor .hint-sm{color:#AEB8CC}
 .items .ev{font-family:var(--serif); font-style:italic; font-size:17px; color:var(--ink-2); line-height:1.5}
 .items .why{font-size:16px}
 .items .gap{font-size:15px; color:var(--brass); margin-top:2px}
+.items .how{font-size:15px; color:var(--ink-2); margin-top:2px}
+.items .ex-line{margin-top:10px; padding:10px 14px; background:var(--paper); border-left:3px solid var(--gold); border-radius:6px; font-size:15.5px; color:var(--ink); line-height:1.5}
+.items .ex-line small{display:block; font-size:11.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--gold-deep); margin-bottom:2px}
+mark.blank{background:var(--brass-soft); color:var(--brass); font-weight:600; padding:0 3px; border-radius:3px}
 .items .row-actions{margin-top:8px}
 .goal-form{display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:14px}
 @media (max-width:520px){ .goal-form{grid-template-columns:1fr} }
@@ -982,7 +986,7 @@ function normalize(p){
     strengths: arr(p.strengths).filter(s => s && s.name),
     hiddenTalent: arr(p.hiddenTalent).filter(s => s && s.title),
     directions: arr(p.directions).filter(s => s && s.role),
-    unknowns: arr(p.unknowns).filter(Boolean).map(String),
+    unknowns: arr(p.unknowns).map(u => typeof u === "string" ? { what: u, how: "", example: "" } : { what: String(u?.what || ""), how: String(u?.how || ""), example: String(u?.example || "") }).filter(u => u.what),
     isExample: !!p.isExample
   };
 }
@@ -1225,7 +1229,11 @@ const EXAMPLE = {
     { role: "Sales team lead", why: "Your training record and quota history are the two things hiring managers look for first.", gap: "Show a result from a team you guided, not just your own numbers." },
     { role: "Sales enablement specialist", why: "You already onboard new hires and build their habits.", gap: "Add any training materials or playbooks you created." }
   ],
-  unknowns: ["Deal sizes and contract values", "Experience managing a budget", "CRM or forecasting tools you use"]
+  unknowns: [
+    { what: "Deal sizes", how: "Say how big your typical deals or contracts were, and your largest one.", example: "Closed deals averaging [average deal size], including a [largest deal] contract with [client or industry]." },
+    { what: "Budget ownership", how: "If you managed any budget, name what it covered and how much it was.", example: "Managed a [budget amount] annual budget for [what it covered] in the Northeast territory." },
+    { what: "Sales tools", how: "List the CRM and forecasting tools you use day to day.", example: "Tracked the Northeast pipeline in [CRM name] and built monthly forecasts in [tool]." }
+  ]
 };
 $("exampleBtn").addEventListener("click", () => { track("example_viewed"); showProfile(normalize(EXAMPLE)); });
 $("exampleBtn2").addEventListener("click", () => $("exampleBtn").click());
@@ -1271,9 +1279,16 @@ function showProfile(p){
     h += "</ul></div>";
   }
   if (p.unknowns.length) {
-    h += '<div class="o-sec"><h3>Not enough evidence yet</h3><p class="hint">Adding these to the resume would make the Career DNA more complete.</p><ul class="items">';
-    p.unknowns.forEach(u => { h += '<li><i class="mark unknown" aria-hidden="true"></i><span class="why">' + esc(u) + "</span></li>"; });
-    h += "</ul></div>";
+    h += '<div class="o-sec"><h3>Not shown yet</h3><p class="hint">Your resume doesn\'t show these clearly. That doesn\'t mean you haven\'t done them. Here\'s how to show them.</p><ul class="items">';
+    p.unknowns.forEach((u, i) => {
+      h += '<li><i class="mark unknown" aria-hidden="true"></i><b>' + esc(u.what) + "</b>";
+      if (u.how) h += '<span class="how">How to show it: ' + esc(u.how) + "</span>";
+      if (u.example) h += '<span class="ex-line"><small>Example line</small>' + esc(u.example).replace(/\[([^\]]{1,60})\]/g, '<mark class="blank">[$1]</mark>') + '</span><span class="row-actions"><button class="btn btn-quiet btn-sm" type="button" data-copyex="' + i + '">Copy this line</button></span>';
+      h += "</li>";
+    });
+    h += "</ul>";
+    if (!ex) h += '<p class="hint" style="margin-top:14px">Added any of these to your resume? <button class="linkish" type="button" id="rebuildBtn">Rebuild my Career DNA</button> to see your evidence score change.</p>';
+    h += "</div>";
   }
   if (!ex) {
     h += '<div class="o-sec" id="pathSec"><h3>Plan a path</h3><p class="hint">Name a role you\'d like to reach and Trazerr maps the steps from here.</p>';
@@ -1306,6 +1321,12 @@ function showProfile(p){
   const tb = $("nxTailor"); if (tb) tb.onclick = () => openTailor(p, {});
   const np = $("nxPath"); if (np) np.onclick = () => { $("pathSec").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); $("goalInput").focus({ preventScroll: true }); };
   const dc = $("dnaCanvas"); if (dc) { const ctx = dc.getContext("2d"); drawHelix(ctx, p, 40, dc.width - 40, dc.height / 2); }
+  $("oBody").querySelectorAll("[data-copyex]").forEach(b => b.onclick = async () => {
+    const line = p.unknowns[+b.dataset.copyex].example;
+    try { await navigator.clipboard.writeText(line); b.textContent = "Copied. Fill in the brackets"; track("gap_line_copied"); }
+    catch (e) { b.textContent = "Couldn't copy. Select the line instead"; }
+  });
+  const rb = $("rebuildBtn"); if (rb) rb.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const s = $("saveBtn"); if (s) s.onclick = () => { if (saveProfile(p)) { $("oNote").textContent = "Saved on this device."; s.remove(); refreshProfileUI(); } else $("oNote").textContent = "This browser blocked saving. Private browsing mode can cause this."; };

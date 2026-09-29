@@ -209,9 +209,10 @@ ${JSON_ONLY} Use exactly this shape:
   "strengths": [ { "name": "2-4 words", "level": "verified or inferred", "evidence": "one sentence" } ],
   "hiddenTalent": [ { "title": "short phrase", "why": "one or two sentences", "evidence": "one sentence from the resume" } ],
   "directions": [ { "role": "job title people actually search for", "why": "one sentence", "gap": "one sentence on what to build or show" } ],
-  "unknowns": [ "short phrase for something the resume does not show" ]
+  "unknowns": [ { "what": "2-5 words naming something relevant to their work or directions that the resume doesn't show clearly, e.g. 'Shipment volumes'", "how": "one sentence on the detail to add to show it: what they did, how much, which tools, or what changed", "example": "one sample resume bullet that would show it, using this person's real employers and duties, with a square-bracket placeholder for every number, name or detail the resume doesn't give, like [shipments per week]" } ]
 }
 Give 4-7 strengths, 1-3 hidden talents, 2-4 directions and 1-4 unknowns. evidenceScore must be a whole number.
+Unknowns are things the resume doesn't show yet, never doubts about the person. Word them kindly. In each example, anything the resume doesn't state must be a [placeholder]; never write a made-up number, tool or result as if it were true.
 If the document is not a resume or has no readable work history, return exactly {"error":"not_a_resume"}.`;
 
 function cleanProfile(p) {
@@ -233,7 +234,9 @@ function cleanProfile(p) {
     directions: list(p.directions, 4).map(d => ({
       role: str(d?.role, 80), why: str(d?.why, 240), gap: str(d?.gap, 240)
     })).filter(d => d.role),
-    unknowns: list(p.unknowns, 4).map(u => str(u, 120)).filter(Boolean)
+    unknowns: list(p.unknowns, 4).map(u => typeof u === "string"
+      ? { what: str(u, 120), how: "", example: "" }
+      : { what: str(u?.what, 120), how: str(u?.how, 240), example: str(u?.example, 260) }).filter(u => u.what)
   };
 }
 
@@ -406,7 +409,7 @@ function compactProfile(p) {
   const c = cleanProfile(p || {});
   return {
     headline: c.headline, experience: c.experience, stage: c.stage, location: c.location,
-    strengths: c.strengths, hiddenTalent: c.hiddenTalent, directions: c.directions.map(d => d.role), unknowns: c.unknowns
+    strengths: c.strengths, hiddenTalent: c.hiddenTalent, directions: c.directions.map(d => d.role), unknowns: c.unknowns.map(u => u.what)
   };
 }
 
@@ -714,7 +717,7 @@ async function redisPipeline(cfg, commands) {
 const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
-  "tailor_started", "tailor_built", "feedback_up", "feedback_down"
+  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
