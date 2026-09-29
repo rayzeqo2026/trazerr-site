@@ -130,6 +130,17 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .hero-card .status:empty{display:none}
 .hero-card .status.err{color:#FFB4AE}
 
+.hero-link{display:inline-block; margin-top:18px; color:#B7C5FF; font-weight:600; text-decoration:none; border-bottom:1px solid rgba(183,197,255,.4)}
+.hero-link:hover{color:#fff; border-color:#fff}
+.welcome{margin-top:22px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:12px 14px; max-width:520px;
+  background:rgba(8,14,30,.66); border:1px solid rgba(255,255,255,.16); border-radius:12px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#E4E9F7; font-size:15px}
+.welcome-actions{display:flex; gap:8px}
+.btn-ghost{background:transparent; color:#fff; border-color:rgba(255,255,255,.35)}
+.btn-ghost:hover{border-color:#fff}
+.hero-progress{height:4px; background:rgba(255,255,255,.14); border-radius:2px; overflow:hidden}
+.hero-progress i{display:block; height:100%; width:0; background:#7D95FF; transition:width .5s ease}
+.hero-card .btn:disabled{opacity:.85}
+
 /* Narrow screens: the image becomes a band at the top, the headline sits on its lower edge,
    and the upload window follows below at full width. */
 @media (max-width:900px){
@@ -277,6 +288,13 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
 .foot-links{display:flex; flex-wrap:wrap; gap:8px 22px}
 .foot-links a{color:var(--ink-2); text-decoration:none}
 .foot-links a:hover{color:var(--ink); text-decoration:underline}
+.trio{list-style:none; padding:0; margin:36px 0 0; counter-reset:t; display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+.trio li{counter-increment:t; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; display:grid; gap:6px}
+.trio li::before{content:counter(t); font-family:var(--serif); font-size:32px; line-height:1; color:var(--blue); margin-bottom:6px}
+.trio b{font-weight:600; font-size:17px}
+.trio span{color:var(--ink-2); font-size:15.5px}
+.hint-sm{color:var(--ink-2); font-size:14.5px}
+@media (max-width:760px){ .trio{grid-template-columns:1fr} }
 .principles{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:40px}
 .principles div{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px}
 .principles b{font-family:var(--serif); font-weight:500; font-size:21px; display:block}
@@ -411,9 +429,10 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
     <a class="brand" href="#top" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
     <nav class="site-nav" aria-label="Main">
       <a href="#try">Career DNA</a>
+      <a href="#tailor">Tailor my DNA</a>
       <a href="#jobs">Jobs</a>
-      <a href="#employers">For employers</a>
-      <a href="#now">What's live</a>
+      <a href="#employers">Job DNA</a>
+      <a href="#about">About</a>
     </nav>
     <a class="btn btn-primary" href="#try">Try it free</a>
   </div>
@@ -434,6 +453,8 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
       <div class="hero-copy">
         <h1>What could your career become?</h1>
         <p class="lede">Upload your resume. Trazerr reads it as evidence, shows you what your experience actually proves, and finds the jobs where you'd fit, including ones you haven't considered.</p>
+        <a class="hero-link" href="#tailor">New: tailor your resume for any job <span aria-hidden="true">→</span></a>
+        <div class="welcome" id="welcome" hidden></div>
         <div class="hero-notes">
           <span><i class="mark verified" aria-hidden="true"></i>Every strength is backed by a line from your resume.</span>
           <span><i class="mark inferred" aria-hidden="true"></i>Anything we infer is labeled as an inference.</span>
@@ -443,16 +464,16 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
 
       <div class="hero-card" id="try">
         <h2>See your Career DNA</h2>
-        <div id="savedBox" class="saved-note" hidden></div>
         <label class="upload" id="drop" for="file">
           <input id="file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
           <span class="upload-text">Upload resume</span>
           <span class="file-name" id="fileName" hidden></span>
         </label>
-        <textarea id="paste" placeholder="Or paste your resume text" aria-label="Resume text"></textarea>
+        <textarea id="paste" placeholder="Or paste your full resume" aria-label="Or paste your full resume"></textarea>
         <input type="checkbox" id="saveLocal" checked hidden>
         <button class="btn btn-primary" id="analyzeBtn" type="button">Build my Career DNA</button>
+        <div class="hero-progress" id="heroProg" hidden aria-hidden="true"><i id="heroBar"></i></div>
         <p class="status" id="status" role="status" aria-live="polite"></p>
         <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy">Never stored on servers</a></div>
       </div>
@@ -475,6 +496,21 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
         <li><b>Evolve</b><span>Update your resume and your Career DNA grows with you.</span></li>
         <li class="step-cta"><span>It starts with step 1, and takes about 20 seconds.</span><a class="btn btn-primary" href="#try">Build my Career DNA</a></li>
       </ol>
+    </div>
+  </section>
+
+  <section class="block" id="tailor">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Tailor my DNA: your resume, shaped for the job you want.</h2>
+        <p class="lede">Pick a role or paste a job posting. Trazerr rebuilds your resume around your real evidence, shows your fit before and after, and never adds anything you haven't done.</p>
+      </div>
+      <ol class="trio">
+        <li><b>Choose the role</b><span>One of your suggested directions, any job title, or a pasted posting.</span></li>
+        <li><b>Confirm your skills</b><span>Verified skills are pre-checked. Inferred ones are only added if you say they're true.</span></li>
+        <li><b>Download your resume</b><span>Fill in the marked blanks with real details, then save it as Word or PDF.</span></li>
+      </ol>
+      <div class="actions" style="margin-top:28px"><button class="btn btn-primary" type="button" id="homeTailor">Tailor my resume</button><span class="hint-sm" id="homeTailorHint"></span></div>
     </div>
   </section>
 
@@ -775,13 +811,16 @@ function setProfile(p){
   refreshProfileUI();
 }
 function refreshProfileUI(){
-  const box = $("savedBox");
+  const box = $("welcome");
   const saved = loadSaved();
   if (saved) {
-    box.innerHTML = 'Your Career DNA is saved on this device. <button class="linkish" type="button" id="openSaved">Open it</button>';
+    box.innerHTML = "<span>Welcome back" + (saved.firstName ? ", " + esc(saved.firstName) : "") + '. Your Career DNA is saved on this device.</span><span class="welcome-actions"><button class="btn btn-primary btn-sm" type="button" id="openSaved">Open it</button><button class="btn btn-ghost btn-sm" type="button" id="welcomeTailor">Tailor my DNA</button></span>';
     box.hidden = false;
     $("openSaved").onclick = () => showProfile(saved);
+    $("welcomeTailor").onclick = () => openTailor(saved, {});
   } else box.hidden = true;
+  $("homeTailor").textContent = saved || (profile && !profile.isExample) ? "Tailor my resume" : "Build my Career DNA first";
+  $("homeTailorHint").textContent = saved || (profile && !profile.isExample) ? "" : "It takes about 20 seconds, then you can tailor for any role.";
 
   const real = profile && !profile.isExample ? profile : null;
   const chips = $("chips");
@@ -799,8 +838,20 @@ function refreshProfileUI(){
 }
 
 /* ---------- overlay ---------- */
+// The results screen gets its own browser history entry, so the phone's Back button closes it
+// instead of leaving the site.
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+if (history.state && history.state.trzOverlay) history.replaceState(null, "");
+let overlayInHistory = false, ignoreNextPop = false;
+window.addEventListener("popstate", () => {
+  if (ignoreNextPop) { ignoreNextPop = false; return; }
+  if ($("overlay").classList.contains("open")) { overlayInHistory = false; hideOverlay(); }
+});
 function openOverlay(title, html){
-  if (!$("overlay").classList.contains("open")) lastFocus = document.activeElement;
+  if (!$("overlay").classList.contains("open")) {
+    lastFocus = document.activeElement;
+    if (!overlayInHistory) { history.pushState({ trzOverlay: 1 }, ""); overlayInHistory = true; }
+  }
   $("oTitle").textContent = title;
   $("oBody").innerHTML = html;
   const o = $("overlay");
@@ -808,10 +859,14 @@ function openOverlay(title, html){
   document.body.style.overflow = "hidden";
   $("closeBtn").focus();
 }
-function closeOverlay(){
+function hideOverlay(){
   $("overlay").classList.remove("open");
   document.body.style.overflow = "";
-  if (lastFocus && lastFocus.focus) lastFocus.focus();
+  if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+}
+function closeOverlay(){
+  hideOverlay();
+  if (overlayInHistory) { overlayInHistory = false; ignoreNextPop = true; history.back(); }
 }
 // Optional steps advance every few seconds with a progress bar, so a long wait feels like progress.
 let loadTimer = null;
@@ -902,7 +957,7 @@ $("file").addEventListener("change", e => handleFile(e.target.files[0]));
 ["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", e => handleFile(e.dataTransfer.files[0]));
 
-const STEPS = ["Reading your resume…", "Finding the evidence…", "Looking for hidden talent…", "Writing your Career DNA…"];
+const STEPS = ["Step 1 of 4 · Reading your resume…", "Step 2 of 4 · Finding the evidence…", "Step 3 of 4 · Looking for hidden talent…", "Step 4 of 4 · Writing your Career DNA…"];
 $("analyzeBtn").addEventListener("click", async () => {
   const btn = $("analyzeBtn"), status = $("status");
   const pasted = $("paste").value.trim();
@@ -911,8 +966,16 @@ $("analyzeBtn").addEventListener("click", async () => {
   else if (pasted.length >= 80) payload = { kind: "text", text: pasted };
   if (!payload) { setStatus(status, "Choose a resume file or paste at least a few lines of your resume.", true); return; }
   btn.disabled = true; track("dna_started");
+  const label = btn.textContent; btn.textContent = "Building…";
+  const prog = $("heroProg"), bar = $("heroBar"); prog.hidden = false; bar.style.width = "8%";
   let i = 0; setStatus(status, STEPS[0]);
-  const ticker = setInterval(() => { i = Math.min(i + 1, STEPS.length - 1); setStatus(status, STEPS[i]); }, 4500);
+  // The bar creeps toward 92% over about 30 seconds, then jumps to full when the result arrives.
+  const started = Date.now();
+  const ticker = setInterval(() => {
+    const t = (Date.now() - started) / 1000;
+    i = Math.min(Math.floor(t / 5.5), STEPS.length - 1); setStatus(status, STEPS[i]);
+    bar.style.width = Math.min(92, 8 + t * 2.8) + "%";
+  }, 500);
   try {
     const data = await api("analyze", { body: payload });
     const p = normalize(data.profile);
@@ -926,7 +989,13 @@ $("analyzeBtn").addEventListener("click", async () => {
   } catch (e) {
     track("dna_failed");
     setStatus(status, e.message, true);
-  } finally { clearInterval(ticker); btn.disabled = false; }
+  } finally { clearInterval(ticker); btn.disabled = false; btn.textContent = label; bar.style.width = "100%"; setTimeout(() => { prog.hidden = true; bar.style.width = "0"; }, 400); }
+});
+
+$("homeTailor").addEventListener("click", () => {
+  const p = profile && !profile.isExample ? profile : loadSaved();
+  if (p) openTailor(p, {});
+  else { $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); $("drop").focus({ preventScroll: true }); }
 });
 
 /* ---------- example ---------- */
