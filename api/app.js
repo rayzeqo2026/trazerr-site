@@ -8,6 +8,8 @@
 //   ADZUNA_COUNTRY      optional: defaults to "us"
 //   KV_REST_API_URL     waitlist storage, added automatically when you connect Upstash Redis in Vercel Storage
 //   KV_REST_API_TOKEN   waitlist storage, added automatically with the line above
+//   STATS_KEY           optional: a long random password for viewing usage counts at
+//                       /api/app?action=stats&key=YOUR_STATS_KEY
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 
@@ -52,7 +54,7 @@ function getQuery(req) {
 
 // Simple per-visitor limit to protect your API budget (per server instance).
 const hits = new Map();
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, jobs: 60, waitlist: 10 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, jobs: 60, waitlist: 10, track: 200, stats: 30 };
 function limited(req, action) {
   const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
   const key = ip + ":" + action;
@@ -425,6 +427,79 @@ async function path(req, res) {
   return res.status(200).json({ plan });
 }
 
+/* ---------------- Storage (Upstash Redis REST) ---------------- */
+
+function redisConfig() {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  return url && token ? { url, token } : null;
+}
+
+// Runs several commands in one request. Returns one { result } or { error } per command.
+async function redisPipeline(cfg, commands) {
+  const r = await fetch(cfg.url.replace(/\/$/, "") + "/pipeline", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + cfg.token, "Content-Type": "application/json" },
+    body: JSON.stringify(commands)
+  });
+  if (!r.ok) throw new Error("Redis " + r.status + " " + (await r.text().catch(() => "")).slice(0, 200));
+  return r.json();
+}
+
+/* ---------------- Usage counts ---------------- */
+// Anonymous daily counters only: an event name and a count per day. No cookies, IP addresses,
+// names or resume content are stored.
+
+const EVENTS = new Set([
+  "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
+  "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined"
+]);
+const day = (d) => d.toISOString().slice(0, 10);
+
+async function track(req, res) {
+  const name = str(getBody(req)?.e, 40);
+  const cfg = redisConfig();
+  if (EVENTS.has(name) && cfg) {
+    try { await redisPipeline(cfg, [["HINCRBY", "trazerr:events:" + day(new Date()), name, 1]]); }
+    catch (e) { console.error("Usage count error", e.message); }
+  }
+  return res.status(204).end();
+}
+
+async function stats(req, res) {
+  const key = str(getQuery(req).key, 200);
+  const expected = process.env.STATS_KEY || "";
+  if (!expected || key.length !== expected.length || key !== expected) throw new UserError(404, "Unknown request.");
+  const cfg = redisConfig();
+  if (!cfg) throw new UserError(503, "Storage isn't connected yet.");
+  const days = Math.max(1, Math.min(90, parseInt(getQuery(req).days, 10) || 30));
+  const dates = Array.from({ length: days }, (_, i) => day(new Date(Date.now() - i * 86400000)));
+  const out = await redisPipeline(cfg, dates.map(d => ["HGETALL", "trazerr:events:" + d]));
+  const byDay = {}, totals = {};
+  dates.forEach((d, i) => {
+    const flat = out[i]?.result || [];
+    if (!flat.length) return;
+    byDay[d] = {};
+    for (let j = 0; j < flat.length; j += 2) {
+      const n = Number(flat[j + 1]) || 0;
+      byDay[d][flat[j]] = n;
+      totals[flat[j]] = (totals[flat[j]] || 0) + n;
+    }
+  });
+  const rate = (a, b) => (totals[b] ? Math.round((totals[a] || 0) / totals[b] * 100) + "%" : "n/a");
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).json({
+    period: days + " days",
+    totals,
+    funnel: {
+      "visits that started a Career DNA": rate("dna_started", "visit"),
+      "Career DNAs that succeeded": rate("dna_built", "dna_started"),
+      "built Career DNAs that saved a card": rate("card_saved", "dna_built")
+    },
+    byDay
+  });
+}
+
 /* ---------------- Waitlist ---------------- */
 
 async function waitlist(req, res) {
@@ -450,13 +525,13 @@ async function waitlist(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, waitlist };
+const ACTIONS = { analyze, jobs, match, jobdna, path, waitlist, track, stats };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = action === "jobs" ? "GET" : "POST";
+  const method = action === "jobs" || action === "stats" ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });

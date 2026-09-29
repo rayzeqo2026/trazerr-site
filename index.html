@@ -569,6 +569,7 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
       <p>If you choose to save your Career DNA, it's stored in this browser only. It never leaves your device except when you ask for a fit check or a path, and you can remove it at any time from your results.</p>
       <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
       <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
+      <p>Career DNA cards are made on your device and never uploaded. To improve Trazerr, we count anonymous events, like how many Career DNAs are built each day. Those counts include no cookies, names, IP addresses or resume content.</p>
       </div>
     </div>
   </section>
@@ -614,6 +615,15 @@ function ago(d){
   const m = Math.floor(days / 30); return m === 1 ? "1 month ago" : m + " months ago";
 }
 function snippet(t, n){ t = String(t || "").replace(/\s+/g, " ").trim(); return t.length > n ? t.slice(0, n).replace(/\s\S*$/, "") + "…" : t; }
+
+// Anonymous usage counts (event name only). See the privacy section.
+function track(e){
+  try {
+    const body = JSON.stringify({ e });
+    if (navigator.sendBeacon) navigator.sendBeacon(API + "?action=track", new Blob([body], { type: "application/json" }));
+    else fetch(API + "?action=track", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
+  } catch (err) {}
+}
 
 async function api(action, opts){
   opts = opts || {};
@@ -756,6 +766,7 @@ async function handleFile(file){
     }
     if (picked.kind === "text" && picked.text.trim().length < 80) { picked = null; setStatus(status, "That file doesn't contain enough readable text. Try a PDF or paste the text instead.", true); return; }
     $("fileName").textContent = name; $("fileName").hidden = false;
+    track("resume_file");
     setStatus(status, "");
   } catch (e) {
     picked = null;
@@ -776,7 +787,7 @@ $("analyzeBtn").addEventListener("click", async () => {
   if (picked) payload = picked;
   else if (pasted.length >= 80) payload = { kind: "text", text: pasted };
   if (!payload) { setStatus(status, "Choose a resume file or paste at least a few lines of your resume.", true); return; }
-  btn.disabled = true;
+  btn.disabled = true; track("dna_started");
   let i = 0; setStatus(status, STEPS[0]);
   const ticker = setInterval(() => { i = Math.min(i + 1, STEPS.length - 1); setStatus(status, STEPS[i]); }, 4500);
   try {
@@ -786,8 +797,10 @@ $("analyzeBtn").addEventListener("click", async () => {
     if ($("saveLocal").checked) saveProfile(p);
     setProfile(p);
     setStatus(status, "");
+    track("dna_built");
     showProfile(p);
   } catch (e) {
+    track("dna_failed");
     setStatus(status, e.message, true);
   } finally { clearInterval(ticker); btn.disabled = false; }
 });
@@ -813,7 +826,7 @@ const EXAMPLE = {
   ],
   unknowns: ["Deal sizes and contract values", "Experience managing a budget", "CRM or forecasting tools you use"]
 };
-$("exampleBtn").addEventListener("click", () => showProfile(normalize(EXAMPLE)));
+$("exampleBtn").addEventListener("click", () => { track("example_viewed"); showProfile(normalize(EXAMPLE)); });
 
 /* ---------- Career DNA view ---------- */
 function greeting(){ const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
@@ -859,6 +872,7 @@ function showProfile(p){
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
+  h += '<button class="btn btn-quiet" type="button" id="cardBtn">' + (ex ? "Save this example card" : "Save my Career DNA card") + "</button>";
   h += '</div><p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
 
   openOverlay(ex ? "Example Career DNA" : (p.fullName || "Your Career DNA"), h);
@@ -876,16 +890,140 @@ function showProfile(p){
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const s = $("saveBtn"); if (s) s.onclick = () => { if (saveProfile(p)) { $("oNote").textContent = "Saved on this device."; s.remove(); refreshProfileUI(); } else $("oNote").textContent = "This browser blocked saving. Private browsing mode can cause this."; };
+  $("cardBtn").onclick = () => saveCard(p, $("cardBtn"));
   const u = $("unsaveBtn"); if (u) u.onclick = () => { removeProfile(); refreshProfileUI(); $("oNote").textContent = "Removed from this device. It stays available until you close this page."; u.remove(); };
   const gf = $("goalForm"); if (gf) gf.onsubmit = (e) => { e.preventDefault(); planPath(p); };
 }
 function resetForm(){ picked = null; $("file").value = ""; $("fileName").hidden = true; $("paste").value = ""; setStatus($("status"), ""); }
 
+/* ---------- Career DNA card ---------- */
+// Drawn on the visitor's own device and saved or shared from there. Nothing is uploaded.
+function loadImg(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+function wrapLines(ctx, text, maxW, maxLines){
+  const words = String(text || "").split(/\s+/).filter(Boolean), lines = [];
+  let line = "";
+  for (const w of words) {
+    const test = line ? line + " " + w : w;
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; } else line = test;
+  }
+  if (line) lines.push(line);
+  if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = fitLine(ctx, lines[maxLines - 1] + "…", maxW); }
+  return lines;
+}
+function fitLine(ctx, text, maxW){
+  if (ctx.measureText(text).width <= maxW) return text;
+  let t = text.replace(/…$/, "");
+  while (t && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
+  return t.trimEnd() + "…";
+}
+function pill(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+async function drawCard(p){
+  const W = 1080, H = 1350, M = 72, CW = W - M * 2;
+  const serif = '"Newsreader", Georgia, serif', sans = '"Instrument Sans", system-ui, sans-serif';
+  try { await Promise.all([document.fonts.load("500 72px Newsreader"), document.fonts.load('600 28px "Instrument Sans"'), document.fonts.load('400 28px "Instrument Sans"')]); } catch (e) {}
+  const [bg, logo] = await Promise.all([loadImg("/img/career-dna-1280.jpg").catch(() => null), loadImg("/logo.png").catch(() => null)]);
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
+  if (bg) {
+    const bh = 720, scale = Math.max(W / bg.width, bh / bg.height), sw = W / scale, sh = bh / scale;
+    ctx.globalAlpha = 0.6; ctx.drawImage(bg, (bg.width - sw) * 0.7, (bg.height - sh) * 0.5, sw, sh, 0, 0, W, bh); ctx.globalAlpha = 1;
+    let g = ctx.createLinearGradient(0, 0, 0, bh); g.addColorStop(0, "rgba(2,6,15,.35)"); g.addColorStop(0.55, "rgba(2,6,15,.7)"); g.addColorStop(1, "#02060F");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, bh);
+    g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(2,6,15,.85)"); g.addColorStop(0.6, "rgba(2,6,15,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, bh);
+  }
+  ctx.textBaseline = "alphabetic";
+  // header
+  if (logo) ctx.drawImage(logo, M - 6, 50, 64, 64);
+  ctx.fillStyle = "#fff"; ctx.font = "500 40px " + serif; ctx.fillText("Trazerr", M + 70, 96);
+  ctx.textAlign = "right"; ctx.font = "600 22px " + sans; ctx.fillStyle = "#9DB0FF";
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "4px";
+  ctx.fillText(p.isExample ? "EXAMPLE · CAREER DNA" : "CAREER DNA", W - M, 92);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+  ctx.textAlign = "left";
+  // name and headline
+  let y = 250;
+  ctx.fillStyle = "#fff"; ctx.font = "500 76px " + serif;
+  for (const l of wrapLines(ctx, p.fullName || "My Career DNA", CW, 2)) { ctx.fillText(l, M, y); y += 80; }
+  y += 6; ctx.font = "400 30px " + sans; ctx.fillStyle = "#D5DBE8";
+  const head = wrapLines(ctx, p.headline, CW, 4);
+  for (const l of head) { ctx.fillText(l, M, y); y += 44; }
+  // evidence score
+  if (p.evidenceScore !== null && p.evidenceScore !== undefined) {
+    y += 34; const cx = M + 48, cy = y + 44;
+    ctx.lineWidth = 10; ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.arc(cx, cy, 44, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "#5B7BFF"; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(cx, cy, 44, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p.evidenceScore / 100); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = "500 38px " + serif; ctx.textAlign = "center"; ctx.fillText(String(p.evidenceScore), cx, cy + 13); ctx.textAlign = "left";
+    ctx.font = "600 28px " + sans; ctx.fillText("Evidence score", M + 124, cy - 6);
+    ctx.font = "400 22px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("How specific and provable the resume is, out of 100", M + 124, cy + 28);
+    y = cy + 44;
+  }
+  const label = (t) => { ctx.font = "600 20px " + sans; ctx.fillStyle = "#9DB0FF"; if ("letterSpacing" in ctx) ctx.letterSpacing = "3px"; ctx.fillText(t, M, y); if ("letterSpacing" in ctx) ctx.letterSpacing = "0px"; };
+  const footerTop = H - 150;
+  // strengths
+  const dirs = p.directions.slice(0, 3);
+  const room = footerTop - (dirs.length ? 150 : 0) - (y + 64);
+  const strengths = p.strengths.slice(0, Math.max(0, Math.min(5, Math.floor(room / 80))));
+  if (strengths.length) {
+    y += 64; label("PROVEN STRENGTHS"); y += 22;
+    for (const st of strengths) {
+      y += 34;
+      if (st.level === "inferred") { ctx.strokeStyle = "#8FA5FF"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(M + 9, y - 9, 8, 0, Math.PI * 2); ctx.stroke(); }
+      else { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(M + 9, y - 9, 9, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "#fff"; ctx.font = "600 28px " + sans; ctx.fillText(fitLine(ctx, st.name, CW - 40), M + 36, y);
+      if (st.evidence) { ctx.fillStyle = "#AEB8CC"; ctx.font = "italic 400 22px " + serif; ctx.fillText(fitLine(ctx, st.evidence, CW - 40), M + 36, y + 32); }
+      y += 46;
+    }
+  }
+  // directions
+  if (dirs.length) {
+    y = Math.max(y + 40, footerTop - 150); label("WORTH EXPLORING"); y += 22;
+    ctx.font = "500 24px " + sans; let x = M;
+    for (const d of dirs) {
+      const t = fitLine(ctx, d.role, CW - 40), w = ctx.measureText(t).width + 40;
+      if (x + w > W - M) { x = M; y += 62; }
+      if (y > footerTop - 20) break;
+      ctx.setLineDash([6, 5]); ctx.strokeStyle = "#E0B25A"; ctx.lineWidth = 2; pill(ctx, x, y, w, 48, 24); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#fff"; ctx.fillText(t, x + 20, y + 32); x += w + 14;
+    }
+  }
+  // footer
+  ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(M, H - 110, CW, 1);
+  ctx.font = "400 22px " + sans; ctx.fillStyle = "#98A3BA"; ctx.fillText("Every strength is backed by evidence from the resume.", M, H - 60);
+  ctx.textAlign = "right"; ctx.font = "600 24px " + sans; ctx.fillStyle = "#9DB0FF"; ctx.fillText("trazerr.com", W - M, H - 60); ctx.textAlign = "left";
+  return new Promise(res => c.toBlob(res, "image/png"));
+}
+
+async function saveCard(p, btn){
+  const note = $("oNote"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Making your card…";
+  try {
+    const blob = await drawCard(p);
+    const name = "Trazerr Career DNA" + (p.fullName ? " - " + p.fullName.replace(/[^\w .-]/g, "") : "") + ".png";
+    const file = new File([blob], name, { type: "image/png" });
+    track("card_saved");
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: "My Career DNA", text: "My Career DNA, built by Trazerr: https://www.trazerr.com" }); }
+      catch (e) { if (e.name !== "AbortError") throw e; }
+    } else {
+      const url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      note.textContent = "Your card was saved as an image. It was made on this device and never uploaded.";
+    }
+  } catch (e) {
+    note.textContent = "The card couldn't be made in this browser. Try another browser, or use a screenshot.";
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+
 /* ---------- career path ---------- */
 async function planPath(p){
   const goal = $("goalInput").value.trim(), st = $("goalStatus"), btn = $("goalBtn");
   if (goal.length < 2) { setStatus(st, "Type the role you'd like to reach.", true); return; }
-  btn.disabled = true; setStatus(st, "Mapping your path…"); $("pathOut").innerHTML = "";
+  btn.disabled = true; setStatus(st, "Mapping your path…"); $("pathOut").innerHTML = ""; track("path_planned");
   try {
     const { plan } = await api("path", { body: { profile: p, goal } });
     setStatus(st, "");
@@ -912,6 +1050,7 @@ async function runJobSearch(fresh){
   if (fresh) {
     jobState = { q: $("jq").value.trim(), where: $("jw").value.trim(), remote: $("jr").checked, page: 1, list: [] };
     if (!jobState.q) { setStatus(st, "Enter a job title or keyword to search.", true); $("jq").focus(); return; }
+    track("job_search");
   } else jobState.page += 1;
   btn.disabled = true; more.disabled = true;
   setStatus(st, fresh ? "Searching live openings…" : "Loading more…");
@@ -963,6 +1102,7 @@ async function checkFit(job){
     $("goBuild").onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
     return;
   }
+  track("fit_check");
   openOverlay(job.title || "Fit check", loadingHTML("Comparing this job with your Career DNA…"));
   try {
     const { fit } = await api("match", { body: { profile: p, job: { title: job.title, company: job.company, location: job.location, description: job.description } } });
@@ -1014,7 +1154,7 @@ function renderFit(job, fit){
 $("jobdnaBtn").addEventListener("click", async () => {
   const text = $("postingText").value.trim(), st = $("jobdnaStatus"), btn = $("jobdnaBtn");
   if (text.length < 120) { setStatus(st, "Paste the full job posting, at least a few lines.", true); return; }
-  btn.disabled = true; setStatus(st, "Reading the posting…");
+  btn.disabled = true; setStatus(st, "Reading the posting…"); track("job_dna");
   try {
     const { dna } = await api("jobdna", { body: { text } });
     setStatus(st, "");
@@ -1052,6 +1192,7 @@ $("waitlist").addEventListener("submit", async e => {
   try {
     const data = await api("waitlist", { body: { email, company: $("wlCompany").value } });
     e.target.reset();
+    if (!data.already) track("waitlist_joined");
     setStatus(st, data.already ? "You're already on the waitlist. We'll be in touch." : "You're on the waitlist. We'll email you when early access opens.");
   } catch (err) { setStatus(st, err.message, true); }
   finally { btn.disabled = false; }
@@ -1070,6 +1211,7 @@ syncHead();
 
 /* ---------- start ---------- */
 setProfile(loadSaved());
+track("visit");
 </script>
 </body>
 </html>
