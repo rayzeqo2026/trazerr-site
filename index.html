@@ -342,6 +342,16 @@ section#tailor .hint-sm{color:#AEB8CC}
 .score .tip{color:var(--ink); margin-top:10px}
 @media (max-width:480px){ .score{grid-template-columns:1fr; justify-items:start} }
 .o-sec{margin-top:40px}
+/* "Was this accurate?" */
+.fb{margin-top:36px; padding:16px 18px; background:var(--surface); border:1px solid var(--line); border-radius:12px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px}
+.fb > span{font-weight:600}
+.fb-btn{font:inherit; font-size:20px; line-height:1; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:8px 12px; cursor:pointer}
+.fb-btn:hover{border-color:var(--blue)}
+.fb-btn[aria-pressed="true"]{border-color:var(--blue); background:var(--blue-soft)}
+.fb-more{flex-basis:100%; display:grid; gap:8px}
+.fb-more textarea{min-height:72px}
+.fb-more .btn{justify-self:start}
+.fb-done{flex-basis:100%; color:var(--ink-2); font-size:14.5px; margin:0}
 /* DNA band at the top of Career DNA results: the same personal strand as the share card */
 .o-hero{background:var(--navy); color:#fff; border-radius:16px; padding:26px 26px 18px; border-top:3px solid var(--gold)}
 .o-hero .greet{color:#AEB8CC}
@@ -708,7 +718,7 @@ section#tailor .hint-sm{color:#AEB8CC}
       <p>If you choose to save your Career DNA, it's stored in this browser only, along with your resume so you can tailor it later. Neither leaves your device except when you ask for a fit check, a path or a tailored resume, and you can remove both at any time from your results.</p>
       <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
       <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
-      <p>Career DNA cards are made on your device and never uploaded. To improve Trazerr, we count anonymous events, like how many Career DNAs are built each day. Those counts include no cookies, names, IP addresses or resume content.</p>
+      <p>Career DNA cards are made on your device and never uploaded. To improve Trazerr, we count anonymous events, like how many Career DNAs are built each day. Those counts include no cookies, names, IP addresses or resume content. If you answer "Was this accurate?", we keep your answer and any comment you type, but not your resume.</p>
       <p><a href="/privacy.html">Read the full privacy policy</a> · <a href="/terms.html">Terms of use</a></p>
       </div>
     </div>
@@ -1102,6 +1112,7 @@ function showProfile(p){
     h += '<div class="o-sec" id="pathSec"><h3>Plan a path</h3><p class="hint">Name a role you\'d like to reach and Trazerr maps the steps from here.</p>';
     h += '<form class="goal-form" id="goalForm" novalidate><input class="input" id="goalInput" type="text" placeholder="e.g. Hotel general manager" aria-label="Goal role"><button class="btn btn-primary" type="submit" id="goalBtn">Plan my path</button></form><p class="status" id="goalStatus" role="status" aria-live="polite"></p><div id="pathOut"></div></div>';
   }
+  if (!ex) h += feedbackHTML("dna");
   h += '<div class="o-foot">';
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
   else {
@@ -1124,6 +1135,7 @@ function showProfile(p){
     runJobSearch(true);
   });
   body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
+  if (!ex) wireFeedback("dna", "");
   const tb = $("nxTailor"); if (tb) tb.onclick = () => openTailor(p, {});
   const np = $("nxPath"); if (np) np.onclick = () => { $("pathSec").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); $("goalInput").focus({ preventScroll: true }); };
   const dc = $("dnaCanvas"); if (dc) { const ctx = dc.getContext("2d"); drawHelix(ctx, p, 40, dc.width - 40, dc.height / 2); }
@@ -1499,10 +1511,12 @@ function renderTailored(){
   if (r.blanks.length) h += '<div class="o-sec"><h3>Fill in the blanks</h3><p class="hint">Add only real details. Anything you leave empty stays marked in brackets so you don\'t miss it.</p><div class="blanks">' +
     r.blanks.map((b, i) => '<div><label for="tb' + i + '">' + esc(b.question) + ' <span style="color:var(--brass)">[' + esc(b.placeholder) + ']</span></label><input class="input" id="tb' + i + '" data-ph="' + esc(b.placeholder) + '" type="text" maxlength="80"></div>').join("") + "</div></div>";
   h += '<div class="o-sec"><h3>Your tailored resume</h3><div class="paper" id="paper">' + resumeBody(r, "html") + "</div></div>";
+  h += feedbackHTML("tailor");
   h += '<div class="o-foot"><button class="btn btn-primary" type="button" id="tWord">Download Word file</button><button class="btn btn-quiet" type="button" id="tPdf">Save as PDF</button><button class="btn btn-quiet" type="button" id="tCopy">Copy text</button><button class="btn btn-quiet" type="button" id="tAgain">Tailor for another role</button></div>';
   h += '<p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
   openOverlay("Tailor my DNA", h);
   const body = $("oBody");
+  wireFeedback("tailor", st.role);
   body.querySelectorAll("[data-ph]").forEach(inp => inp.oninput = () => { st.values[inp.dataset.ph] = inp.value; $("paper").innerHTML = resumeBody(r, "html"); });
   const left = () => { const n = (resumeText(r).match(/\[[^\]]{1,60}\]/g) || []).length; return n ? " " + n + (n === 1 ? " blank is" : " blanks are") + " still marked in [brackets]." : ""; };
   const fileBase = (r.name || "Resume") + " - " + (st.role || "tailored");
@@ -1526,6 +1540,39 @@ function renderTailored(){
     catch (e) { $("oNote").textContent = "Your browser blocked copying. Use Download Word file instead."; }
   };
   $("tAgain").onclick = () => { st.role = ""; st.posting = ""; showTailorStart(); };
+}
+
+/* ---------- feedback ---------- */
+function feedbackHTML(on){
+  return '<div class="fb" data-fb="' + on + '"><span>Was this accurate?</span>' +
+    '<button class="fb-btn" type="button" data-rate="up" aria-pressed="false" aria-label="Yes, it was accurate">👍</button>' +
+    '<button class="fb-btn" type="button" data-rate="down" aria-pressed="false" aria-label="No, something was off">👎</button>' +
+    '<div class="fb-more" hidden><label class="hint" for="fbText-' + on + '">Tell us more (optional). What was off, or what helped? Please leave out personal details.</label>' +
+    '<textarea class="input" id="fbText-' + on + '" maxlength="1000"></textarea><button class="btn btn-quiet btn-sm" type="button" data-fbsend>Send</button></div>' +
+    '<p class="fb-done" role="status" aria-live="polite"></p></div>';
+}
+function wireFeedback(on, role){
+  const box = document.querySelector('[data-fb="' + on + '"]');
+  if (!box) return;
+  let rating = "";
+  const done = box.querySelector(".fb-done");
+  box.querySelectorAll("[data-rate]").forEach(b => b.onclick = async () => {
+    if (rating) return;
+    rating = b.dataset.rate;
+    box.querySelectorAll("[data-rate]").forEach(x => { x.setAttribute("aria-pressed", String(x === b)); x.disabled = true; });
+    try { await api("feedback", { body: { on, rating, role: role || "" } }); } catch (e) {}
+    done.textContent = rating === "up" ? "Thanks! Glad it was useful." : "Thanks for telling us. What was off?";
+    box.querySelector(".fb-more").hidden = false;
+  });
+  box.querySelector("[data-fbsend]").onclick = async () => {
+    const comment = box.querySelector("textarea").value.trim();
+    if (!comment) { done.textContent = "Type a few words first, or just close this screen."; return; }
+    const btn = box.querySelector("[data-fbsend]"); btn.disabled = true;
+    try {
+      await api("feedback", { body: { on, rating, role: role || "", comment, followup: true } });
+      box.querySelector(".fb-more").hidden = true; done.textContent = "Thank you. We read every comment.";
+    } catch (e) { done.textContent = e.message; btn.disabled = false; }
+  };
 }
 
 /* ---------- career path ---------- */
@@ -1654,10 +1701,12 @@ function renderFit(job, fit){
     fit.tips.forEach(t => { h += '<li><i class="mark inferred" aria-hidden="true"></i><span class="why">' + esc(t) + "</span></li>"; });
     h += "</ul></div>";
   }
+  h += feedbackHTML("fit");
   h += '<div class="o-foot">' + (job.url ? '<a class="btn btn-primary" href="' + esc(safeUrl(job.url)) + '" target="_blank" rel="noopener noreferrer">View and apply</a>' : "") + '<button class="btn btn-quiet" type="button" id="fitTailorBtn">Tailor my DNA for this job</button><button class="btn btn-quiet" type="button" data-close>Back to jobs</button></div>';
   openOverlay(job.title || "Fit check", h);
   animateRing("fit", toScore(fit.fitScore));
   $("fitTailorBtn").onclick = () => openTailor(profile, { role: job.title, posting: job.description });
+  wireFeedback("fit", job.title);
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $("oBody").querySelectorAll("[data-w]").forEach(el => { el.style.width = el.dataset.w + "%"; });
   }));

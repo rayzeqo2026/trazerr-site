@@ -62,7 +62,7 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20 };
 const MEMORY_ONLY = new Set(["track", "jobs"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
@@ -115,6 +115,13 @@ const MAX_TOKENS = 16000;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// The model doesn't know today's date, and guesses an older year. Telling it keeps "Present",
+// years of experience and recent start dates right.
+function withToday(system) {
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+  return "Today's date is " + today + '. Treat "Present" or "Current" as today when working out how long someone has worked.\n\n' + system;
+}
+
 // Tries the main model, retries it once after a short pause, then tries the backup model.
 // Retries stop after about 20 seconds so the whole request fits in the server's time limit.
 async function askClaude(system, content) {
@@ -134,7 +141,7 @@ async function askClaude(system, content) {
       r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model, max_tokens: MAX_TOKENS, output_config: { effort: "low" }, system, messages: [{ role: "user", content }] })
+        body: JSON.stringify({ model, max_tokens: MAX_TOKENS, output_config: { effort: "low" }, system: withToday(system), messages: [{ role: "user", content }] })
       });
     } catch (e) {
       console.error("Anthropic network error", model, e.message);
@@ -194,7 +201,7 @@ ${JSON_ONLY} Use exactly this shape:
   "fullName": "name as written on the resume, or empty string",
   "firstName": "first name, or empty string",
   "headline": "one sentence, max 32 words, describing who they are and what their record really shows",
-  "experience": "short phrase, max 6 words, e.g. '8+ years customer-facing'",
+  "experience": "short phrase, max 6 words, e.g. '8+ years customer-facing'. Work the years out from the dates in the resume up to today, not from a number the resume states",
   "stage": "short phrase, max 8 words, e.g. 'New to degree-level roles'",
   "location": "where the person lives now, as 'City, ST' in the US or 'City, Country' elsewhere, taken from the contact details (or the most recent job if there's no address); never a street address; empty string if unknown",
   "evidenceScore": 64,
@@ -555,6 +562,7 @@ How to tailor:
 - Lead each job with the bullets most relevant to the target role, and start bullets with a strong, plain verb and the result.
 - Shorten or merge bullets that don't matter for this role, but keep the facts accurate.
 - Each bullet's "from" is a short paraphrase of the original resume line it is based on.
+- Reword and reorder only. Don't add details, purposes, results, qualifiers or context the original line doesn't state. For example, don't turn "room adjustments" into "room rate adjustments", and don't add phrases like "to keep guests satisfied". If a bullet would be stronger with a missing detail, use a [placeholder] instead.
 - ${PLAIN}
 
 ${JSON_ONLY} Use exactly this shape:
@@ -665,6 +673,8 @@ async function tailor(req, res) {
     fitBefore: toScore(p.fitBefore), fitAfter: toScore(p.fitAfter)
   };
   if (!resume.experience.length) throw new UserError(502, "The tailored resume came back incomplete. Try again.");
+  const written = [resume.headline, resume.summary, ...resume.experience.flatMap(j => j.bullets.map(b => b.text))].join(" ");
+  resume.blanks = resume.blanks.filter(b => written.includes("[" + b.placeholder + "]"));
   if (body?.resume?.kind === "text") {
     const src = squash(body.resume.text);
     for (const j of resume.experience) {
@@ -702,7 +712,7 @@ async function redisPipeline(cfg, commands) {
 const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
-  "tailor_started", "tailor_built"
+  "tailor_started", "tailor_built", "feedback_up", "feedback_down"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
@@ -724,7 +734,8 @@ async function stats(req, res) {
   if (!cfg) throw new UserError(503, "Storage isn't connected yet.");
   const days = Math.max(1, Math.min(90, parseInt(getQuery(req).days, 10) || 30));
   const dates = Array.from({ length: days }, (_, i) => day(new Date(Date.now() - i * 86400000)));
-  const out = await redisPipeline(cfg, dates.map(d => ["HGETALL", "trazerr:events:" + d]));
+  const out = await redisPipeline(cfg, [...dates.map(d => ["HGETALL", "trazerr:events:" + d]), ["LRANGE", "trazerr:feedback", 0, 49]]);
+  const recentFeedback = (out[dates.length]?.result || []).map(x => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
   const byDay = {}, totals = {};
   dates.forEach((d, i) => {
     const flat = out[i]?.result || [];
@@ -736,6 +747,7 @@ async function stats(req, res) {
       totals[flat[j]] = (totals[flat[j]] || 0) + n;
     }
   });
+  totals.feedback_total = (totals.feedback_up || 0) + (totals.feedback_down || 0);
   const rate = (a, b) => (totals[b] ? Math.round((totals[a] || 0) / totals[b] * 100) + "%" : "n/a");
   res.setHeader("Cache-Control", "no-store");
   return res.status(200).json({
@@ -744,10 +756,37 @@ async function stats(req, res) {
     funnel: {
       "visits that started a Career DNA": rate("dna_started", "visit"),
       "Career DNAs that succeeded": rate("dna_built", "dna_started"),
-      "built Career DNAs that saved a card": rate("card_saved", "dna_built")
+      "built Career DNAs that saved a card": rate("card_saved", "dna_built"),
+      "feedback that was positive": rate("feedback_up", "feedback_total")
     },
+    recentFeedback,
     byDay
   });
+}
+
+/* ---------------- Feedback ---------------- */
+// "Was this accurate?" answers from the results screens: which screen, thumbs up or down, and an
+// optional comment. No resume content is stored. The newest 2,000 are kept.
+
+async function feedback(req, res) {
+  const body = getBody(req) || {};
+  const on = ["dna", "tailor", "fit"].includes(body.on) ? body.on : "";
+  const rating = body.rating === "up" || body.rating === "down" ? body.rating : "";
+  if (!on || !rating) throw new UserError(400, "That feedback couldn't be read.");
+  const cfg = redisConfig();
+  if (!cfg) throw new UserError(503, "Feedback isn't switched on yet. Email hello@trazerr.com instead.");
+  const entry = { at: new Date().toISOString(), on, rating, comment: str(body.comment, 1000), role: str(body.role, 100) };
+  const today = "trazerr:events:" + day(new Date());
+  try {
+    // A follow-up comment for a rating already counted is stored but not counted again.
+    const cmds = [["LPUSH", "trazerr:feedback", JSON.stringify(entry)], ["LTRIM", "trazerr:feedback", 0, 1999]];
+    if (!body.followup) cmds.push(["HINCRBY", today, "feedback_" + rating, 1]);
+    await redisPipeline(cfg, cmds);
+  } catch (e) {
+    console.error("Feedback storage error", e.message);
+    throw new UserError(502, "That didn't go through. Try again in a moment.");
+  }
+  return res.status(200).json({ ok: true });
 }
 
 /* ---------------- Waitlist ---------------- */
@@ -775,7 +814,7 @@ async function waitlist(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, waitlist, track, stats };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
