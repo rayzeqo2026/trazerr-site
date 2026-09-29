@@ -558,6 +558,52 @@ section#tailor .hint-sm{color:#AEB8CC}
 .seqlay-bar i{display:block; height:100%; width:0; background:linear-gradient(90deg, #5CA8FF, var(--gold)); transition:width .5s ease}
 .seqlay-hide{position:absolute; right:20px; bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:3; color:#98A3BA; background:none; border:0; font:14px var(--sans); text-decoration:underline; text-underline-offset:3px; cursor:pointer}
 .seqlay-count{position:absolute; left:20px; bottom:calc(20px + env(safe-area-inset-bottom,0px)); z-index:3; color:#7F8AA3; font-size:12.5px; letter-spacing:.14em; text-transform:uppercase}
+/* Lower half: numbered chapters with oversized numerals, dark bands for the tools */
+section.chap{position:relative; overflow:hidden}
+.chap-num{position:absolute; right:-.04em; top:-.18em; font:italic 400 clamp(150px,22vw,340px)/1 var(--serif); color:rgba(176,122,40,.09); pointer-events:none; letter-spacing:-.04em; user-select:none}
+.chap .wrap{position:relative}
+.chapter{display:flex; align-items:center; gap:12px; font-size:12.5px; letter-spacing:.2em; text-transform:uppercase; font-weight:600; color:var(--gold-deep); margin-bottom:20px}
+.chapter b{font:italic 500 17px/1 var(--serif); letter-spacing:0; color:inherit; padding-right:12px; border-right:1px solid currentColor}
+section#tailor .chapter, section#employers .chapter{color:var(--gold)}
+section#tailor .chap-num, section#employers .chap-num{color:rgba(224,176,112,.08)}
+section#employers{background:linear-gradient(180deg, var(--navy), #0E1B33); color:#fff; border-top:0}
+section#employers h2{color:#fff}
+section#employers .lede{color:#C9D1E3}
+section#employers .fit, section#employers .sheet{color:var(--ink); border-color:transparent; box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+section#employers .sheet h2{color:var(--ink)}
+section#paths{border-top:0}
+.ba{margin-top:28px; max-width:560px; margin-left:auto; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:18px 20px}
+.ba small{color:var(--gold); font-size:12.5px; font-weight:600; letter-spacing:.04em}
+.ba-row{display:grid; grid-template-columns:56px 1fr 34px; gap:12px; align-items:center; margin-top:10px; font-size:14px; color:#AEB8CC}
+.ba-row b{font:500 22px/1 var(--serif); color:#fff; text-align:right}
+.ba-bar{height:6px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden}
+.ba-bar i{display:block; height:100%; width:var(--w); background:#8FA5C8; border-radius:3px}
+.ba-bar.gold i{background:linear-gradient(90deg, #5CA8FF, var(--gold))}
+.ba p{color:#AEB8CC; font-size:14px; margin-top:12px}
+@media (max-width:900px){ .ba{margin-left:0} }
+#jobsEmpty{text-align:left; border-style:solid; border-color:var(--line); background:var(--surface); padding:22px 24px}
+#jobsEmpty p{color:var(--ink-2)}
+#jobsEmpty p b{color:var(--ink)}
+.try-q{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+.manifesto{font-family:var(--serif); font-size:clamp(30px,4.2vw,58px); line-height:1.1; letter-spacing:-.02em; max-width:22ch; color:var(--ink)}
+.manifesto em{color:var(--gold-deep)}
+.principles{grid-template-columns:repeat(4,1fr); gap:32px; margin-top:56px}
+.principles div{background:none; border:0; border-top:2px solid var(--ink); border-radius:0; padding:18px 0 0}
+.roadmap{display:grid; grid-template-columns:1fr 1fr; gap:24px 48px; margin-top:56px; padding-top:32px; border-top:1px solid var(--line)}
+.roadmap h3{font-size:14px; font-family:var(--sans); font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2)}
+.pills{list-style:none; padding:0; margin:14px 0 0; display:flex; flex-wrap:wrap; gap:8px}
+.pills li{padding:8px 14px; border-radius:999px; background:var(--navy); color:#fff; font-size:14.5px; font-weight:500}
+.pills li::before{content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:#3DDC97; margin-right:8px; vertical-align:1px}
+.pills.soon li{background:transparent; color:var(--ink); border:1px dashed var(--ink-2)}
+.pills.soon li::before{background:var(--gold)}
+@media (max-width:1000px){ .principles{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .principles{grid-template-columns:1fr} }
+@media (max-width:760px){ .roadmap{grid-template-columns:1fr} .principles{gap:24px; margin-top:40px} }
+.privacy-line{border-top:1px solid var(--line-soft); padding:28px 0}
+.privacy-line .wrap{display:flex; gap:14px; align-items:flex-start}
+.privacy-line svg{width:22px; height:22px; flex:none; color:var(--gold-deep); margin-top:2px}
+.privacy-line p{color:var(--ink-2); font-size:15px; max-width:95ch}
+.privacy-line b{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none !important; animation:none !important} }
 </style>
 </head>
@@ -694,11 +740,19 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="block" id="tailor">
+  <section class="block chap" id="tailor">
+    <span class="chap-num" aria-hidden="true">01</span>
     <div class="wrap">
+      <p class="chapter"><b>01</b>Tailor my DNA</p>
       <div class="sec-head">
         <h2>Tailor my DNA: your resume, shaped for the job you want.</h2>
         <p class="lede">Pick a role or paste a job posting. Trazerr rebuilds your resume around your real evidence, shows your fit before and after, and never adds anything you haven't done.</p>
+      </div>
+      <div class="ba" aria-label="Example: fit before and after tailoring">
+        <small>Example · Dana's fit for Sales team lead</small>
+        <div class="ba-row"><span>Before</span><div class="ba-bar"><i style="--w:61%"></i></div><b>61</b></div>
+        <div class="ba-row"><span>After</span><div class="ba-bar gold"><i style="--w:84%"></i></div><b>84</b></div>
+        <p>Same experience, told for the role. Nothing added that she hasn't done.</p>
       </div>
       <ol class="trio">
         <li><b>Choose the role</b><span>One of your suggested directions, any job title, or a pasted posting.</span></li>
@@ -709,8 +763,10 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="block" id="jobs">
+  <section class="block chap" id="jobs">
+    <span class="chap-num" aria-hidden="true">02</span>
     <div class="wrap">
+      <p class="chapter"><b>02</b>Live jobs</p>
       <div class="sec-head">
         <h2>Find jobs, then see how you fit.</h2>
         <p class="lede">Search live openings. With your Career DNA saved, every job gets a fit check that shows what you already prove, what's missing, and how to apply well.</p>
@@ -723,7 +779,10 @@ section#tailor .hint-sm{color:#AEB8CC}
       <label class="check"><input type="checkbox" id="jr">Remote jobs only</label>
       <div class="chips" id="chips" hidden></div>
       <p class="status" id="jobsStatus" role="status" aria-live="polite"></p>
-      <div class="empty" id="jobsEmpty">Search above to see live openings.</div>
+      <div class="empty" id="jobsEmpty">
+        <p><b>Try a search.</b> Or build your Career DNA first, and Trazerr suggests searches that fit you, near where you live.</p>
+        <div class="try-q"><button class="chip" type="button" data-q="Project manager">Project manager</button><button class="chip" type="button" data-q="Registered nurse">Registered nurse</button><button class="chip" type="button" data-q="Customer success">Customer success</button><button class="chip" type="button" data-q="Data analyst">Data analyst</button><button class="chip" type="button" data-q="Sales manager">Sales manager</button></div>
+      </div>
       <ul class="job-list" id="jobList"></ul>
       <div class="jobs-foot" id="jobsFoot" hidden>
         <span id="jobsSource"></span>
@@ -732,39 +791,10 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="block" id="dna">
+  <section class="block chap" id="paths">
+    <span class="chap-num" aria-hidden="true">03</span>
     <div class="wrap">
-      <div class="sec-head">
-        <h2>Evidence before inference.</h2>
-        <p class="lede">Every part of your Career DNA is marked by how sure we are, so Trazerr never pretends to know something it doesn't.</p>
-      </div>
-      <div class="levels">
-        <div class="level"><i class="mark verified" aria-hidden="true"></i><h3>Verified</h3><p>Stated directly in your resume.</p></div>
-        <div class="level"><i class="mark inferred" aria-hidden="true"></i><h3>Inferred</h3><p>A reasonable conclusion from your evidence, with the reasoning shown.</p></div>
-        <div class="level"><i class="mark potential" aria-hidden="true"></i><h3>Potential</h3><p>A direction worth exploring. Never presented as fact.</p></div>
-        <div class="level"><i class="mark unknown" aria-hidden="true"></i><h3>Not enough evidence</h3><p>What your resume doesn't show yet, so you know what to add.</p></div>
-      </div>
-      <div class="quote-card">
-        <div>
-          <blockquote>"You may be under-selling yourself."</blockquote>
-          <p style="margin-top:14px">A resume might say <em>Sales Representative</em>. The evidence underneath can show much more. Trazerr brings those signals forward without giving you a title you don't hold, and always shows you why.</p>
-        </div>
-        <div>
-          <p><b style="color:var(--ink)">Signals found in one sales resume</b></p>
-          <ul class="signals">
-            <li><i class="mark verified" aria-hidden="true"></i>Built a new territory from scratch</li>
-            <li><i class="mark verified" aria-hidden="true"></i>Trained four new hires</li>
-            <li><i class="mark verified" aria-hidden="true"></i>Hit 118% of quota two years running</li>
-            <li><i class="mark inferred" aria-hidden="true"></i>Early team-leadership ability</li>
-            <li><i class="mark potential" aria-hidden="true"></i>Worth exploring: sales enablement</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="block" id="paths">
-    <div class="wrap">
+      <p class="chapter"><b>03</b>Career paths</p>
       <div class="sec-head">
         <h2>Not just the next job. The one after that.</h2>
         <p class="lede">Name a goal and Trazerr maps what you've already proven, what's missing, and the steps in between. Build your Career DNA, then use "Plan a path" in your results.</p>
@@ -778,8 +808,10 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="block" id="employers">
+  <section class="block chap" id="employers">
+    <span class="chap-num" aria-hidden="true">04</span>
     <div class="wrap">
+      <p class="chapter"><b>04</b>Job DNA</p>
       <div class="sec-head">
         <h2>For employers: matches you can explain.</h2>
         <p class="lede">Paste a job posting and Trazerr builds its Job DNA: what the role truly requires, what it quietly expects, and the resume evidence that would prove a fit.</p>
@@ -809,53 +841,20 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="block" id="now">
+  <section class="block chap" id="about">
+    <span class="chap-num" aria-hidden="true">05</span>
     <div class="wrap">
-      <div class="sec-head">
-        <h2>What's live, and what's next.</h2>
-        <p class="lede">Trazerr is early, and honest about it. Here's what you can use today and what's on the way.</p>
-      </div>
-      <div class="two-col">
-        <div><h3>Available now <span class="live-tag">Live</span></h3>
-          <ul>
-            <li>Career DNA<small>Strengths, hidden talent, directions and gaps, from your resume.</small></li>
-            <li>Job search<small>Live openings, with suggested searches from your Career DNA.</small></li>
-            <li>Fit checks<small>An honest, explained fit score for any job, with application tips.</small></li>
-            <li>Career paths<small>A step-by-step route to the role you want.</small></li>
-            <li>Job DNA<small>A clear breakdown of what any posting really asks for.</small></li>
-          </ul>
-        </div>
-        <div><h3>Coming next</h3>
-          <ul>
-            <li>Accounts and Career Passport<small>Keep your Career DNA across devices, and own it.</small></li>
-            <li>Candidate discovery for employers<small>Find people by what they can prove, not keywords.</small></li>
-            <li>Interview practice<small>Role-specific practice based on your real experience.</small></li>
-            <li>The Trazerr network<small>A growing map connecting people and opportunity.</small></li>
-          </ul>
-        </div>
-      </div>
-      <div class="two-col" style="margin-top:56px">
-        <div class="not"><h3>Trazerr is not</h3>
-          <ul><li>A resume template shop</li><li>A keyword scanner</li><li>Another endless job board</li><li>A black box that can't explain a match</li><li>A tool that invents qualifications</li></ul>
-        </div>
-        <div><h3>Trazerr is</h3>
-          <ul><li>A Career DNA that grows with you</li><li>Evidence-based and always explainable</li><li>Built for candidates and employers</li><li>Honest about what it doesn't know</li><li>A growing network of people and opportunity</li></ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="block" id="about">
-    <div class="wrap">
-      <div class="sec-head">
-        <h2>Why Trazerr exists.</h2>
-        <p class="lede">Resumes undersell people, and hiring tools reward keywords over evidence. Trazerr reads a career the way a good mentor would: carefully, honestly, and on your side.</p>
-      </div>
+      <p class="chapter"><b>05</b>Why Trazerr exists</p>
+      <p class="manifesto">Resumes undersell people. Hiring tools reward keywords. Trazerr reads a career the way a good mentor would: <em>carefully, honestly, and on your side.</em></p>
       <div class="principles">
         <div><b>Evidence first</b><p>Every strength points to a line in your resume. Anything we infer is labeled, with the reasoning shown.</p></div>
-        <div><b>Honest about what we don't know</b><p>Gaps and unknowns are shown, not hidden. We never add a skill, title or number you didn't give us.</p></div>
+        <div><b>Honest about gaps</b><p>What your resume doesn't show is named, not hidden. We never add a skill, title or number you didn't give us.</p></div>
         <div><b>Yours to keep</b><p>We don't store your resume. Your Career DNA stays on your device unless you ask for something that needs it.</p></div>
-        <div><b>Talk to us</b><p>Questions, feedback, or a result that seemed off? Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything.</p></div>
+        <div><b>Talk to us</b><p>Questions, or a result that seemed off? Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything.</p></div>
+      </div>
+      <div class="roadmap">
+        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Career paths</li><li>Job DNA</li></ul></div>
+        <div><h3>Coming next</h3><ul class="pills soon"><li>Accounts and Career Passport</li><li>Candidate discovery for employers</li><li>Interview practice</li></ul></div>
       </div>
     </div>
   </section>
@@ -878,17 +877,10 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="block" id="privacy">
-    <div class="wrap privacy">
-      <h2>How we handle your data.</h2>
-      <div class="privacy-text">
-      <p>When you build your Career DNA, check a fit or plan a path, the text is sent over an encrypted connection to Claude, an AI model made by Anthropic, which returns the result. Trazerr does not keep a copy of your resume on its servers.</p>
-      <p>If you choose to save your Career DNA, it's stored in this browser only, along with your resume so you can tailor it later. Neither leaves your device except when you ask for a fit check, a path or a tailored resume, and you can remove both at any time from your results.</p>
-      <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
-      <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
-      <p>Career DNA cards are made on your device and never uploaded. To improve Trazerr, we count anonymous events, like how many Career DNAs are built each day. Those counts include no cookies, names, IP addresses or resume content. If you answer "Was this accurate?", we keep your answer and any comment you type, but not your resume.</p>
-      <p><a href="/privacy.html">Read the full privacy policy</a> · <a href="/terms.html">Terms of use</a></p>
-      </div>
+  <section class="privacy-line" id="privacy">
+    <div class="wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <p><b>Your resume is never stored on our servers.</b> It's sent securely to Claude, an AI model by Anthropic, to build your result. Your Career DNA stays in this browser unless you ask for something that needs it. <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms</a></p>
     </div>
   </section>
 </main>
@@ -1772,6 +1764,7 @@ async function planPath(p){
 
 /* ---------- jobs ---------- */
 $("jobsForm").addEventListener("submit", e => { e.preventDefault(); runJobSearch(true); });
+document.querySelectorAll("#jobsEmpty [data-q]").forEach(b => b.addEventListener("click", () => { $("jq").value = b.dataset.q; runJobSearch(true); }));
 $("moreBtn").addEventListener("click", () => runJobSearch(false));
 
 async function runJobSearch(fresh){
