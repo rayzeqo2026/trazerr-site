@@ -62,8 +62,8 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20 };
-const MEMORY_ONLY = new Set(["track", "jobs"]); // cheap requests; not worth a storage round trip
+const LIMITS = { pay: 40, analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20 };
+const MEMORY_ONLY = new Set(["track", "jobs", "pay"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -203,6 +203,7 @@ ${JSON_ONLY} Use exactly this shape:
   "headline": "one sentence, max 32 words, describing who they are and what their record really shows",
   "experience": "short phrase, max 6 words, e.g. '8+ years customer-facing'. Work the years out from the dates in the resume up to today, not from a number the resume states",
   "stage": "short phrase, max 8 words, e.g. 'New to degree-level roles'",
+  "currentRole": "the person's most recent job title, as written, or empty string",
   "location": "where the person lives now, as 'City, ST' in the US or 'City, Country' elsewhere, taken from the contact details (or the most recent job if there's no address); never a street address; empty string if unknown",
   "evidenceScore": 64,
   "scoreNote": "one sentence on the single change that would raise the score most",
@@ -222,6 +223,7 @@ function cleanProfile(p) {
     experience: str(p.experience, 60),
     stage: str(p.stage, 80),
     location: str(p.location, 80),
+    currentRole: str(p.currentRole, 100),
     evidenceScore: toScore(p.evidenceScore),
     scoreNote: str(p.scoreNote, 240),
     strengths: list(p.strengths, 7).map(s => ({
@@ -335,6 +337,50 @@ function simplifyTitle(q) {
   const core = words.filter(w => !SENIORITY.has(w));
   // Keep the full wording when dropping seniority would leave one vague word ("sales", "research").
   return (core.length >= 2 ? core : words).join(" ").trim();
+}
+
+/* ---------------- Earning range ---------------- */
+// Typical advertised pay for a role, from up to 50 live Adzuna listings within about 30 miles,
+// falling back to US-wide listings when there aren't enough nearby. Many listings carry Adzuna's
+// own salary estimate; the response says how many so the page can be upfront about it.
+
+async function adzunaSalaries(q, where) {
+  const country = (process.env.ADZUNA_COUNTRY || "us").toLowerCase();
+  const params = new URLSearchParams({ app_id: process.env.ADZUNA_APP_ID, app_key: process.env.ADZUNA_APP_KEY, results_per_page: "50", what: q, "content-type": "application/json" });
+  if (where) { params.set("where", where); params.set("distance", "50"); }
+  const r = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/1?${params}`);
+  if (!r.ok) throw new Error("Adzuna " + r.status);
+  const data = await r.json();
+  return list(data.results, 50).map(j => {
+    const lo = Number(j.salary_min) || 0, hi = Number(j.salary_max) || lo;
+    return lo > 0 ? { mid: (lo + hi) / 2, estimated: String(j.salary_is_predicted) === "1" } : null;
+  }).filter(Boolean);
+}
+
+async function pay(req, res) {
+  const q = getQuery(req);
+  const role = str(q.q, 100), where = str(q.where, 80);
+  if (!role) throw new UserError(400, "Missing role.");
+  if (!process.env.ADZUNA_APP_ID || !process.env.ADZUNA_APP_KEY) return res.status(200).json({ found: false });
+  const MIN = 8;
+  let scope = where, rows = [];
+  try {
+    if (where) rows = await adzunaSalaries(role, where);
+    if (rows.length < MIN) { rows = await adzunaSalaries(role, ""); scope = ""; }
+  } catch (e) {
+    console.error("Pay lookup failed:", e.message);
+    return res.status(200).json({ found: false });
+  }
+  res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=86400");
+  if (rows.length < MIN) return res.status(200).json({ found: false });
+  const mids = rows.map(r => r.mid).sort((a, b) => a - b);
+  const at = (f) => mids[Math.min(mids.length - 1, Math.max(0, Math.round(f * (mids.length - 1))))];
+  const k = (n) => Math.round(n / 1000) * 1000;
+  return res.status(200).json({
+    found: true, role, scope: scope || "US",
+    low: k(at(0.25)), typical: k(at(0.5)), high: k(at(0.75)),
+    listings: rows.length, estimatedShare: Math.round(rows.filter(r => r.estimated).length / rows.length * 100)
+  });
 }
 
 async function jobs(req, res) {
@@ -816,13 +862,13 @@ async function waitlist(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats };
+const ACTIONS = { analyze, jobs, pay, match, jobdna, path, tailor, feedback, waitlist, track, stats };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = action === "jobs" || action === "stats" ? "GET" : "POST";
+  const method = action === "jobs" || action === "stats" || action === "pay" ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });

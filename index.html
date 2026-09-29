@@ -342,6 +342,16 @@ section#tailor .hint-sm{color:#AEB8CC}
 .score .tip{color:var(--ink); margin-top:10px}
 @media (max-width:480px){ .score{grid-template-columns:1fr; justify-items:start} }
 .o-sec{margin-top:40px}
+/* Earning range */
+.pay{list-style:none; padding:0; margin:12px 0 0}
+.pay li{display:grid; grid-template-columns:1fr auto; gap:4px 16px; padding:16px 0; border-bottom:1px solid var(--line-soft); align-items:start}
+.pay small{grid-column:1 / -1; color:var(--ink-2); font-size:13.5px}
+.pay .who{font-weight:600}
+.pay .who span{display:block; font-weight:400; color:var(--ink-2); font-size:14px}
+.pay .amt{font-family:var(--serif); font-size:24px; text-align:right; white-space:nowrap}
+.pay .who span.up{display:inline-block; margin-top:4px; font-size:13px; font-weight:600; color:#1E6B3A; background:#E3F4E8; padding:2px 8px; border-radius:6px}
+.pay .row-actions{grid-column:1 / -1}
+.pay-note{margin-top:10px; font-size:13px; color:var(--ink-2)}
 /* "Was this accurate?" */
 .fb{margin-top:36px; padding:16px 18px; background:var(--surface); border:1px solid var(--line); border-radius:12px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px}
 .fb > span{font-weight:600}
@@ -815,6 +825,7 @@ function normalize(p){
     experience: String(p.experience || "").trim(),
     stage: String(p.stage || "").trim(),
     location: String(p.location || "").trim(),
+    currentRole: String(p.currentRole || "").trim(),
     evidenceScore: toScore(p.evidenceScore),
     scoreNote: String(p.scoreNote || "").trim(),
     strengths: arr(p.strengths).filter(s => s && s.name),
@@ -1112,6 +1123,7 @@ function showProfile(p){
     h += '<div class="o-sec" id="pathSec"><h3>Plan a path</h3><p class="hint">Name a role you\'d like to reach and Trazerr maps the steps from here.</p>';
     h += '<form class="goal-form" id="goalForm" novalidate><input class="input" id="goalInput" type="text" placeholder="e.g. Hotel general manager" aria-label="Goal role"><button class="btn btn-primary" type="submit" id="goalBtn">Plan my path</button></form><p class="status" id="goalStatus" role="status" aria-live="polite"></p><div id="pathOut"></div></div>';
   }
+  if (!ex) h += '<div class="o-sec" id="paySec" hidden><h3>Earning range near you</h3><p class="hint" id="payHint">Checking live job listings…</p><ul class="pay" id="payList"></ul><p class="pay-note">Typical advertised pay from live job listings, not a guarantee or an offer. Many listings show salary estimates from Adzuna rather than a posted figure. Ranges show the middle half of listings.</p></div>';
   if (!ex) h += feedbackHTML("dna");
   h += '<div class="o-foot">';
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
@@ -1135,7 +1147,7 @@ function showProfile(p){
     runJobSearch(true);
   });
   body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
-  if (!ex) wireFeedback("dna", "");
+  if (!ex) { wireFeedback("dna", ""); loadPay(p); }
   const tb = $("nxTailor"); if (tb) tb.onclick = () => openTailor(p, {});
   const np = $("nxPath"); if (np) np.onclick = () => { $("pathSec").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); $("goalInput").focus({ preventScroll: true }); };
   const dc = $("dnaCanvas"); if (dc) { const ctx = dc.getContext("2d"); drawHelix(ctx, p, 40, dc.width - 40, dc.height / 2); }
@@ -1540,6 +1552,39 @@ function renderTailored(){
     catch (e) { $("oNote").textContent = "Your browser blocked copying. Use Download Word file instead."; }
   };
   $("tAgain").onclick = () => { st.role = ""; st.posting = ""; showTailorStart(); };
+}
+
+/* ---------- earning range ---------- */
+// Today's role and the suggested directions, each with typical advertised pay near the person.
+// A role is shown only when there are enough listings with pay to be meaningful.
+async function loadPay(p){
+  const where = cleanLocation(p.location);
+  const roles = [];
+  if (p.currentRole) roles.push({ role: p.currentRole, today: true });
+  p.directions.slice(0, 3).forEach((d, i) => { if (!roles.some(r => r.role.toLowerCase() === d.role.toLowerCase())) roles.push({ role: d.role, dir: i }); });
+  if (!roles.length) return;
+  const sec = $("paySec"); if (!sec) return;
+  sec.hidden = false;
+  const results = await Promise.all(roles.map(r => api("pay", { query: { q: r.role, where } }).then(d => ({ ...r, d })).catch(() => ({ ...r, d: { found: false } }))));
+  if (!$("paySec")) return; // results screen was closed or replaced
+  const shown = results.filter(r => r.d.found);
+  if (!shown.length) { sec.hidden = true; return; }
+  const money = (n) => "$" + Math.round(n / 1000) + "k";
+  const today = shown.find(r => r.today);
+  let h = "";
+  shown.forEach(r => {
+    const place = r.d.scope === "US" ? "across the US" : "within about 30 miles of " + r.d.scope;
+    // Only compare with today's pay when both figures cover the same area.
+    const diff = today && !r.today && today.d.scope === r.d.scope ? r.d.typical - today.d.typical : 0;
+    h += '<li><div class="who">' + esc(r.role) + "<span>" + (r.today ? "Your role today" : "A direction your evidence supports") + "</span>" +
+      (diff >= 3000 ? '<span class="up">About ' + money(diff) + " more than today, typically</span>" : "") + '</div>' +
+      '<div class="amt">' + money(r.d.low) + "–" + money(r.d.high) + "</div>" +
+      "<small>Typical " + money(r.d.typical) + " · " + r.d.listings + " listings " + place + (r.d.estimatedShare >= 50 ? " · mostly estimated" : "") + "</small>" +
+      (r.today ? "" : '<span class="row-actions"><button class="btn btn-quiet btn-sm" type="button" data-paytailor="' + r.dir + '">Tailor my resume for this</button></span>') + "</li>";
+  });
+  $("payList").innerHTML = h;
+  $("payHint").textContent = where ? "What these roles typically pay near " + where + ", based on live job listings." : "What these roles typically pay, based on live job listings across the US.";
+  sec.querySelectorAll("[data-paytailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.paytailor].role }));
 }
 
 /* ---------- feedback ---------- */
