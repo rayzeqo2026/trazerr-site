@@ -262,7 +262,7 @@ function money(n) {
   return v >= 1000 ? "$" + Math.round(v / 1000) + "k" : "$" + Math.round(v);
 }
 
-async function searchAdzuna(q, where, page) {
+async function searchAdzuna(q, where, page, distanceKm) {
   const country = (process.env.ADZUNA_COUNTRY || "us").toLowerCase();
   const params = new URLSearchParams({
     app_id: process.env.ADZUNA_APP_ID,
@@ -272,6 +272,7 @@ async function searchAdzuna(q, where, page) {
   });
   if (q) params.set("what", q);
   if (where) params.set("where", where);
+  if (where && distanceKm) params.set("distance", String(distanceKm));
   const r = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?${params}`);
   if (!r.ok) {
     console.error("Adzuna error", r.status, (await r.text().catch(() => "")).slice(0, 300));
@@ -318,6 +319,17 @@ async function searchRemotive(q) {
   return { jobs, total: jobs.length, source: "remotive", hasMore: false };
 }
 
+// Drops seniority words and anything in brackets or after a slash, so a very specific
+// title can fall back to the role people actually post jobs under.
+const SENIORITY = new Set(["assistant", "associate", "senior", "sr", "junior", "jr", "lead", "head", "chief", "entry", "level", "entrylevel", "trainee", "intern", "i", "ii", "iii", "iv"]);
+function simplifyTitle(q) {
+  const base = String(q || "").toLowerCase().replace(/\(.*?\)/g, " ").split("/")[0].replace(/[^a-z0-9& -]/g, " ");
+  const words = base.split(/[\s-]+/).filter(Boolean);
+  const core = words.filter(w => !SENIORITY.has(w));
+  // Keep the full wording when dropping seniority would leave one vague word ("sales", "research").
+  return (core.length >= 2 ? core : words).join(" ").trim();
+}
+
 async function jobs(req, res) {
   const q = getQuery(req);
   const query = str(q.q, 100);
@@ -330,7 +342,20 @@ async function jobs(req, res) {
   let result, fellBack = false;
   if (hasAdzuna && !remote) {
     // If Adzuna is down or over its daily limit, show remote jobs rather than an error.
-    try { result = await searchAdzuna(query, where, page); }
+    try {
+      result = await searchAdzuna(query, where, page);
+      // Nothing nearby? Widen to about 30 miles, then try a simpler title ("Assistant Front Office
+      // Manager" -> "Front Office Manager"). The response says what was broadened so the page can explain.
+      if (page === 1 && !result.jobs.length && where) {
+        const wider = await searchAdzuna(query, where, 1, 50);
+        if (wider.jobs.length) result = { ...wider, hasMore: false, broadened: "area" };
+      }
+      const simpler = simplifyTitle(query);
+      if (page === 1 && !result.jobs.length && simpler && simpler !== query.toLowerCase()) {
+        const broader = await searchAdzuna(simpler, where, 1, where ? 50 : undefined);
+        if (broader.jobs.length) result = { ...broader, hasMore: false, broadened: "title", searchedFor: simpler };
+      }
+    }
     catch (e) { console.error("Adzuna unavailable, falling back to Remotive:", e.message); result = await searchRemotive(query); fellBack = true; }
   } else result = await searchRemotive(query);
   result.localSearch = hasAdzuna;

@@ -1574,6 +1574,8 @@ async function runJobSearch(fresh){
     const count = jobState.list.length;
     let msg = count ? "" : "No openings found. Try a broader title, or remove the location.";
     if (count && data.source === "adzuna" && jobState.where) msg = "Showing openings near " + jobState.where + ".";
+    if (count && data.broadened === "area") msg = "No exact matches right near " + jobState.where + ", so these are within about 30 miles.";
+    if (count && data.broadened === "title") msg = "No \u201c" + jobState.q + "\u201d openings " + (jobState.where ? "near " + jobState.where : "right now") + ", so here are \u201c" + data.searchedFor + "\u201d roles instead.";
     if (count && data.source === "remotive" && jobState.where && !jobState.remote) msg = "Showing remote openings. Local results for this location aren't available right now.";
     setStatus(st, msg);
   } catch (e) {
