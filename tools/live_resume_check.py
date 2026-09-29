@@ -12,6 +12,9 @@ CASES = [
   ("Victor Bernardo", "ResumeVictorBernardo_1.pdf", "Ophthalmic technician"),
   ("Julia Blanck", "ResumeJuliaBlanck.pdf", "Clinical research coordinator"),
   ("Nasir Wimberly", "ResumeNasirWimberly.pdf", "Pharmaceutical sales representative"),
+  ("Clyde McAllister", "ResumeClydeMcAllister.pdf", "Account executive"),
+  ("Eric Jiang", "Resume-Eric-Jiang-9-26.pdf", "Construction project manager"),
+  ("Hima Jagadish", "ResumeHimaJagadish.pdf", "Laboratory technician"),
 ]
 import os
 def find(folder, ending):
@@ -37,9 +40,13 @@ for name, ending, role in CASES:
     c, d, t = post("tailor", {"stage": "build", "role": role, "posting": "", "resume": resume, "confirmed": confirmed}); row["build"] = {"status": c, "seconds": round(t, 1), "error": d.get("error"), "resume": d.get("resume")}
     issues = []
     r = d.get("resume") or {}
+    if len(text.strip()) < 200:  # scanned image: no text to compare against, review by hand
+        row["accuracy_issues"] = ["scanned PDF: automatic check skipped, review by hand"]
+        report.append(row); print(name, "| DNA", row["dna"]["status"], row["dna"]["seconds"], "s | skills", row["skills"]["status"], "| build", row["build"]["status"], row["build"]["seconds"], "s | scanned: manual review"); sys.stdout.flush()
+        time.sleep(2); continue
     src = norm(text)
     for j in r.get("experience", []):
-        for field in ("company", "dates"):
+        for field in ("title", "company", "dates"):
             v = j.get(field, "")
             if v and norm(v) not in src: issues.append(f"{field} not in original: {v!r}")
         for b in j.get("bullets", []):
