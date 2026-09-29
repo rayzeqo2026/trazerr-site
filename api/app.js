@@ -175,7 +175,7 @@ async function askClaude(system, content) {
   throw lastErr || new UserError(502, "The analysis didn't finish. Try again in a moment.");
 }
 
-const PLAIN = "Write in plain, warm, everyday language for someone who may not work in tech. No jargon, no buzzwords.";
+const PLAIN = "Write in plain, warm, everyday language for someone who may not work in tech. No jargon, no buzzwords. Take the resume at its word and never suggest the person is untruthful: say what the resume shows or doesn't mention, never 'unverified', 'unproven', 'no evidence', 'claims' or 'can't be verified'.";
 const JSON_ONLY = "Return ONLY a JSON object, no markdown fences, no text before or after.";
 
 /* ---------------- Career DNA ---------------- */
