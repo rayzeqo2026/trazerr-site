@@ -200,6 +200,11 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 /* Jobs */
 .jobs-form{display:grid; grid-template-columns:2fr 1.4fr auto; gap:12px; margin-top:28px; align-items:end}
 .jobs-form .btn{min-height:50px}
+.jobs-form{align-items:start}
+.jobs-form > .btn{margin-top:26px}
+.jw-note{display:block; margin-top:6px; font-size:13.5px; color:var(--ink-2)}
+.jw-note .linkish{font-size:13.5px}
+@media (max-width:760px){ .jobs-form > .btn{margin-top:0} }
 @media (max-width:760px){ .jobs-form{grid-template-columns:1fr} }
 .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; align-items:center}
 .chips small{color:var(--ink-2); font-size:14px; margin-right:4px}
@@ -534,7 +539,7 @@ section#tailor .hint-sm{color:#AEB8CC}
       </div>
       <form class="jobs-form" id="jobsForm" novalidate>
         <div class="field"><label for="jq">Job title or keyword</label><input class="input" id="jq" type="search" placeholder="e.g. hotel operations manager" autocomplete="off"></div>
-        <div class="field"><label for="jw">Location</label><input class="input" id="jw" type="text" placeholder="City, state or ZIP" autocomplete="address-level2"></div>
+        <div class="field"><label for="jw">Location</label><input class="input" id="jw" type="text" placeholder="City, state or ZIP" autocomplete="address-level2"><small class="jw-note" id="jwNote" hidden>From your resume: <b id="jwNoteText"></b> · <button class="linkish" type="button" id="jwChange">Change</button></small></div>
         <button class="btn btn-primary" type="submit" id="jobsBtn">Search jobs</button>
       </form>
       <label class="check"><input type="checkbox" id="jr">Remote jobs only</label>
@@ -822,6 +827,16 @@ function setProfile(p){
   profile = p;
   refreshProfileUI();
 }
+// Job search looks near where the person lives, taken from their resume. It only fills an empty box
+// or one it filled before, so a location the person typed themselves is never overwritten.
+function cleanLocation(s){ return String(s || "").replace(/,?\s*(United States( of America)?|U\.?S\.?A?\.?)\s*$/i, "").trim(); }
+function applyHomeLocation(p){
+  const jw = $("jw"), loc = cleanLocation(p && !p.isExample ? p.location : "");
+  if (loc && (!jw.value.trim() || jw.dataset.auto === "1")) { jw.value = loc; jw.dataset.auto = "1"; }
+  $("jwNoteText").textContent = loc;
+  $("jwNote").hidden = !loc || jw.value !== loc;
+  return loc;
+}
 function refreshProfileUI(){
   const box = $("welcome");
   const saved = loadSaved();
@@ -842,11 +857,12 @@ function refreshProfileUI(){
     chips.querySelectorAll("[data-chip]").forEach(b => b.onclick = () => {
       const d = real.directions[+b.dataset.chip];
       $("jq").value = d.role;
-      if (!$("jw").value && real.location) $("jw").value = real.location;
+      applyHomeLocation(real);
       runJobSearch(true);
     });
   } else chips.hidden = true;
   $("postingFitBtn").hidden = !real;
+  applyHomeLocation(real);
 }
 
 /* ---------- overlay ---------- */
@@ -998,6 +1014,7 @@ $("analyzeBtn").addEventListener("click", async () => {
     setStatus(status, "");
     track("dna_built");
     showProfile(p);
+    if (applyHomeLocation(p) && p.directions.length && !$("jq").value.trim()) { $("jq").value = p.directions[0].role; runJobSearch(true); }
   } catch (e) {
     track("dna_failed");
     setStatus(status, e.message, true);
@@ -1009,6 +1026,9 @@ $("homeTailor").addEventListener("click", () => {
   if (p) openTailor(p, {});
   else { $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); $("drop").focus({ preventScroll: true }); }
 });
+
+$("jw").addEventListener("input", () => { delete $("jw").dataset.auto; $("jwNote").hidden = true; });
+$("jwChange").addEventListener("click", () => { const jw = $("jw"); delete jw.dataset.auto; $("jwNote").hidden = true; jw.select(); jw.focus(); });
 
 /* ---------- example ---------- */
 const EXAMPLE = {
@@ -1051,7 +1071,8 @@ function showProfile(p){
   if (!ex) {
     h += '<div class="o-sec"><h3>What to do next</h3><div class="next-grid">';
     h += '<button type="button" class="primary" id="nxTailor"><b>Tailor my DNA</b><span>Reshape your resume for a role you want, using only your real evidence.</span></button>';
-    if (p.directions.length) h += '<button type="button" data-findjobs="0"><b>Find jobs that fit</b><span>Live openings for ' + esc(p.directions[0].role) + ", with a fit check for each.</span></button>";
+    const near = cleanLocation(p.location);
+    if (p.directions.length) h += '<button type="button" data-findjobs="0"><b>Find jobs that fit</b><span>Live openings for ' + esc(p.directions[0].role) + (near ? " near " + esc(near) : "") + ", with a fit check for each.</span></button>";
     h += '<button type="button" id="nxPath"><b>Plan a path</b><span>Map the steps from where you are to a bigger goal.</span></button>';
     h += "</div></div>";
   }
@@ -1098,7 +1119,7 @@ function showProfile(p){
     const d = p.directions[+b.dataset.findjobs];
     closeOverlay();
     $("jq").value = d.role;
-    if (!$("jw").value && p.location) $("jw").value = p.location;
+    applyHomeLocation(p);
     $("jobs").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
     runJobSearch(true);
   });
@@ -1552,6 +1573,7 @@ async function runJobSearch(fresh){
     renderJobs(data);
     const count = jobState.list.length;
     let msg = count ? "" : "No openings found. Try a broader title, or remove the location.";
+    if (count && data.source === "adzuna" && jobState.where) msg = "Showing openings near " + jobState.where + ".";
     if (count && data.source === "remotive" && jobState.where && !jobState.remote) msg = "Showing remote openings. Local results for this location aren't available right now.";
     setStatus(st, msg);
   } catch (e) {

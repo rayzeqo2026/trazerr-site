@@ -196,7 +196,7 @@ ${JSON_ONLY} Use exactly this shape:
   "headline": "one sentence, max 32 words, describing who they are and what their record really shows",
   "experience": "short phrase, max 6 words, e.g. '8+ years customer-facing'",
   "stage": "short phrase, max 8 words, e.g. 'New to degree-level roles'",
-  "location": "city and state or country from the resume, or empty string",
+  "location": "where the person lives now, as 'City, ST' in the US or 'City, Country' elsewhere, taken from the contact details (or the most recent job if there's no address); never a street address; empty string if unknown",
   "evidenceScore": 64,
   "scoreNote": "one sentence on the single change that would raise the score most",
   "strengths": [ { "name": "2-4 words", "level": "verified or inferred", "evidence": "one sentence" } ],
