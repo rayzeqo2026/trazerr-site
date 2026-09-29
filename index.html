@@ -521,32 +521,39 @@ section#tailor .hint-sm{color:#AEB8CC}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Signature: the sequencer. A resume's evidence lifts off the page and is woven into a helix as you scroll. */
-.seq{position:relative; height:430vh; background:var(--night)}
-.seq-stage{position:sticky; top:0; height:100vh; height:100svh; overflow:hidden; color:#fff;
+.seq{position:relative; background:var(--night)}
+.seq-steps .sm-hide{display:inline}
+.seq-stage{position:relative; height:min(max(760px, 100vh), 960px); overflow:hidden; color:#fff;
   background:radial-gradient(1200px 700px at 70% 60%, rgba(0,102,224,.16), transparent 70%), radial-gradient(900px 600px at 15% 80%, rgba(224,176,112,.08), transparent 70%), var(--night)}
 .seq-stage canvas{position:absolute; inset:0; width:100%; height:100%}
 .grain::after{content:""; position:absolute; inset:0; pointer-events:none; opacity:.08; mix-blend-mode:overlay; z-index:2;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-.seq-caps{position:absolute; left:0; right:0; top:calc(68px + env(safe-area-inset-top,0px) + 20px); z-index:3; text-align:center; padding:0 20px; pointer-events:none}
+.seq-caps{position:absolute; left:0; right:0; top:calc(68px + env(safe-area-inset-top,0px) + 28px); z-index:3; text-align:center; padding:0 20px; pointer-events:none}
 .seq-kicker{color:var(--gold); font-size:12.5px; letter-spacing:.2em; text-transform:uppercase; font-weight:600}
-.seq-cap-wrap{display:grid; margin-top:10px}
-.seq-cap{grid-area:1/1; opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1)}
-.seq-cap.on{opacity:1; transform:none}
-.seq-cap h2{color:#fff; font-size:clamp(28px,4.4vw,54px); max-width:none; line-height:1.05; letter-spacing:-.02em}
-.seq-cap h2 em{font-style:italic; color:var(--gold)}
-.seq-cap p{color:#AEB7CB; font-size:clamp(15px,1.5vw,18px); margin-top:10px}
-.seq-rail{position:absolute; right:24px; top:50%; transform:translateY(-50%); z-index:3; list-style:none; margin:0; padding:0; display:grid; gap:10px}
-.seq-rail li{width:3px; height:28px; border-radius:2px; background:rgba(255,255,255,.18); transition:background .3s, height .3s}
-.seq-rail li.on{background:var(--gold); height:44px}
-.seq-skip{position:absolute; right:22px; bottom:22px; z-index:3; color:#98A3BA; font-size:13.5px; text-decoration:none; border-bottom:1px solid rgba(152,163,186,.4)}
-.seq-skip:hover{color:#fff}
-.seq-hint{position:absolute; left:50%; bottom:22px; transform:translateX(-50%); z-index:3; color:#7F8AA3; font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; transition:opacity .4s}
-.seq-hint::after{content:""; display:block; width:1px; height:26px; margin:8px auto 0; background:linear-gradient(#7F8AA3, transparent); animation:seqhint 1.8s ease-in-out infinite}
-@keyframes seqhint{0%{transform:scaleY(0); transform-origin:top} 50%{transform:scaleY(1); transform-origin:top} 51%{transform-origin:bottom} 100%{transform:scaleY(0); transform-origin:bottom}}
-.seq.static{height:auto}
-.seq.static .seq-stage{position:relative; height:max(640px, 100vh)}
-.seq.static .seq-hint, .seq.static .seq-rail{display:none}
-@media (max-width:700px){ .seq-rail{right:10px} .seq-rail li{height:20px} .seq-rail li.on{height:32px} .seq-skip{right:16px; bottom:16px} .seq-hint{bottom:16px; left:24px; transform:none} .seq{height:370vh} }
+.seq-h{color:#fff; font-size:clamp(28px,3.8vw,46px); max-width:none; margin-top:10px; letter-spacing:-.02em}
+.seq-h em{font-style:italic; color:var(--gold)}
+.seq-steps{list-style:none; padding:0; margin:20px 0 0; display:flex; justify-content:center; flex-wrap:wrap; gap:8px}
+.seq-steps li{display:flex; align-items:center; gap:8px; padding:6px 14px 6px 6px; border-radius:999px; border:1px solid rgba(255,255,255,.14); color:#8F9AB2; font-size:14.5px; font-weight:500; transition:color .4s, border-color .4s, background .4s}
+.seq-steps b{width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.08); font:500 14px/1 var(--serif); transition:background .4s, color .4s}
+.seq-steps li.on{color:#fff; border-color:var(--gold); background:rgba(224,176,112,.12)}
+.seq-steps li.on b{background:var(--gold); color:var(--night)}
+.seq-steps li.done{color:#C9D1E3}
+.seq-steps li.done b{background:rgba(224,176,112,.3); color:#fff}
+.seq-note{color:#AEB7CB; font-size:clamp(15px,1.4vw,17px); margin-top:14px; min-height:1.5em; transition:opacity .3s}
+.seq-replay{position:absolute; right:24px; bottom:24px; z-index:3; display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; border:1px solid rgba(255,255,255,.3); background:rgba(11,21,40,.6); color:#fff; font:600 14px var(--sans); cursor:pointer}
+.seq-replay:hover{border-color:#fff}
+.seq-replay svg{width:16px; height:16px}
+.seq.static .seq-stage{height:max(700px, 100vh)}
+@media (max-width:700px){
+  .seq-stage{height:max(860px, 100svh)}
+  .seq-caps{top:calc(68px + env(safe-area-inset-top,0px) + 18px); padding:0 14px}
+  .seq-steps .sm-hide{display:none}
+  .seq-steps{gap:6px; margin-top:16px}
+  .seq-steps li{font-size:12.5px; padding:5px 10px 5px 5px; gap:6px}
+  .seq-steps b{width:20px; height:20px; font-size:12px}
+  .seq-note{font-size:14.5px}
+  .seq-replay{right:16px; bottom:16px}
+}
 
 /* The personal version: while your own Career DNA is being built, your resume is sequenced on screen. */
 .seqlay{position:fixed; inset:0; z-index:60; background:var(--night); color:#fff; opacity:0; transition:opacity .45s ease}
@@ -676,16 +683,11 @@ section#paths{border-top:0}
       <canvas id="seqCanvas" aria-hidden="true"></canvas>
       <div class="seq-caps">
         <p class="seq-kicker" id="seqTitle">How Trazerr reads a resume</p>
-        <div class="seq-cap-wrap">
-          <div class="seq-cap on"><h2>A resume is a list of <em>claims.</em></h2><p>Most tools stop here and polish the wording.</p></div>
-          <div class="seq-cap"><h2>Trazerr pulls out the <em>evidence.</em></h2><p>Every line that proves something is lifted off the page.</p></div>
-          <div class="seq-cap"><h2>Then sequences it into your <em>Career DNA.</em></h2><p>Each strength is tied to the line that proves it. Inferences are labeled.</p></div>
-          <div class="seq-cap"><h2>And shows where it can <em>take you.</em></h2><p>Directions your record already supports, including ones you haven't considered.</p></div>
-        </div>
+        <h2 class="seq-h">From resume to <em>Career DNA</em> in three steps.</h2>
+        <ol class="seq-steps" aria-hidden="true"><li class="on"><b>1</b><span><span class="sm-hide">Your </span>Resume</span></li><li><b>2</b><span><span class="sm-hide">The </span>Evidence</span></li><li><b>3</b><span><span class="sm-hide">Your </span>Career DNA</span></li></ol>
+        <p class="seq-note" id="seqNote">Example: this is Dana's resume. Like most, it's a list of claims.</p>
       </div>
-      <ol class="seq-rail" aria-hidden="true"><li class="on"></li><li></li><li></li><li></li></ol>
-      <p class="seq-hint" id="seqHint" aria-hidden="true">Scroll</p>
-      <a class="seq-skip" href="#get">Skip</a>
+      <button class="seq-replay" id="seqReplay" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Replay</button>
     </div>
   </section>
 
@@ -2012,7 +2014,9 @@ function drawDust(ctx, dust, W, H, time, drift){
 
 (() => {
   const sec = $("sequence"); if (!sec) return;
-  const cv = $("seqCanvas"), ctx = cv.getContext("2d"), caps = sec.querySelectorAll(".seq-cap"), rail = sec.querySelectorAll(".seq-rail li"), hint = $("seqHint");
+  const cv = $("seqCanvas"), ctx = cv.getContext("2d"), steps = sec.querySelectorAll(".seq-steps li"), note = $("seqNote"), replay = $("seqReplay");
+  const NOTES = ["Example: this is Dana's resume. Like most, it's a list of claims.", "Trazerr finds the lines that actually prove something.", "Each one becomes a strength in her Career DNA, and points to where she can go next."];
+  let started = false, playing = false, elapsed = 0, last = 0;
   // Dana's resume, from the example. Evidence lines point at the strength they prove, in the order they leave the page.
   const EVID = [
     { name: "Territory development", level: "verified" },
@@ -2098,23 +2102,25 @@ function drawDust(ctx, dust, W, H, time, drift){
       const ratio = buildPaper(360).ph / 360;
       let pw = Math.min(W - 48, 330), ph = pw * ratio; if (ph > avail - 10) { ph = avail - 10; pw = ph / ratio; }
       paper = buildPaper(pw);
-      const ax = Math.max(40, W * .15), bottom = H - Math.max(150, H * .2);
+      const ax = Math.max(40, W * .15), bottom = H - Math.max(196, H * .23);
       L = { portrait, px: (W - pw) / 2, py: capB + 6, x0: ax, y0: capB + 12, x1: ax, y1: bottom, amp: clamp(W * .1, 28, 46), cycles: 2.4,
-        targets: DIRS.map((d, i) => ({ x: W * (.18 + i * .32), y: H - Math.max(92, H * .12) })) };
+        targets: DIRS.map((d, i) => ({ x: W * (.18 + i * .32), y: H - Math.max(136, H * .16) })) };
     }
     EVID.forEach((e, k) => { e.t = .1 + k * (.8 / (EVID.length - 1)); });
   }
 
   function frame(now){
     raf = 0; if (!L) return;
+    const dt = last ? Math.min(.1, (now - last) / 1000) : 0; last = now;
+    if (playing) { elapsed += dt; if (elapsed > 10.2) { playing = false; replay.hidden = false; } }
+    prog = clamp((elapsed - 1.4) / 8.4);
     const time = (now - start) / 1000, p = isStatic ? 1 : prog;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     drawDust(ctx, dust, W, H, isStatic ? 0 : time, p * 2);
 
     // the page
-    const lift = L.portrait ? ease(seg(p, .3, .56)) : 0;
-    const pa = L.portrait ? 1 - seg(p, .34, .56) : 1;
-    const ox = L.portrait ? -lift * (L.px + paper.pw * .9) : ((W - paper.pw) / 2 - L.px) * (1 - ease(seg(p, .15, .3))), rot = L.portrait ? -lift * .12 : 0;
+    const pa = L.portrait ? 1 - seg(p, .3, .42) : 1;
+    const ox = L.portrait ? 0 : ((W - paper.pw) / 2 - L.px) * (1 - ease(seg(p, .15, .3))), rot = 0;
     const px = L.px + ox, py = L.py;
     if (pa > .01) {
       ctx.save(); ctx.globalAlpha = pa;
@@ -2134,9 +2140,9 @@ function drawDust(ctx, dust, W, H, time, drift){
     }
 
     // the helix
-    const ha = ease(seg(p, .18, .36)), reveal = ease(seg(p, .18, .5));
+    const ha = L.portrait ? ease(seg(p, .3, .44)) : ease(seg(p, .18, .36)), reveal = L.portrait ? ease(seg(p, .3, .52)) : ease(seg(p, .18, .5));
     const rungs = EVID.map((e, k) => { const land = .4 + k * .035; return { t: e.t, kind: e.level, on: p >= land, pulse: 1 - seg(p, land, land + .06), land, k }; });
-    const hx = drawDNA(ctx, { x0: L.x0, y0: L.y0, x1: L.x1, y1: L.y1, amp: L.amp, cycles: L.cycles, rot: (isStatic ? 0 : time * .55) + p * 7, alpha: ha, reveal, rungs, plain: 28 });
+    const hx = drawDNA(ctx, { x0: L.x0, y0: L.y0, x1: L.x1, y1: L.y1, amp: L.amp, cycles: L.cycles, rot: (isStatic ? 0 : time * .3) + p * 4, alpha: ha, reveal, rungs, plain: 28 });
 
     // strength labels
     ctx.textBaseline = "alphabetic";
@@ -2164,12 +2170,12 @@ function drawDust(ctx, dust, W, H, time, drift){
       const to = hx.out.find(r => r.k === k)?.base || { x: L.x0, y: L.y0 };
       const c1 = L.portrait ? { x: from.x + 40, y: from.y + 40 } : { x: from.x + 120, y: from.y - 120 };
       const c2 = L.portrait ? { x: to.x + 120, y: to.y - 40 } : { x: to.x - 40, y: to.y - 140 };
-      const q = bezier(from, c1, c2, to, ease(f)), shrink = ease(seg(f, .55, 1));
+      const q = bezier(from, c1, c2, to, ease(f));
       for (let i = 1; i <= 6; i++) { const tq = bezier(from, c1, c2, to, ease(Math.max(0, f - i * .025))); ctx.fillStyle = `rgba(255,214,140,${.28 - i * .04})`; ctx.beginPath(); ctx.arc(tq.x, tq.y, 3 - i * .35, 0, TAU); ctx.fill(); }
-      ctx.font = `500 12px ${F_SANS}`;
-      const text = cut(ctx, e.text || e.name, L.portrait ? W * .6 : 260);
-      if (shrink < .92) pill(ctx, text, q.x, q.y, lerp(12, 7, shrink), 1 - shrink, e.level === "inferred" ? "#6FB4FF" : "#E0B070");
-      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,220,160,.9)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2 + 3 * shrink, 0, TAU); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 16); glow.addColorStop(0, e.level === "inferred" ? "rgba(111,180,255,.8)" : "rgba(255,214,140,.8)"); glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(q.x, q.y, 16, 0, TAU); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(q.x, q.y, 3.2, 0, TAU); ctx.fill(); ctx.restore();
     });
 
     // where it leads
@@ -2199,20 +2205,23 @@ function drawDust(ctx, dust, W, H, time, drift){
       ctx.globalAlpha = 1;
     });
 
-    // caption and rail
-    const idx = isStatic ? 2 : p < .17 ? 0 : p < .45 ? 1 : p < .72 ? 2 : 3;
-    if (idx !== shown) { shown = idx; caps.forEach((c, i) => c.classList.toggle("on", i === idx)); rail.forEach((r, i) => r.classList.toggle("on", i <= idx)); }
-    hint.style.opacity = p > .04 ? 0 : 1;
-    if (visible && !isStatic) raf = requestAnimationFrame(frame);
+    // which step we're on
+    const idx = isStatic ? 2 : p < .14 ? 0 : p < .56 ? 1 : 2;
+    if (idx !== shown) { shown = idx; steps.forEach((li, i) => { li.classList.toggle("on", i === idx); li.classList.toggle("done", i < idx); }); note.textContent = NOTES[idx]; }
+    if (visible && !isStatic) raf = requestAnimationFrame(frame); else last = 0;
   }
 
-  function onScroll(){ const r = sec.getBoundingClientRect(); prog = clamp(-r.top / Math.max(1, r.height - innerHeight)); }
   function kick(){ if (!raf) raf = requestAnimationFrame(frame); }
-  const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) kick(); }, { rootMargin: "100px" });
+  // Plays once, by itself, when most of it is on screen. It pauses while scrolled away.
+  const io = new IntersectionObserver(es => {
+    const e = es[es.length - 1]; visible = e.isIntersecting;
+    if (!started && e.intersectionRatio >= .45) { started = true; playing = true; }
+    if (visible) kick();
+  }, { threshold: [0, .45] });
   io.observe(sec);
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", () => { layout(); onScroll(); kick(); });
-  const go = () => { layout(); onScroll(); kick(); };
+  replay.addEventListener("click", () => { elapsed = 0; playing = true; replay.hidden = true; kick(); });
+  window.addEventListener("resize", () => { layout(); kick(); });
+  const go = () => { layout(); kick(); };
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go();
 })();
 
