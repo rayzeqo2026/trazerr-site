@@ -520,12 +520,60 @@ section#tailor .hint-sm{color:#AEB8CC}
 .spinner{width:36px; height:36px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--blue); margin:0 auto 16px; animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* Signature: the sequencer. A resume's evidence lifts off the page and is woven into a helix as you scroll. */
+.seq{position:relative; height:430vh; background:var(--night)}
+.seq-stage{position:sticky; top:0; height:100vh; height:100svh; overflow:hidden; color:#fff;
+  background:radial-gradient(1200px 700px at 70% 60%, rgba(0,102,224,.16), transparent 70%), radial-gradient(900px 600px at 15% 80%, rgba(224,176,112,.08), transparent 70%), var(--night)}
+.seq-stage canvas{position:absolute; inset:0; width:100%; height:100%}
+.grain::after{content:""; position:absolute; inset:0; pointer-events:none; opacity:.08; mix-blend-mode:overlay; z-index:2;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.seq-caps{position:absolute; left:0; right:0; top:calc(68px + env(safe-area-inset-top,0px) + 20px); z-index:3; text-align:center; padding:0 20px; pointer-events:none}
+.seq-kicker{color:var(--gold); font-size:12.5px; letter-spacing:.2em; text-transform:uppercase; font-weight:600}
+.seq-cap-wrap{display:grid; margin-top:10px}
+.seq-cap{grid-area:1/1; opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1)}
+.seq-cap.on{opacity:1; transform:none}
+.seq-cap h2{color:#fff; font-size:clamp(28px,4.4vw,54px); max-width:none; line-height:1.05; letter-spacing:-.02em}
+.seq-cap h2 em{font-style:italic; color:var(--gold)}
+.seq-cap p{color:#AEB7CB; font-size:clamp(15px,1.5vw,18px); margin-top:10px}
+.seq-rail{position:absolute; right:24px; top:50%; transform:translateY(-50%); z-index:3; list-style:none; margin:0; padding:0; display:grid; gap:10px}
+.seq-rail li{width:3px; height:28px; border-radius:2px; background:rgba(255,255,255,.18); transition:background .3s, height .3s}
+.seq-rail li.on{background:var(--gold); height:44px}
+.seq-skip{position:absolute; right:22px; bottom:22px; z-index:3; color:#98A3BA; font-size:13.5px; text-decoration:none; border-bottom:1px solid rgba(152,163,186,.4)}
+.seq-skip:hover{color:#fff}
+.seq-hint{position:absolute; left:50%; bottom:22px; transform:translateX(-50%); z-index:3; color:#7F8AA3; font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; transition:opacity .4s}
+.seq-hint::after{content:""; display:block; width:1px; height:26px; margin:8px auto 0; background:linear-gradient(#7F8AA3, transparent); animation:seqhint 1.8s ease-in-out infinite}
+@keyframes seqhint{0%{transform:scaleY(0); transform-origin:top} 50%{transform:scaleY(1); transform-origin:top} 51%{transform-origin:bottom} 100%{transform:scaleY(0); transform-origin:bottom}}
+.seq.static{height:auto}
+.seq.static .seq-stage{position:relative; height:max(640px, 100vh)}
+.seq.static .seq-hint, .seq.static .seq-rail{display:none}
+@media (max-width:700px){ .seq-rail{right:10px} .seq-rail li{height:20px} .seq-rail li.on{height:32px} .seq-skip{right:16px; bottom:16px} .seq-hint{bottom:16px; left:24px; transform:none} .seq{height:370vh} }
+
+/* The personal version: while your own Career DNA is being built, your resume is sequenced on screen. */
+.seqlay{position:fixed; inset:0; z-index:60; background:var(--night); color:#fff; opacity:0; transition:opacity .45s ease}
+.seqlay.on{opacity:1}
+.seqlay canvas{position:absolute; inset:0; width:100%; height:100%}
+.seqlay-top{position:absolute; left:0; right:0; top:calc(7vh + env(safe-area-inset-top,0px)); z-index:3; text-align:center; padding:0 20px}
+.seqlay-top h2{color:#fff; font-size:clamp(26px,3.6vw,44px); max-width:none; margin:10px auto 0; min-height:1.1em}
+.seqlay-bar{width:min(320px,70vw); height:3px; margin:20px auto 0; background:rgba(255,255,255,.14); border-radius:2px; overflow:hidden}
+.seqlay-bar i{display:block; height:100%; width:0; background:linear-gradient(90deg, #5CA8FF, var(--gold)); transition:width .5s ease}
+.seqlay-hide{position:absolute; right:20px; bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:3; color:#98A3BA; background:none; border:0; font:14px var(--sans); text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+.seqlay-count{position:absolute; left:20px; bottom:calc(20px + env(safe-area-inset-bottom,0px)); z-index:3; color:#7F8AA3; font-size:12.5px; letter-spacing:.14em; text-transform:uppercase}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none !important; animation:none !important} }
 </style>
 </head>
 <body>
 
 <a class="skip" href="#top">Skip to content</a>
+<div class="seqlay grain" id="seqlay" hidden>
+  <canvas id="seqlayCanvas" aria-hidden="true"></canvas>
+  <div class="seqlay-top">
+    <p class="seq-kicker">Sequencing your Career DNA</p>
+    <h2 id="seqlayStep" aria-live="polite">Reading your resume</h2>
+    <div class="seqlay-bar"><i id="seqlayBar"></i></div>
+  </div>
+  <p class="seqlay-count" id="seqlayCount" aria-hidden="true"></p>
+  <button class="seqlay-hide" id="seqlayHide" type="button">Hide</button>
+</div>
 <header class="site-head on-dark">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
@@ -577,7 +625,25 @@ section#tailor .hint-sm{color:#AEB8CC}
     </div>
   </section>
 
-  <section class="sample" aria-labelledby="sampleTitle">
+  <section class="seq" id="sequence" aria-labelledby="seqTitle">
+    <div class="seq-stage grain">
+      <canvas id="seqCanvas" aria-hidden="true"></canvas>
+      <div class="seq-caps">
+        <p class="seq-kicker" id="seqTitle">How Trazerr reads a resume</p>
+        <div class="seq-cap-wrap">
+          <div class="seq-cap on"><h2>A resume is a list of <em>claims.</em></h2><p>Most tools stop here and polish the wording.</p></div>
+          <div class="seq-cap"><h2>Trazerr pulls out the <em>evidence.</em></h2><p>Every line that proves something is lifted off the page.</p></div>
+          <div class="seq-cap"><h2>Then sequences it into your <em>Career DNA.</em></h2><p>Each strength is tied to the line that proves it. Inferences are labeled.</p></div>
+          <div class="seq-cap"><h2>And shows where it can <em>take you.</em></h2><p>Directions your record already supports, including ones you haven't considered.</p></div>
+        </div>
+      </div>
+      <ol class="seq-rail" aria-hidden="true"><li class="on"></li><li></li><li></li><li></li></ol>
+      <p class="seq-hint" id="seqHint" aria-hidden="true">Scroll</p>
+      <a class="seq-skip" href="#get">Skip</a>
+    </div>
+  </section>
+
+  <section class="sample" id="get" aria-labelledby="sampleTitle">
     <div class="wrap">
       <div>
         <p class="eyebrow">What you get</p>
@@ -1108,6 +1174,7 @@ $("analyzeBtn").addEventListener("click", async () => {
   btn.disabled = true; track("dna_started");
   const label = btn.textContent; btn.textContent = "Building…";
   const prog = $("heroProg"), bar = $("heroBar"); prog.hidden = false; bar.style.width = "8%";
+  window.Seqlay?.start(payload);
   let i = 0; setStatus(status, STEPS[0]);
   // The bar creeps toward 92% over about 30 seconds, then jumps to full when the result arrives.
   const started = Date.now();
@@ -1115,6 +1182,7 @@ $("analyzeBtn").addEventListener("click", async () => {
     const t = (Date.now() - started) / 1000;
     i = Math.min(Math.floor(t / 5.5), STEPS.length - 1); setStatus(status, STEPS[i]);
     bar.style.width = Math.min(92, 8 + t * 2.8) + "%";
+    window.Seqlay?.step(STEPS[i], Math.min(92, 8 + t * 2.8));
   }, 500);
   try {
     const data = await api("analyze", { body: payload });
@@ -1126,9 +1194,11 @@ $("analyzeBtn").addEventListener("click", async () => {
     setStatus(status, "");
     track("dna_built");
     showProfile(p);
+    window.Seqlay?.finish(true);
     if (applyHomeLocation(p) && p.directions.length && !$("jq").value.trim()) { $("jq").value = p.directions[0].role; runJobSearch(true); }
   } catch (e) {
     track("dna_failed");
+    window.Seqlay?.finish(false);
     setStatus(status, e.message, true);
   } finally { clearInterval(ticker); btn.disabled = false; btn.textContent = label; bar.style.width = "100%"; setTimeout(() => { prog.hidden = true; bar.style.width = "0"; }, 400); }
 });
@@ -1866,15 +1936,376 @@ $("waitlist").addEventListener("submit", async e => {
 });
 
 /* ---------- header over the hero image ---------- */
-const siteHead = document.querySelector(".site-head"), hero = document.querySelector(".hero");
+const siteHead = document.querySelector(".site-head"), darkEnd = document.querySelector(".sample") || document.querySelector(".hero");
 function syncHead(){
   const y = window.scrollY;
-  siteHead.classList.toggle("on-dark", y < hero.offsetHeight - siteHead.offsetHeight);
+  siteHead.classList.toggle("on-dark", y < darkEnd.offsetTop + darkEnd.offsetHeight - siteHead.offsetHeight);
   siteHead.classList.toggle("scrolled", y > 8);
 }
 window.addEventListener("scroll", syncHead, { passive: true });
 window.addEventListener("resize", syncHead);
 syncHead();
+
+/* ---------- signature: the sequencer ---------- */
+const TAU = Math.PI * 2;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const seg = (p, a, b) => clamp((p - a) / (b - a));
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const lerp = (a, b, t) => a + (b - a) * t;
+const F_SANS = '"Instrument Sans", system-ui, sans-serif', F_SERIF = '"Newsreader", Georgia, serif';
+const LEVEL_COL = { verified: "#FFFFFF", inferred: "#6FB4FF", potential: "#E0B25A" };
+
+// A double helix along any axis. Returns where the highlighted rungs are, so labels and flying lines can find them.
+function drawDNA(ctx, o){
+  const dx = o.x1 - o.x0, dy = o.y1 - o.y0, len = Math.hypot(dx, dy) || 1, px = -dy / len, py = dx / len;
+  const pt = (t, off) => { const th = t * o.cycles * TAU + o.rot + off, s = Math.sin(th); return { x: o.x0 + dx * t + px * o.amp * s, y: o.y0 + dy * t + py * o.amp * s, z: Math.cos(th) }; };
+  const reveal = o.reveal ?? 1, a = o.alpha ?? 1, N = 170, back = [], front = [];
+  for (const off of [0, Math.PI]) for (let i = 0; i < N; i++) {
+    const t0 = i / N, t1 = (i + 1) / N; if (t0 >= reveal) break;
+    const p0 = pt(t0, off), p1 = pt(Math.min(t1, reveal), off), z = (p0.z + p1.z) / 2;
+    (z < 0 ? back : front).push([p0, p1, z, off]);
+  }
+  const strands = list => { for (const [p0, p1, z, off] of list) {
+    const d = (z + 1) / 2;
+    ctx.strokeStyle = off ? `rgba(224,176,112,${(.16 + .74 * d) * a})` : `rgba(130,190,255,${(.16 + .78 * d) * a})`;
+    ctx.lineWidth = 1 + 2.8 * d; ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+  } };
+  ctx.lineCap = "round";
+  strands(back);
+  const out = [];
+  const plain = o.plain || 26;
+  for (let j = 0; j < plain; j++) {
+    const t = (j + .5) / plain; if (t > reveal) break;
+    const A = pt(t, 0), B = pt(t, Math.PI);
+    ctx.strokeStyle = `rgba(255,255,255,${.12 * a})`; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+  }
+  for (const r of o.rungs || []) {
+    if (r.t > reveal) continue;
+    const A = pt(r.t, 0), B = pt(r.t, Math.PI), base = { x: o.x0 + dx * r.t, y: o.y0 + dy * r.t };
+    out.push({ ...r, base, A, B });
+    if (!r.on) continue;
+    const col = LEVEL_COL[r.kind] || "#fff";
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const g = ctx.createRadialGradient(base.x, base.y, 0, base.x, base.y, 26 + 30 * (r.pulse || 0));
+    g.addColorStop(0, r.kind === "inferred" ? `rgba(111,180,255,${.45 * a})` : `rgba(255,236,200,${.4 * a})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(base.x, base.y, 26 + 30 * (r.pulse || 0), 0, TAU); ctx.fill(); ctx.restore();
+    ctx.strokeStyle = col; ctx.globalAlpha = a; ctx.lineWidth = 3;
+    if (r.kind === "inferred") ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke(); ctx.setLineDash([]);
+    for (const P of [A, B]) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(P.x, P.y, 3.2, 0, TAU); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  strands(front);
+  return { out, end: pt(1, 0), axisEnd: { x: o.x1, y: o.y1 }, px, py };
+}
+
+function roundRect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function wrapText(ctx, text, width){ const out = []; let line = ""; for (const w of text.split(" ")) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > width && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; }
+function cut(ctx, text, width){ if (ctx.measureText(text).width <= width) return text; while (text.length > 4 && ctx.measureText(text + "…").width > width) text = text.slice(0, -1); return text.trimEnd() + "…"; }
+function pill(ctx, text, x, y, size, alpha, col){
+  ctx.font = `500 ${size}px ${F_SANS}`; const w = ctx.measureText(text).width + size * 1.4, h = size * 2;
+  const cw = ctx.canvas.width / (ctx.getTransform().a || 1); x = Math.max(w / 2 + 8, Math.min(cw - w / 2 - 8, x));
+  ctx.globalAlpha = alpha; ctx.fillStyle = "rgba(11,21,40,.92)"; roundRect(ctx, x - w / 2, y - h / 2, w, h, h / 2); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, x, y + .5);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.globalAlpha = 1;
+}
+function bezier(a, c1, c2, b, t){ const u = 1 - t; return { x: u*u*u*a.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*b.x, y: u*u*u*a.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*b.y }; }
+function makeDust(n){ const r = seeded("trazerr-dust"); return Array.from({ length: n }, () => ({ x: r(), y: r(), s: .5 + r() * 1.6, a: .08 + r() * .3, v: .2 + r() * .8 })); }
+function drawDust(ctx, dust, W, H, time, drift){
+  for (const d of dust) { const y = ((d.y - time * .004 * d.v - drift * d.v * .3) % 1 + 1) % 1; ctx.fillStyle = `rgba(150,196,255,${d.a})`; ctx.beginPath(); ctx.arc(d.x * W, y * H, d.s, 0, TAU); ctx.fill(); }
+}
+
+(() => {
+  const sec = $("sequence"); if (!sec) return;
+  const cv = $("seqCanvas"), ctx = cv.getContext("2d"), caps = sec.querySelectorAll(".seq-cap"), rail = sec.querySelectorAll(".seq-rail li"), hint = $("seqHint");
+  // Dana's resume, from the example. Evidence lines point at the strength they prove, in the order they leave the page.
+  const EVID = [
+    { name: "Territory development", level: "verified" },
+    { name: "Quota performance", level: "verified" },
+    { name: "Training and onboarding", level: "verified" },
+    { name: "Early team leadership", level: "inferred" },
+    { name: "Negotiation", level: "inferred" }
+  ];
+  const RES = [
+    ["name", "Dana Whitfield"], ["sub", "Sales Representative · Newark, NJ"], ["rule"],
+    ["head", "EXPERIENCE"], ["job", "Account Executive, Northline Supply", "2019 – now"],
+    ["b", "Opened the Northeast territory and grew it to 60 active accounts.", 0],
+    ["b", "Reached 118% of annual quota in 2023 and 2024.", 1],
+    ["b", "Trained four new sales hires in their first 90 days.", 2],
+    ["b", "Presented quarterly results to the regional team."],
+    ["b", "Covered regional manager duties during a 3-month leave.", 3],
+    ["job", "Sales Associate, Harbor Office Co.", "2017 – 2019"],
+    ["b", "Managed renewals and pricing for 40 small-business clients.", 4],
+    ["b", "Answered inbound leads and booked product demos."],
+    ["head", "EDUCATION"], ["t", "B.A. Communications, Rutgers University"],
+    ["head", "SKILLS"], ["t", "Salesforce · Outreach · Excel · Forecasting"]
+  ];
+  const DIRS = [
+    { role: "Senior sales rep", tag: "Where you are", kind: "current" },
+    { role: "Sales team lead", tag: "Worth exploring", kind: "dir" },
+    { role: "Sales enablement", tag: "Worth exploring", kind: "dir" }
+  ];
+  const dust = makeDust(90);
+  let W = 0, H = 0, dpr = 1, L = null, paper = null, visible = false, raf = 0, prog = 0, shown = -1;
+  const start = performance.now();
+  const isStatic = reduceMotion;
+  if (isStatic) sec.classList.add("static");
+
+  // The page is drawn once at design size (360 wide), then scaled.
+  function buildPaper(pw){
+    const s = pw / 360, c = document.createElement("canvas"), x = c.getContext("2d");
+    const lines = []; let y = 30;
+    const put = (font, text, yy, extra) => lines.push({ font, text, y: yy, ...extra });
+    for (const r of RES) {
+      if (r[0] === "name") { y += 24; put(`500 25px ${F_SERIF}`, r[1], y, { col: "#15203A" }); y += 18; }
+      else if (r[0] === "sub") { put(`400 11.5px ${F_SANS}`, r[1], y, { col: "#4A5470" }); y += 14; }
+      else if (r[0] === "rule") { lines.push({ rule: true, y }); y += 20; }
+      else if (r[0] === "head") { y += 6; put(`600 9.5px ${F_SANS}`, r[1], y, { col: "#B07A28", spacing: 1.6 }); y += 18; }
+      else if (r[0] === "job") { put(`600 12px ${F_SANS}`, r[1], y, { col: "#15203A", right: r[2] }); y += 17; }
+      else if (r[0] === "t") { put(`400 11px ${F_SANS}`, r[1], y, { col: "#4A5470" }); y += 17; }
+      else if (r[0] === "b") {
+        x.font = `400 11px ${F_SANS}`; const wl = wrapText(x, r[1], 280), top = y - 11;
+        wl.forEach((t, i) => put(`400 11px ${F_SANS}`, t, y + i * 15, { col: "#2A3450", indent: 14, bullet: i === 0 }));
+        if (r[2] !== undefined) EVID[r[2]].rect = { x: 36, y: top, w: 292, h: wl.length * 15 + 3 }, EVID[r[2]].text = r[1];
+        y += wl.length * 15 + 5;
+      }
+    }
+    const ph = (y + 18) * s;
+    c.width = Math.round(pw * dpr); c.height = Math.round(ph * dpr);
+    x.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
+    x.fillStyle = "#FBFAF6"; roundRect(x, 0, 0, 360, ph / s, 10); x.fill();
+    for (const l of lines) {
+      if (l.rule) { x.fillStyle = "#E3E1DA"; x.fillRect(30, l.y, 300, 1); continue; }
+      x.font = l.font; x.fillStyle = l.col; if ("letterSpacing" in x) x.letterSpacing = (l.spacing || 0) + "px";
+      if (l.bullet) { x.beginPath(); x.arc(34, l.y - 4, 1.6, 0, TAU); x.fill(); }
+      x.fillText(l.text, 30 + (l.indent || 0), l.y);
+      if (l.right) { x.font = `400 10.5px ${F_SANS}`; x.fillStyle = "#8A91A3"; x.textAlign = "right"; x.fillText(l.right, 330, l.y); x.textAlign = "left"; }
+    }
+    if ("letterSpacing" in x) x.letterSpacing = "0px";
+    return { c, pw, ph, s };
+  }
+
+  function layout(){
+    const r = cv.getBoundingClientRect(); W = r.width; H = r.height; dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const capB = sec.querySelector(".seq-caps").getBoundingClientRect().bottom - r.top + 22;
+    const portrait = W < 1100 || W / H < 1.15;
+    const avail = H - capB - 34;
+    if (!portrait) {
+      const ratio = buildPaper(360).ph / 360;
+      let ph = Math.min(avail, 560), pw = Math.min(ph / ratio, W * .28); ph = pw * ratio;
+      const cy = capB + avail / 2, px = Math.max(40, W * .06);
+      paper = buildPaper(pw);
+      const x0 = px + pw + Math.max(70, W * .06), x1 = W * .76;
+      L = { portrait, px, py: cy - ph / 2, cy, x0, y0: cy, x1, y1: cy, amp: clamp(avail * .17, 48, 104), cycles: 2.2,
+        targets: DIRS.map((d, i) => ({ x: x1 + W * .07, y: cy + (i - 1) * Math.max(110, avail * .24) })) };
+    } else {
+      const ratio = buildPaper(360).ph / 360;
+      let pw = Math.min(W - 48, 330), ph = pw * ratio; if (ph > avail - 10) { ph = avail - 10; pw = ph / ratio; }
+      paper = buildPaper(pw);
+      const ax = Math.max(40, W * .15), bottom = H - Math.max(150, H * .2);
+      L = { portrait, px: (W - pw) / 2, py: capB + 6, x0: ax, y0: capB + 12, x1: ax, y1: bottom, amp: clamp(W * .1, 28, 46), cycles: 2.4,
+        targets: DIRS.map((d, i) => ({ x: W * (.18 + i * .32), y: H - Math.max(92, H * .12) })) };
+    }
+    EVID.forEach((e, k) => { e.t = .1 + k * (.8 / (EVID.length - 1)); });
+  }
+
+  function frame(now){
+    raf = 0; if (!L) return;
+    const time = (now - start) / 1000, p = isStatic ? 1 : prog;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    drawDust(ctx, dust, W, H, isStatic ? 0 : time, p * 2);
+
+    // the page
+    const lift = L.portrait ? ease(seg(p, .3, .56)) : 0;
+    const pa = L.portrait ? 1 - seg(p, .34, .56) : 1;
+    const ox = L.portrait ? -lift * (L.px + paper.pw * .9) : ((W - paper.pw) / 2 - L.px) * (1 - ease(seg(p, .15, .3))), rot = L.portrait ? -lift * .12 : 0;
+    const px = L.px + ox, py = L.py;
+    if (pa > .01) {
+      ctx.save(); ctx.globalAlpha = pa;
+      ctx.translate(px + paper.pw / 2, py + paper.ph / 2); ctx.rotate(rot); ctx.translate(-paper.pw / 2, -paper.ph / 2);
+      ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
+      ctx.drawImage(paper.c, 0, 0, paper.pw, paper.ph); ctx.shadowColor = "transparent";
+      EVID.forEach((e, k) => {
+        const h = seg(p, .14 + k * .03, .19 + k * .03), f = seg(p, .27 + k * .035, .4 + k * .035), R = e.rect, s = paper.s;
+        const rx = R.x * s, ry = R.y * s, rw = R.w * s, rh = R.h * s;
+        if (h > 0 && f < 1) { ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = `rgba(255,208,120,${.85 * h * (1 - f)})`; roundRect(ctx, rx - 3, ry, rw * h + 6, rh, 3); ctx.fill(); ctx.globalCompositeOperation = "source-over"; }
+        if (f > 0) {
+          ctx.fillStyle = `rgba(251,250,246,${Math.min(1, f * 1.6)})`; ctx.fillRect(rx - 4, ry - 1, rw + 8, rh + 2);
+          ctx.strokeStyle = `rgba(176,122,40,${.5 * f})`; ctx.setLineDash([3, 4]); ctx.lineWidth = 1; roundRect(ctx, rx - 2, ry + 1, rw + 4, rh - 2, 3); ctx.stroke(); ctx.setLineDash([]);
+        }
+      });
+      ctx.restore();
+    }
+
+    // the helix
+    const ha = ease(seg(p, .18, .36)), reveal = ease(seg(p, .18, .5));
+    const rungs = EVID.map((e, k) => { const land = .4 + k * .035; return { t: e.t, kind: e.level, on: p >= land, pulse: 1 - seg(p, land, land + .06), land, k }; });
+    const hx = drawDNA(ctx, { x0: L.x0, y0: L.y0, x1: L.x1, y1: L.y1, amp: L.amp, cycles: L.cycles, rot: (isStatic ? 0 : time * .55) + p * 7, alpha: ha, reveal, rungs, plain: 28 });
+
+    // strength labels
+    ctx.textBaseline = "alphabetic";
+    for (const r of hx.out) {
+      const la = seg(p, r.land, r.land + .04) * ha; if (la <= 0) continue;
+      const e = EVID[r.k], col = LEVEL_COL[e.level];
+      let lx, ly, align;
+      if (L.portrait) { lx = L.x0 + L.amp + 22; ly = r.base.y + 4; align = "left"; }
+      else { const side = r.k % 2 ? 1 : -1; lx = r.base.x; ly = r.base.y + side * (L.amp + 40) + (side > 0 ? 10 : 0); align = "center"; }
+      ctx.globalAlpha = la * .6; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.beginPath();
+      if (L.portrait) { ctx.moveTo(L.x0 + L.amp + 6, r.base.y); ctx.lineTo(lx - 6, r.base.y); }
+      else { const side = r.k % 2 ? 1 : -1; ctx.moveTo(r.base.x, r.base.y + side * (L.amp + 6)); ctx.lineTo(r.base.x, ly - (side > 0 ? 24 : -8)); }
+      ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = la;
+      ctx.textAlign = align; ctx.font = `600 ${L.portrait ? 14 : 13.5}px ${F_SANS}`; ctx.fillStyle = "#fff";
+      ctx.fillText(e.name, lx, L.portrait ? ly - 4 : ly - 6);
+      ctx.font = `500 11.5px ${F_SANS}`; ctx.fillStyle = col;
+      ctx.fillText(e.level === "inferred" ? "Inferred" : !L.portrait ? "Verified" : "Verified · " + (e.text || "").replace(/\.$/, "").split(" ").slice(0, 4).join(" ") + "…", lx, L.portrait ? ly + 13 : ly + 11);
+      ctx.globalAlpha = 1; ctx.textAlign = "left";
+    }
+
+    // lines in flight, from the page to their rung
+    EVID.forEach((e, k) => {
+      const f = seg(p, .27 + k * .035, .4 + k * .035); if (f <= 0 || f >= 1) return;
+      const R = e.rect, s = paper.s, from = { x: px + (R.x + 60) * s, y: py + (R.y + 7) * s };
+      const to = hx.out.find(r => r.k === k)?.base || { x: L.x0, y: L.y0 };
+      const c1 = L.portrait ? { x: from.x + 40, y: from.y + 40 } : { x: from.x + 120, y: from.y - 120 };
+      const c2 = L.portrait ? { x: to.x + 120, y: to.y - 40 } : { x: to.x - 40, y: to.y - 140 };
+      const q = bezier(from, c1, c2, to, ease(f)), shrink = ease(seg(f, .55, 1));
+      for (let i = 1; i <= 6; i++) { const tq = bezier(from, c1, c2, to, ease(Math.max(0, f - i * .025))); ctx.fillStyle = `rgba(255,214,140,${.28 - i * .04})`; ctx.beginPath(); ctx.arc(tq.x, tq.y, 3 - i * .35, 0, TAU); ctx.fill(); }
+      ctx.font = `500 12px ${F_SANS}`;
+      const text = cut(ctx, e.text || e.name, L.portrait ? W * .6 : 260);
+      if (shrink < .92) pill(ctx, text, q.x, q.y, lerp(12, 7, shrink), 1 - shrink, e.level === "inferred" ? "#6FB4FF" : "#E0B070");
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,220,160,.9)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2 + 3 * shrink, 0, TAU); ctx.fill(); ctx.restore();
+    });
+
+    // where it leads
+    const E = { x: L.x1, y: L.y1 };
+    DIRS.forEach((d, i) => {
+      const b = ease(seg(p, .72 + i * .045, .86 + i * .045)); if (b <= 0) return;
+      const T = L.targets[i];
+      const c1 = L.portrait ? { x: E.x, y: E.y + 40 } : { x: E.x + 70, y: E.y };
+      const c2 = L.portrait ? { x: T.x, y: T.y - 50 } : { x: T.x - 70, y: T.y };
+      const gold = d.kind === "dir";
+      for (const [w, a] of gold ? [[8, .12], [2.2, .95]] : [[1.6, .6]]) {
+        ctx.strokeStyle = gold ? `rgba(224,176,112,${a})` : `rgba(255,255,255,${a})`; ctx.lineWidth = w; ctx.beginPath();
+        for (let j = 0; j <= 40; j++) { const q = bezier(E, c1, c2, T, b * j / 40); j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); } ctx.stroke();
+      }
+      const tip = bezier(E, c1, c2, T, b);
+      ctx.fillStyle = gold ? "#E0B070" : "#fff"; ctx.beginPath(); ctx.arc(tip.x, tip.y, 4.5, 0, TAU); ctx.fill();
+      if (!isStatic && b >= 1) { const q = bezier(E, c1, c2, T, (time * .45 + i * .3) % 1); ctx.fillStyle = gold ? "rgba(255,226,170,.9)" : "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, TAU); ctx.fill(); }
+      const la = seg(b, .8, 1); if (la <= 0) return;
+      ctx.globalAlpha = la;
+      if (L.portrait) {
+        ctx.textAlign = "center"; ctx.font = `500 ${W < 420 ? 14.5 : 16}px ${F_SERIF}`; ctx.fillStyle = "#fff"; ctx.fillText(d.role, T.x, T.y + 24);
+        ctx.font = `600 10.5px ${F_SANS}`; ctx.fillStyle = gold ? "#E0B070" : "#98A3BA"; ctx.fillText(d.tag.toUpperCase(), T.x, T.y + 40); ctx.textAlign = "left";
+      } else {
+        ctx.font = `600 11px ${F_SANS}`; ctx.fillStyle = gold ? "#E0B070" : "#98A3BA"; ctx.fillText(d.tag.toUpperCase(), T.x + 16, T.y - 8);
+        ctx.font = `500 22px ${F_SERIF}`; ctx.fillStyle = "#fff"; ctx.fillText(d.role, T.x + 16, T.y + 14);
+      }
+      ctx.globalAlpha = 1;
+    });
+
+    // caption and rail
+    const idx = isStatic ? 2 : p < .17 ? 0 : p < .45 ? 1 : p < .72 ? 2 : 3;
+    if (idx !== shown) { shown = idx; caps.forEach((c, i) => c.classList.toggle("on", i === idx)); rail.forEach((r, i) => r.classList.toggle("on", i <= idx)); }
+    hint.style.opacity = p > .04 ? 0 : 1;
+    if (visible && !isStatic) raf = requestAnimationFrame(frame);
+  }
+
+  function onScroll(){ const r = sec.getBoundingClientRect(); prog = clamp(-r.top / Math.max(1, r.height - innerHeight)); }
+  function kick(){ if (!raf) raf = requestAnimationFrame(frame); }
+  const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) kick(); }, { rootMargin: "100px" });
+  io.observe(sec);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", () => { layout(); onScroll(); kick(); });
+  const go = () => { layout(); onScroll(); kick(); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go();
+})();
+
+/* ---------- signature: your own resume, sequenced while you wait ---------- */
+window.Seqlay = (() => {
+  const el = $("seqlay"); if (!el || reduceMotion) return null;
+  const cv = $("seqlayCanvas"), ctx = cv.getContext("2d"), dust = makeDust(70);
+  const PROOF = /\d|\b(led|lead|built|grew|grow|managed|trained|launched|increased|reduced|cut|created|designed|developed|improved|delivered|opened|won|saved|owned|shipped|started|founded|negotiat|mentor|coached|supervis|oversaw|achiev|exceed|award|certif|licensed)/i;
+  let W, H, dpr, lines = [], running = false, t0 = 0, raf = 0, flyers = [], lit = [], nextRung = 0, fired = new Set(), done = 0, loopN = 0, found = 0;
+  const RUNGS = 22;
+
+  function prepare(payload){
+    let src = [];
+    if (payload && payload.kind === "text") src = payload.text.split(/\r?\n/).map(s => s.replace(/\s+/g, " ").trim()).filter(s => s.length > 2);
+    if (src.length < 6) { const r = seeded("pdf"); src = Array.from({ length: 36 }, (_, i) => ({ bar: .35 + r() * .6, proof: i % 3 === 1 })); }
+    lines = src.map(s => typeof s === "string" ? { text: s.length > 90 ? s.slice(0, 88) + "…" : s, proof: PROOF.test(s) && s.length > 24 } : s);
+  }
+  function size(){ const r = el.getBoundingClientRect(); W = r.width; H = r.height; dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  function geo(){
+    const wide = W >= 900;
+    return wide ? { lx0: W * .08, lx1: W * .42, ly0: H * .3, ly1: H * .92, scan: H * .62, hx0: W * .52, hx1: W * .92, hy: H * .62, amp: Math.min(80, H * .1) }
+                : { lx0: 22, lx1: W - 22, ly0: H * .27, ly1: H * .56, scan: H * .5, hx0: W * .08, hx1: W * .92, hy: H * .75, amp: Math.min(48, W * .11) };
+  }
+  function frame(now){
+    raf = 0; if (!running) return;
+    const t = (now - t0) / 1000, g = geo();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    drawDust(ctx, dust, W, H, t * 6, 0);
+    // the resume scrolling past the scan line
+    const LH = W >= 900 ? 22 : 19, total = lines.length * LH, off = t * (W >= 900 ? 34 : 28) + (g.ly1 - g.ly0) * .55;
+    ctx.save(); ctx.beginPath(); ctx.rect(g.lx0 - 10, g.ly0, g.lx1 - g.lx0 + 20, g.ly1 - g.ly0); ctx.clip();
+    ctx.font = `400 ${W >= 900 ? 13 : 12}px ${F_SANS}`;
+    const first = Math.floor((off - (g.ly1 - g.ly0)) / LH) - 1;
+    for (let n = Math.max(0, first); n < first + Math.ceil((g.ly1 - g.ly0) / LH) + 3; n++) {
+      const i = n % lines.length, ln = lines[i], y = g.ly1 - (off - n * LH);
+      if (y < g.ly0 - LH || y > g.ly1 + LH) continue;
+      const near = 1 - Math.min(1, Math.abs(y - g.scan) / (H * .25));
+      const passed = y < g.scan;
+      const key = n;
+      if (ln.proof && passed && !fired.has(key) && y > g.scan - LH * 2) {
+        fired.add(key); found++;
+        flyers.push({ text: ln.text || "", from: { x: g.lx0 + 60, y }, t: t, rung: nextRung, inf: found % 3 === 0 });
+        nextRung = (nextRung + 7) % RUNGS;
+      }
+      const hot = ln.proof && passed;
+      if (ln.bar) { ctx.fillStyle = hot ? "rgba(224,176,112,.55)" : `rgba(201,209,227,${.1 + .25 * near})`; roundRect(ctx, g.lx0, y - 9, (g.lx1 - g.lx0) * ln.bar, 7, 3.5); ctx.fill(); }
+      else { ctx.fillStyle = hot ? "rgba(224,176,112,.9)" : `rgba(201,209,227,${.28 + .55 * near})`; ctx.fillText(cut(ctx, ln.text, g.lx1 - g.lx0), g.lx0, y); }
+    }
+    ctx.restore();
+    const sg = ctx.createLinearGradient(g.lx0, 0, g.lx1, 0); sg.addColorStop(0, "rgba(92,168,255,0)"); sg.addColorStop(.5, "rgba(92,168,255,.8)"); sg.addColorStop(1, "rgba(92,168,255,0)");
+    ctx.fillStyle = sg; ctx.fillRect(g.lx0 - 10, g.scan, g.lx1 - g.lx0 + 20, 1.5);
+    // the helix, lighting up as evidence arrives
+    const rungs = Array.from({ length: RUNGS }, (_, i) => ({ t: (i + .5) / RUNGS, kind: lit[i] || "verified", on: !!lit[i] || done > 0, pulse: 0 }));
+    const hx = drawDNA(ctx, { x0: g.hx0, y0: g.hy, x1: g.hx1, y1: g.hy, amp: g.amp * (1 + .15 * ease(Math.min(1, done))), cycles: 2.6, rot: t * .9, alpha: seg(t, 0, 1.2), reveal: ease(seg(t, .1, 2.4)), rungs, plain: 1 });
+    flyers = flyers.filter(f => {
+      const k = (t - f.t) / 1.15; if (k >= 1) { lit[f.rung] = f.inf ? "inferred" : "verified"; return false; }
+      const target = hx.out[f.rung]?.base || { x: g.hx0, y: g.hy };
+      const c1 = W >= 900 ? { x: f.from.x + 200, y: f.from.y - 160 } : { x: f.from.x + 60, y: f.from.y + 60 }, c2 = { x: target.x, y: target.y - (W >= 900 ? 160 : 60) };
+      const q = bezier(f.from, c1, c2, target, ease(k)), sh = ease(seg(k, .5, 1));
+      ctx.font = `500 12px ${F_SANS}`;
+      if (f.text && sh < .9) pill(ctx, cut(ctx, f.text, W >= 900 ? 280 : W * .6), q.x, q.y, lerp(12, 7, sh), 1 - sh, f.inf ? "#6FB4FF" : "#E0B070");
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,220,160,.95)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2 + 3 * sh, 0, TAU); ctx.fill(); ctx.restore();
+      return true;
+    });
+    $("seqlayCount").textContent = found ? `${found} ${found === 1 ? "line" : "lines"} of evidence found` : "";
+    if (done) { done = Math.min(1.001, done + .03); ctx.fillStyle = `rgba(255,236,200,${.35 * Math.sin(Math.min(1, done) * Math.PI)})`; ctx.fillRect(0, 0, W, H); }
+    raf = requestAnimationFrame(frame);
+  }
+  function start(payload){
+    prepare(payload); flyers = []; lit = []; nextRung = 3; fired = new Set(); done = 0; found = 0;
+    $("seqlayStep").textContent = "Reading your resume"; $("seqlayBar").style.width = "6%";
+    el.hidden = false; size(); running = true; t0 = performance.now(); raf = requestAnimationFrame(frame);
+    requestAnimationFrame(() => el.classList.add("on"));
+  }
+  function step(text, pct){ if (!running) return; $("seqlayStep").textContent = text.replace(/^Step \d of \d · /, "").replace(/…$/, ""); $("seqlayBar").style.width = pct + "%"; }
+  function stop(){ running = false; cancelAnimationFrame(raf); el.classList.remove("on"); setTimeout(() => { if (!running) el.hidden = true; }, 460); }
+  function finish(ok){
+    if (!running) return;
+    if (!ok) { stop(); return; }
+    $("seqlayStep").textContent = "Your Career DNA is ready"; $("seqlayBar").style.width = "100%"; done = .001;
+    setTimeout(stop, 900);
+  }
+  $("seqlayHide").addEventListener("click", stop);
+  window.addEventListener("resize", () => { if (running) size(); });
+  return { start, step, finish };
+})();
 
 /* ---------- start ---------- */
 setProfile(loadSaved());
