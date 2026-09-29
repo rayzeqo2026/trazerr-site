@@ -566,7 +566,14 @@ function editDistanceWithin(a, b, max) {
   }
   return prev[b.length] <= max;
 }
+// A value passes if it appears in the original as a whole, or if every part of it does
+// (for example "University of Vermont, Department of Pharmacology" joined from two lines).
 function appearsIn(value, sourceSquashed) {
+  if (appearsWhole(value, sourceSquashed)) return true;
+  const parts = String(value || "").split(/[,()|/;–—]| - /).map(x => x.trim()).filter(x => squash(x).length >= 3);
+  return parts.length > 1 && parts.every(x => appearsWhole(x, sourceSquashed));
+}
+function appearsWhole(value, sourceSquashed) {
   const v = squash(value);
   if (!v || sourceSquashed.includes(v)) return true;
   if (v.length < 6) return false;
