@@ -562,7 +562,9 @@ How to tailor:
 - Lead each job with the bullets most relevant to the target role, and start bullets with a strong, plain verb and the result.
 - Shorten or merge bullets that don't matter for this role, but keep the facts accurate.
 - Each bullet's "from" is a short paraphrase of the original resume line it is based on.
-- Reword and reorder only. Don't add details, purposes, results, qualifiers or context the original line doesn't state. For example, don't turn "room adjustments" into "room rate adjustments", and don't add phrases like "to keep guests satisfied". If a bullet would be stronger with a missing detail, use a [placeholder] instead.
+- Improve the wording, but only with facts the original line states. Do: use a stronger, specific verb, put the result or scale first, tighten wordy phrasing, and merge two lines about the same work. Don't: add details, purposes, results, qualifiers or context the original doesn't state. For example, don't turn "room adjustments" into "room rate adjustments", and don't add phrases like "to keep guests satisfied".
+- Where a bullet has no number but one would clearly make it stronger (how many, how often, how much, how big), add a [placeholder] for it. When the resume is short on numbers, aim for 2 to 5 placeholders across the resume, each on the most relevant bullets.
+- In the summary, work out years of experience from the resume's dates up to today; don't copy a number the resume states, and don't count only the most recent job.
 - ${PLAIN}
 
 ${JSON_ONLY} Use exactly this shape:
