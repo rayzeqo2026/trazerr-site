@@ -111,18 +111,19 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .hero-card h2{color:#fff; font-size:18px; max-width:none}
 .hero-card .saved-note{margin:0; background:rgba(0,102,224,.22); color:#E4E9F7; font-size:13px; padding:8px 10px; border-radius:8px}
 .hero-card .saved-note .linkish{color:#fff}
-.upload{display:flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:8px 12px; border-radius:10px; cursor:pointer;
+.upload{display:flex; align-items:center; justify-content:center; gap:8px; min-height:38px; font-size:14px !important; padding:8px 12px; border-radius:10px; cursor:pointer;
   border:1.5px dashed rgba(255,255,255,.32); color:#fff; font:600 14.5px/1.2 var(--sans); text-align:center; transition:border-color .15s, background .15s}
 .upload:hover, .upload.over{border-color:#5CA8FF; background:rgba(0,102,224,.18)}
 .upload svg{width:16px; height:16px; flex:none}
 .upload .file-name{color:#A9D2FF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
 .upload:has(.file-name:not([hidden])) .upload-text{display:none}
-.hero-card textarea{min-height:0; height:38px; padding:8px 12px; font-size:14px; line-height:1.4; resize:none; overflow:hidden;
+.hero-card textarea{min-height:0; height:64px; padding:8px 12px; font-size:14px; line-height:1.4; resize:none; overflow:hidden;
   background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); color:#fff; transition:height .15s}
-.hero-card textarea:focus, .hero-card textarea:not(:placeholder-shown){height:88px; overflow:auto}
+.hero-card textarea:focus, .hero-card textarea:not(:placeholder-shown){height:120px; overflow:auto}
 .hero-card textarea::placeholder{color:#8C97AE}
 .hero-card textarea:focus{border-color:#5CA8FF; box-shadow:0 0 0 3px rgba(92,168,255,.3)}
 .hero-card .btn{width:100%; min-height:42px; padding:10px 16px; font-size:15px}
+.hero-card .welcome .btn{width:auto; min-height:34px; padding:6px 12px; font-size:13.5px}
 .hero-card .mini{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; color:#98A3BA; white-space:nowrap}
 .hero-card .mini .linkish{color:#A9D2FF; font-size:12.5px}
 .hero-card .mini a{color:#98A3BA}
@@ -132,7 +133,7 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 
 .hero-link{display:inline-block; margin-top:18px; color:var(--gold); font-weight:600; text-decoration:none; border-bottom:1px solid rgba(224,176,112,.45)}
 .hero-link:hover{color:#fff; border-color:#fff}
-.welcome{margin-top:22px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:12px 14px; max-width:520px;
+.welcome{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:10px 12px; font-size:14px !important;
   background:rgba(8,14,30,.66); border:1px solid rgba(255,255,255,.16); border-radius:12px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#E4E9F7; font-size:15px}
 .welcome-actions{display:flex; gap:8px}
 .btn-ghost{background:transparent; color:#fff; border-color:rgba(255,255,255,.35)}
@@ -148,9 +149,13 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
   .hero-bg{bottom:auto; height:calc(var(--head) + 84vw)}
   .hero-bg img{object-position:72% 45%}
   .hero-bg::after{background:linear-gradient(180deg, rgba(2,6,15,.5) 0%, rgba(2,6,15,0) 22%, rgba(2,6,15,.25) 48%, rgba(2,6,15,.85) 78%, var(--night) 100%)}
-  .hero .wrap{grid-template-columns:1fr; gap:32px}
-  .hero-card{justify-self:stretch; max-width:none}
-  .hero .lede{font-size:18px}
+  .hero .wrap{display:flex; flex-direction:column; gap:0}
+  .hero-copy{display:contents}
+  .hero h1{order:1}
+  .hero-card{order:2; justify-self:stretch; max-width:none; margin-top:24px}
+  .hero .lede{order:3; font-size:17px; margin-top:24px}
+  .hero-link{order:4; align-self:flex-start}
+  .hero-notes{display:none}
 }
 
 .sheet{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:28px; box-shadow:0 1px 0 var(--line-soft), 0 18px 40px -24px rgba(21,32,58,.35)}
@@ -481,7 +486,6 @@ section#tailor .hint-sm{color:#AEB8CC}
         <h1>What could your career become?</h1>
         <p class="lede">Upload your resume. Trazerr reads it as evidence, shows you what your experience actually proves, and finds the jobs where you'd fit, including ones you haven't considered.</p>
         <a class="hero-link" href="#tailor">New: tailor your resume for any job <span aria-hidden="true">→</span></a>
-        <div class="welcome" id="welcome" hidden></div>
         <div class="hero-notes">
           <span><i class="mark verified" aria-hidden="true"></i>Every strength is backed by a line from your resume.</span>
           <span><i class="mark inferred" aria-hidden="true"></i>Anything we infer is labeled as an inference.</span>
@@ -491,13 +495,14 @@ section#tailor .hint-sm{color:#AEB8CC}
 
       <div class="hero-card" id="try">
         <h2>See your Career DNA</h2>
+        <div class="welcome" id="welcome" hidden></div>
+        <textarea id="paste" placeholder="Paste your resume here" aria-label="Paste your resume"></textarea>
         <label class="upload" id="drop" for="file">
           <input id="file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
-          <span class="upload-text">Upload resume</span>
+          <span class="upload-text">Or upload a file (PDF, Word)</span>
           <span class="file-name" id="fileName" hidden></span>
         </label>
-        <textarea id="paste" placeholder="Or paste your full resume" aria-label="Or paste your full resume"></textarea>
         <input type="checkbox" id="saveLocal" checked hidden>
         <button class="btn btn-primary" id="analyzeBtn" type="button">Build my Career DNA</button>
         <div class="hero-progress" id="heroProg" hidden aria-hidden="true"><i id="heroBar"></i></div>
@@ -851,7 +856,7 @@ function refreshProfileUI(){
   const box = $("welcome");
   const saved = loadSaved();
   if (saved) {
-    box.innerHTML = "<span>Welcome back" + (saved.firstName ? ", " + esc(saved.firstName) : "") + '. Your Career DNA is saved on this device.</span><span class="welcome-actions"><button class="btn btn-primary btn-sm" type="button" id="openSaved">Open it</button><button class="btn btn-ghost btn-sm" type="button" id="welcomeTailor">Tailor my DNA</button></span>';
+    box.innerHTML = "<span>Welcome back" + (saved.firstName ? ", " + esc(saved.firstName) : "") + '. Your Career DNA is saved.</span><span class="welcome-actions"><button class="btn btn-primary btn-sm" type="button" id="openSaved">Open it</button><button class="btn btn-ghost btn-sm" type="button" id="welcomeTailor">Tailor it</button></span>';
     box.hidden = false;
     $("openSaved").onclick = () => showProfile(saved);
     $("welcomeTailor").onclick = () => openTailor(saved, {});
