@@ -1,5 +1,5 @@
 // Trazerr server: one Vercel function for every feature.
-// Route: /api/app?action=analyze | jobs | match | jobdna | path | waitlist
+// Route: /api/app?action=analyze | jobs | match | jobdna | path | tailor | waitlist
 //
 // Environment variables (Vercel > Project > Settings > Environment Variables):
 //   ANTHROPIC_API_KEY   required: Career DNA, fit checks, Job DNA, career paths
@@ -54,7 +54,7 @@ function getQuery(req) {
 
 // Simple per-visitor limit to protect your API budget (per server instance).
 const hits = new Map();
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, jobs: 60, waitlist: 10, track: 200, stats: 30 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30 };
 function limited(req, action) {
   const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
   const key = ip + ":" + action;
@@ -427,6 +427,116 @@ async function path(req, res) {
   return res.status(200).json({ plan });
 }
 
+/* ---------------- Tailor my DNA ---------------- */
+// Two steps: "skills" lists what the target role needs and how the resume's evidence covers it;
+// "build" rewrites the resume for the role using only facts in the resume plus skills the person confirmed.
+
+const TAILOR_SKILLS_SYSTEM = `You are Trazerr's resume tailor. You compare one resume with one target role (and the job posting, if given) and list the skills that matter most for that role, classified by the resume's evidence.
+
+Rules:
+- Evidence before inference. Never mark something verified unless the resume states it.
+- "verified": the resume states it. "evidence" paraphrases the resume line in one short sentence.
+- "inferred": a reasonable conclusion from the resume, but not stated. "evidence" says what it's based on, starting "Based on". "question" asks the person, in plain words, whether they really have it.
+- "missing": the role needs it and the resume shows nothing for it. "how" is one sentence on how to build or show it.
+- ${PLAIN}
+
+${JSON_ONLY} Use exactly this shape:
+{
+  "role": "the target role as a clean job title",
+  "fitNow": 58,
+  "summary": "one sentence on how well the resume fits this role today",
+  "skills": [ { "name": "2-5 words", "status": "verified, inferred or missing", "evidence": "one sentence", "question": "one short question (inferred only)", "how": "one sentence (missing only)" } ]
+}
+Give 8-14 skills, most important for the role first, with at most 5 missing. fitNow is a whole number from 0 to 100: 80+ strong, 60-79 good, 40-59 partial, under 40 weak.
+If the document is not a resume, return exactly {"error":"not_a_resume"}.`;
+
+const TAILOR_BUILD_SYSTEM = `You are Trazerr's resume tailor. You rewrite one resume so it presents the person's real evidence in the way that best fits a target role.
+
+Hard rules, never broken:
+- Keep every employer, job title, date, location, school, degree and certification exactly as written in the resume. Add none. Don't drop any job.
+- Use only facts from the resume and the skills listed as confirmed. Never add a number, tool, result, title or responsibility the resume doesn't support.
+- Where a specific detail would make a bullet stronger and the resume doesn't give it, put a short placeholder in square brackets and add it to "blanks" with a plain question. Every placeholder must be unique and specific to what it asks for, like [accounts managed] or [% growth in 2023], never a generic [number] reused in several places.
+- The headline describes the person's strengths for the target role. It must not claim a job title they have never held.
+
+How to tailor:
+- Lead each job with the bullets most relevant to the target role, and start bullets with a strong, plain verb and the result.
+- Shorten or merge bullets that don't matter for this role, but keep the facts accurate.
+- Each bullet's "from" is a short paraphrase of the original resume line it is based on.
+- ${PLAIN}
+
+${JSON_ONLY} Use exactly this shape:
+{
+  "name": "name as written",
+  "contact": "contact details as written on one line (email, phone, city, links), or empty string",
+  "headline": "short line, e.g. 'Sales professional · Territory growth · Team training'",
+  "summary": "2-3 sentences aimed at the target role",
+  "skills": [ "skill" ],
+  "experience": [ { "title": "", "company": "", "location": "", "dates": "", "bullets": [ { "text": "", "from": "" } ] } ],
+  "education": [ "one line per entry, as written" ],
+  "extras": [ { "heading": "e.g. Certifications", "items": [ "as written" ] } ],
+  "blanks": [ { "placeholder": "text inside the brackets, exactly as used", "question": "one short question" } ],
+  "changes": [ "one sentence each on what changed and why it helps for this role" ],
+  "fitBefore": 58,
+  "fitAfter": 71
+}
+fitBefore is the fit of the original resume for this role; fitAfter is the honest estimate for the tailored version with blanks still unfilled. Don't inflate fitAfter: tailoring changes presentation, not experience.
+Give 3-6 changes and at most 8 blanks. Skills must come from the resume or the confirmed list.`;
+
+function resumeContent(body) {
+  const r = body?.resume;
+  if (r?.kind === "pdf") {
+    if (typeof r.data !== "string" || r.data.length < 100 || r.data.length > 4_500_000) throw new UserError(400, "That PDF couldn't be read. Try uploading it again.");
+    return [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: r.data } }];
+  }
+  const text = str(r?.text, 30000);
+  if (text.length < 80) throw new UserError(400, "Trazerr needs your resume to tailor it. Upload it again.");
+  return [{ type: "text", text: "Resume:\n\n" + text }];
+}
+
+async function tailor(req, res) {
+  const body = getBody(req);
+  const stage = body?.stage === "build" ? "build" : "skills";
+  const role = str(body?.role, 100);
+  const posting = str(stripHtml(body?.posting), 8000);
+  if (role.length < 2 && posting.length < 120) throw new UserError(400, "Choose or type the role you want to tailor for.");
+  const target = "Target role: " + (role || "(see job posting)") + (posting ? "\n\nJob posting:\n" + posting : "");
+  const content = resumeContent(body);
+
+  if (stage === "skills") {
+    content.push({ type: "text", text: target + "\n\nList the skills and return the JSON object." });
+    const p = await askClaude(TAILOR_SKILLS_SYSTEM, content);
+    if (p.error === "not_a_resume") throw new UserError(422, "That doesn't look like a resume. Upload your resume again.");
+    const status = (v) => (v === "inferred" || v === "missing" ? v : "verified");
+    const out = {
+      role: str(p.role, 100) || role, fitNow: toScore(p.fitNow), summary: str(p.summary, 300),
+      skills: list(p.skills, 14).map(k => ({
+        name: str(k?.name, 60), status: status(k?.status), evidence: str(k?.evidence, 240), question: str(k?.question, 200), how: str(k?.how, 240)
+      })).filter(k => k.name)
+    };
+    if (!out.skills.length) throw new UserError(502, "The skills list came back incomplete. Try again.");
+    return res.status(200).json({ skills: out });
+  }
+
+  const confirmed = list(body?.confirmed, 20).map(k => str(k, 60)).filter(Boolean);
+  content.push({ type: "text", text: target + "\n\nSkills the person confirmed they have: " + (confirmed.join("; ") || "(none beyond the resume)") + "\n\nRewrite the resume and return the JSON object." });
+  const p = await askClaude(TAILOR_BUILD_SYSTEM, content);
+  const resume = {
+    name: str(p.name, 100), contact: str(p.contact, 300), headline: str(p.headline, 160), summary: str(p.summary, 700),
+    skills: list(p.skills, 24).map(k => str(k, 60)).filter(Boolean),
+    experience: list(p.experience, 15).map(j => ({
+      title: str(j?.title, 120), company: str(j?.company, 120), location: str(j?.location, 100), dates: str(j?.dates, 60),
+      bullets: list(j?.bullets, 8).map(b => ({ text: str(b?.text, 400), from: str(b?.from, 300) })).filter(b => b.text)
+    })).filter(j => j.title || j.company),
+    education: list(p.education, 8).map(e => str(e, 240)).filter(Boolean),
+    extras: list(p.extras, 5).map(x => ({ heading: str(x?.heading, 60), items: list(x?.items, 12).map(i => str(i, 200)).filter(Boolean) })).filter(x => x.heading && x.items.length),
+    blanks: list(p.blanks, 8).map(b => ({ placeholder: str(b?.placeholder, 60), question: str(b?.question, 200) })).filter(b => b.placeholder),
+    changes: list(p.changes, 6).map(c => str(c, 300)).filter(Boolean),
+    fitBefore: toScore(p.fitBefore), fitAfter: toScore(p.fitAfter)
+  };
+  if (!resume.experience.length) throw new UserError(502, "The tailored resume came back incomplete. Try again.");
+  return res.status(200).json({ resume });
+}
+
 /* ---------------- Storage (Upstash Redis REST) ---------------- */
 
 function redisConfig() {
@@ -452,7 +562,8 @@ async function redisPipeline(cfg, commands) {
 
 const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
-  "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined"
+  "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
+  "tailor_started", "tailor_built"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
@@ -525,7 +636,7 @@ async function waitlist(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, waitlist, track, stats };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, waitlist, track, stats };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);

@@ -301,6 +301,42 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 .score .tip{color:var(--ink); margin-top:10px}
 @media (max-width:480px){ .score{grid-template-columns:1fr; justify-items:start} }
 .o-sec{margin-top:40px}
+/* Tailor my DNA */
+.t-field{margin-top:18px}
+.t-field label{display:block; font-size:14px; color:var(--ink-2); margin-bottom:6px}
+.t-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.t-resume{display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:18px}
+.skills{list-style:none; padding:0; margin:8px 0 0}
+.skills li{border-bottom:1px solid var(--line-soft)}
+.skills label{display:grid; grid-template-columns:22px 18px 1fr; gap:2px 10px; padding:14px 0; cursor:pointer; align-items:start}
+.skills input{width:18px; height:18px; margin-top:3px; accent-color:var(--blue)}
+.skills .mark{margin-top:6px}
+.skills label > span{display:grid; gap:2px}
+.skills b{font-weight:600}
+.skills .ev{font-family:var(--serif); font-style:italic; color:var(--ink-2); font-size:16px}
+.skills .q{color:var(--blue-deep); font-size:15px}
+.shift{display:flex; align-items:center; gap:18px; margin-top:22px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 22px}
+.shift div{display:grid}
+.shift small{color:var(--ink-2); font-size:13.5px}
+.shift b{font-family:var(--serif); font-weight:500; font-size:44px; line-height:1.1}
+.shift .after b{color:var(--blue)}
+.shift > span{font-size:28px; color:var(--grey)}
+.shift p{margin-left:auto; color:var(--ink-2); font-size:14px; max-width:30ch}
+@media (max-width:560px){ .shift{flex-wrap:wrap} .shift p{margin-left:0} }
+.blanks{display:grid; gap:14px; margin-top:14px}
+.blanks label{display:block; font-size:15px; margin-bottom:6px}
+.paper{margin-top:18px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:40px 44px; box-shadow:0 18px 40px -28px rgba(21,32,58,.45); font-size:15px; line-height:1.5; color:#1b2233}
+.paper h4{font-family:var(--serif); font-weight:500; font-size:30px; margin:0}
+.paper .contact{color:#56607a; font-size:13.5px; margin-top:2px}
+.paper .headline{font-weight:600; margin-top:10px}
+.paper h5{font:600 12.5px var(--sans); letter-spacing:.1em; text-transform:uppercase; color:var(--blue-deep); margin:22px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--line)}
+.paper .rjob{margin-top:12px}
+.paper .rjob-h{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.paper .rjob-h span{color:#56607a; font-size:13.5px}
+.paper ul{margin:6px 0 0; padding-left:18px}
+.paper li{margin-top:3px}
+.paper .ph{background:var(--brass-soft); color:var(--brass); padding:0 4px; border-radius:3px; font-weight:600}
+@media (max-width:560px){ .paper{padding:24px 18px} }
 .o-sec > h3{font-size:25px; padding-bottom:10px; border-bottom:1px solid var(--line)}
 .o-sec .hint{color:var(--ink-2); font-size:15px; margin-top:10px}
 .legend{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:12px; font-size:14px; color:var(--ink-2)}
@@ -399,7 +435,7 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
         <li><b>Career DNA</b><span>A clear picture of what you can do, and how we know.</span></li>
         <li><b>Discover</b><span>Directions your experience supports that you may not have considered.</span></li>
         <li><b>Match</b><span>Live job openings, with an honest fit check for each one.</span></li>
-        <li><b>Optimize</b><span>Specific tips to show your real evidence for a specific role.</span></li>
+        <li><b>Optimize</b><span>Tailor my DNA reshapes your resume for one role, using only your real evidence.</span></li>
         <li><b>Plan</b><span>A step-by-step path from where you are to where you want to be.</span></li>
         <li><b>Evolve</b><span>Update your resume and your Career DNA grows with you.</span></li>
         <li class="step-cta"><span>It starts with step 1, and takes about 20 seconds.</span><a class="btn btn-primary" href="#try">Build my Career DNA</a></li>
@@ -566,7 +602,7 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
       <h2>How we handle your data.</h2>
       <div class="privacy-text">
       <p>When you build your Career DNA, check a fit or plan a path, the text is sent over an encrypted connection to Claude, an AI model made by Anthropic, which returns the result. Trazerr does not keep a copy of your resume on its servers.</p>
-      <p>If you choose to save your Career DNA, it's stored in this browser only. It never leaves your device except when you ask for a fit check or a path, and you can remove it at any time from your results.</p>
+      <p>If you choose to save your Career DNA, it's stored in this browser only, along with your resume so you can tailor it later. Neither leaves your device except when you ask for a fit check, a path or a tailored resume, and you can remove both at any time from your results.</p>
       <p>Job listings come from third-party job boards. When you open a job, you go to that board's site, and their privacy policy applies there.</p>
       <p>If you join the waitlist, we keep your email address only to tell you about early access. We don't sell it or share it.</p>
       <p>Career DNA cards are made on your device and never uploaded. To improve Trazerr, we count anonymous events, like how many Career DNAs are built each day. Those counts include no cookies, names, IP addresses or resume content.</p>
@@ -591,6 +627,8 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; justify-content:space-
 <script>
 const API = "/api/app";
 const STORE_KEY = "trazerr.profile.v3";
+const RESUME_KEY = "trazerr.resume.v1";
+let resumeSrc = null; // the resume behind the current Career DNA, needed for Tailor my DNA
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let picked = null;
@@ -668,7 +706,9 @@ function normalize(p){
 /* ---------- saved profile ---------- */
 function loadSaved(){ try { const raw = localStorage.getItem(STORE_KEY); return raw ? normalize(JSON.parse(raw)) : null; } catch(e){ return null; } }
 function saveProfile(p){ try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); return true; } catch(e){ return false; } }
-function removeProfile(){ try { localStorage.removeItem(STORE_KEY); } catch(e){} }
+function removeProfile(){ try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(RESUME_KEY); } catch(e){} }
+function loadResume(){ try { const r = localStorage.getItem(RESUME_KEY); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+function saveResume(r){ try { localStorage.setItem(RESUME_KEY, JSON.stringify(r)); } catch(e){} } // a large PDF may not fit; that's fine
 function isSaved(){ return !!loadSaved(); }
 
 function setProfile(p){
@@ -746,32 +786,32 @@ function readAsBase64(file){
 function loadScript(src){
   return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
 }
+// Reads a resume file into what the server expects. Throws an Error with a readable message.
+async function readResumeFile(file){
+  const name = file.name || "resume";
+  const ext = name.toLowerCase().split(".").pop();
+  if (file.size > 3 * 1024 * 1024) throw new Error("That file is over 3 MB. Try a smaller PDF or paste the text instead.");
+  let out;
+  try {
+    if (ext === "pdf" || file.type === "application/pdf") out = { kind: "pdf", data: await readAsBase64(file) };
+    else if (ext === "docx") {
+      if (!window.mammoth) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js");
+      out = { kind: "text", text: (await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value };
+    } else if (ext === "txt" || file.type === "text/plain") out = { kind: "text", text: await file.text() };
+  } catch (e) { throw new Error("That file couldn't be read. Try saving it as a PDF, or paste the text instead."); }
+  if (!out) throw new Error("That file type isn't supported. Use a PDF, a Word .docx file or a .txt file.");
+  if (out.kind === "text" && out.text.trim().length < 80) throw new Error("That file doesn't contain enough readable text. Try a PDF or paste the text instead.");
+  return out;
+}
 async function handleFile(file){
   const status = $("status");
   if (!file) return;
-  const name = file.name || "resume";
-  const ext = name.toLowerCase().split(".").pop();
-  if (file.size > 3 * 1024 * 1024) { setStatus(status, "That file is over 3 MB. Try a smaller PDF or paste the text instead.", true); return; }
   try {
-    if (ext === "pdf" || file.type === "application/pdf") {
-      picked = { kind: "pdf", data: await readAsBase64(file) };
-    } else if (ext === "docx") {
-      if (!window.mammoth) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js");
-      const out = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-      picked = { kind: "text", text: out.value };
-    } else if (ext === "txt" || file.type === "text/plain") {
-      picked = { kind: "text", text: await file.text() };
-    } else {
-      picked = null; setStatus(status, "That file type isn't supported. Use a PDF, a Word .docx file or a .txt file.", true); return;
-    }
-    if (picked.kind === "text" && picked.text.trim().length < 80) { picked = null; setStatus(status, "That file doesn't contain enough readable text. Try a PDF or paste the text instead.", true); return; }
-    $("fileName").textContent = name; $("fileName").hidden = false;
+    picked = await readResumeFile(file);
+    $("fileName").textContent = file.name || "resume"; $("fileName").hidden = false;
     track("resume_file");
     setStatus(status, "");
-  } catch (e) {
-    picked = null;
-    setStatus(status, "That file couldn't be read. Try saving it as a PDF, or paste the text instead.", true);
-  }
+  } catch (e) { picked = null; setStatus(status, e.message, true); }
 }
 const drop = $("drop");
 $("file").addEventListener("change", e => handleFile(e.target.files[0]));
@@ -794,7 +834,8 @@ $("analyzeBtn").addEventListener("click", async () => {
     const data = await api("analyze", { body: payload });
     const p = normalize(data.profile);
     if (!p.headline) throw new Error("The analysis came back incomplete. Try again, or paste the text instead.");
-    if ($("saveLocal").checked) saveProfile(p);
+    resumeSrc = payload;
+    if ($("saveLocal").checked) { saveProfile(p); saveResume(payload); }
     setProfile(p);
     setStatus(status, "");
     track("dna_built");
@@ -853,7 +894,7 @@ function showProfile(p){
   }
   if (p.directions.length) {
     h += '<div class="o-sec"><h3>Directions worth exploring</h3><p class="hint">Suggestions based on evidence, not claims.</p><ul class="items">';
-    p.directions.forEach((d, i) => { h += '<li><i class="mark potential" aria-hidden="true"></i><b>' + esc(d.role) + '</b><span class="why">' + esc(d.why) + "</span>" + (d.gap ? '<span class="gap">To get there: ' + esc(d.gap) + "</span>" : "") + (ex ? "" : '<span class="row-actions"><button class="btn btn-quiet btn-sm" type="button" data-findjobs="' + i + '">Find ' + esc(d.role) + " jobs</button></span>") + "</li>"; });
+    p.directions.forEach((d, i) => { h += '<li><i class="mark potential" aria-hidden="true"></i><b>' + esc(d.role) + '</b><span class="why">' + esc(d.why) + "</span>" + (d.gap ? '<span class="gap">To get there: ' + esc(d.gap) + "</span>" : "") + (ex ? "" : '<span class="row-actions"><button class="btn btn-quiet btn-sm" type="button" data-tailor="' + i + '">Tailor my DNA for this</button> <button class="btn btn-quiet btn-sm" type="button" data-findjobs="' + i + '">Find ' + esc(d.role) + " jobs</button></span>") + "</li>"; });
     h += "</ul></div>";
   }
   if (p.unknowns.length) {
@@ -868,7 +909,8 @@ function showProfile(p){
   h += '<div class="o-foot">';
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
   else {
-    if (p.directions.length) h += '<button class="btn btn-primary" type="button" data-findjobs="0">Find jobs that fit</button>';
+    h += '<button class="btn btn-primary" type="button" id="tailorBtn">Tailor my DNA</button>';
+    if (p.directions.length) h += '<button class="btn btn-quiet" type="button" data-findjobs="0">Find jobs that fit</button>';
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
@@ -887,6 +929,8 @@ function showProfile(p){
     $("jobs").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
     runJobSearch(true);
   });
+  body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
+  const tb = $("tailorBtn"); if (tb) tb.onclick = () => openTailor(p, {});
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const s = $("saveBtn"); if (s) s.onclick = () => { if (saveProfile(p)) { $("oNote").textContent = "Saved on this device."; s.remove(); refreshProfileUI(); } else $("oNote").textContent = "This browser blocked saving. Private browsing mode can cause this."; };
@@ -1062,6 +1106,178 @@ async function saveCard(p, btn){
   } finally { btn.disabled = false; btn.textContent = label; }
 }
 
+/* ---------- Tailor my DNA ---------- */
+// Step 1: choose a role. Step 2: confirm skills. Step 3: the tailored resume, with blanks to fill and exports.
+let tailorState = null;
+const ACCEPT = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
+
+function openTailor(p, preset){
+  track("tailor_started");
+  tailorState = { p, role: preset.role || "", posting: preset.posting || "" };
+  if (!resumeSrc) resumeSrc = loadResume();
+  if ((tailorState.role || tailorState.posting) && resumeSrc) runTailorSkills();
+  else showTailorStart();
+}
+
+function showTailorStart(){
+  const st = tailorState, p = st.p;
+  let h = '<span class="flag">Tailor my DNA</span><h2 class="o-headline">Shape your resume for the role you want.</h2>';
+  h += '<p class="greet" style="margin-top:10px">Trazerr rewrites your resume around your real evidence for one role. It keeps every employer, title and date as written, and never adds anything you haven\'t done.</p>';
+  if (!resumeSrc) h += '<div class="t-resume"><span class="saved-note" style="margin:0">To tailor, Trazerr needs your resume file again. It stays on this device.</span><label class="btn btn-quiet btn-sm" for="tFile">Choose your resume</label><input id="tFile" type="file" accept="' + ACCEPT + '" hidden><b id="tFileName"></b></div>';
+  h += '<div class="t-field"><label for="tRole">Role you want</label><input class="input" id="tRole" type="text" maxlength="100" placeholder="e.g. Regional sales manager" value="' + esc(st.role) + '">';
+  if (p.directions.length) h += '<div class="t-chips">' + p.directions.map((d, i) => '<button class="chip" type="button" data-trole="' + i + '">' + esc(d.role) + "</button>").join("") + "</div>";
+  h += '</div><div class="t-field"><label for="tPosting">Job posting (optional, makes it more precise)</label><textarea id="tPosting" placeholder="Paste the full job posting">' + esc(st.posting) + "</textarea></div>";
+  h += '<div class="o-foot"><button class="btn btn-primary" type="button" id="tGo">Find my matching skills</button><button class="btn btn-quiet" type="button" data-close>Cancel</button></div><p class="status" id="tStatus" role="status" aria-live="polite"></p>';
+  openOverlay("Tailor my DNA", h);
+  $("oBody").querySelectorAll("[data-trole]").forEach(b => b.onclick = () => { $("tRole").value = p.directions[+b.dataset.trole].role; });
+  const f = $("tFile");
+  if (f) f.onchange = async () => {
+    try { resumeSrc = await readResumeFile(f.files[0]); $("tFileName").textContent = f.files[0].name; setStatus($("tStatus"), ""); }
+    catch (e) { setStatus($("tStatus"), e.message, true); }
+  };
+  $("tGo").onclick = () => {
+    st.role = $("tRole").value.trim(); st.posting = $("tPosting").value.trim();
+    if (st.role.length < 2 && st.posting.length < 120) { setStatus($("tStatus"), "Type the role you want, or paste the job posting.", true); return; }
+    if (!resumeSrc) { setStatus($("tStatus"), "Choose your resume file first.", true); return; }
+    runTailorSkills();
+  };
+}
+
+async function runTailorSkills(){
+  const st = tailorState;
+  openOverlay("Tailor my DNA", loadingHTML("Finding the skills that matter for " + (st.role || "this role") + "…"));
+  try {
+    const { skills } = await api("tailor", { body: { stage: "skills", role: st.role, posting: st.posting, resume: resumeSrc } });
+    st.skills = skills; if (!st.role) st.role = skills.role;
+    renderTailorSkills();
+  } catch (e) {
+    $("oBody").innerHTML = errorHTML(e.message, "Try again");
+    $("retryBtn").onclick = runTailorSkills;
+  }
+}
+
+function renderTailorSkills(){
+  const st = tailorState, k = st.skills;
+  const have = k.skills.filter(s => s.status !== "missing"), gaps = k.skills.filter(s => s.status === "missing");
+  let h = '<span class="flag">Tailor my DNA</span><h2 class="o-headline">' + esc(k.role || st.role) + "</h2>";
+  h += '<div class="score">' + ringHTML("tfit", k.fitNow) + '<div><h3>Your fit today</h3><p class="tip" style="margin-top:4px">' + esc(k.summary) + "</p></div></div>";
+  h += '<div class="o-sec"><h3>Skills this role needs</h3><p class="hint">Verified skills are already proven in your resume. Only check an inferred skill if it\'s true. Trazerr will build your resume around what\'s checked.</p><ul class="skills">';
+  have.forEach((s, i) => {
+    const v = s.status === "verified";
+    h += '<li><label><input type="checkbox" data-sk="' + i + '"' + (v ? " checked" : "") + '><i class="mark ' + (v ? "verified" : "inferred") + '" aria-hidden="true"></i><span><b>' + esc(s.name) + "</b>" +
+      (v ? "" : '<span class="q">' + esc(s.question || "Do you have this?") + "</span>") + (s.evidence ? '<span class="ev">' + esc(s.evidence) + "</span>" : "") + "</span></label></li>";
+  });
+  h += "</ul></div>";
+  if (gaps.length) {
+    h += '<div class="o-sec"><h3>Gaps for this role</h3><p class="hint">Your resume doesn\'t show these yet. They won\'t be added, but here\'s how to build them.</p><ul class="items">';
+    gaps.forEach(g => { h += '<li><i class="mark potential" aria-hidden="true"></i><b>' + esc(g.name) + "</b>" + (g.how ? '<span class="gap">' + esc(g.how) + "</span>" : "") + "</li>"; });
+    h += "</ul></div>";
+  }
+  h += '<div class="o-foot"><button class="btn btn-primary" type="button" id="tBuild">Tailor my resume</button><button class="btn btn-quiet" type="button" id="tBack">Change role</button></div>';
+  openOverlay("Tailor my DNA", h);
+  animateRing("tfit", k.fitNow);
+  $("tBack").onclick = showTailorStart;
+  $("tBuild").onclick = () => {
+    const confirmed = [...$("oBody").querySelectorAll("[data-sk]:checked")].map(c => have[+c.dataset.sk].name);
+    runTailorBuild(confirmed);
+  };
+}
+
+async function runTailorBuild(confirmed){
+  const st = tailorState; st.confirmed = confirmed;
+  openOverlay("Tailor my DNA", loadingHTML("Rewriting your resume for " + (st.role || "this role") + ". This can take up to a minute…"));
+  try {
+    const { resume } = await api("tailor", { body: { stage: "build", role: st.role, posting: st.posting, resume: resumeSrc, confirmed } });
+    st.resume = resume; st.values = {};
+    track("tailor_built");
+    renderTailored();
+  } catch (e) {
+    $("oBody").innerHTML = errorHTML(e.message, "Try again");
+    $("retryBtn").onclick = () => runTailorBuild(confirmed);
+  }
+}
+
+// Replaces [placeholders] with what the person typed; unfilled ones stay visible.
+function fillBlanks(text, mode){
+  return esc(text).replace(/\[([^\]]{1,60})\]/g, (m, ph) => {
+    const v = (tailorState.values[ph] || "").trim();
+    if (v) return esc(v);
+    return mode === "html" ? '<span class="ph">[' + ph + "]</span>" : "[" + ph + "]";
+  });
+}
+function resumeBody(r, mode){
+  const f = (t) => fillBlanks(t, mode);
+  let h = "<h4>" + esc(r.name) + "</h4>" + (r.contact ? '<div class="contact">' + esc(r.contact) + "</div>" : "") + (r.headline ? '<div class="headline">' + f(r.headline) + "</div>" : "");
+  if (r.summary) h += "<h5>Summary</h5><p>" + f(r.summary) + "</p>";
+  if (r.skills.length) h += "<h5>Skills</h5><p>" + r.skills.map(esc).join(" · ") + "</p>";
+  if (r.experience.length) {
+    h += "<h5>Experience</h5>";
+    r.experience.forEach(j => {
+      h += '<div class="rjob"><div class="rjob-h"><b>' + esc([j.title, j.company].filter(Boolean).join(", ")) + "</b><span>" + esc([j.location, j.dates].filter(Boolean).join(" · ")) + "</span></div>";
+      if (j.bullets.length) h += "<ul>" + j.bullets.map(b => "<li>" + f(b.text) + "</li>").join("") + "</ul>";
+      h += "</div>";
+    });
+  }
+  if (r.education.length) h += "<h5>Education</h5>" + r.education.map(e => "<p>" + esc(e) + "</p>").join("");
+  r.extras.forEach(x => { h += "<h5>" + esc(x.heading) + "</h5><p>" + x.items.map(esc).join(" · ") + "</p>"; });
+  return h;
+}
+function resumeText(r){
+  const f = (t) => { const d = document.createElement("div"); d.innerHTML = fillBlanks(t, "text"); return d.textContent; };
+  const L = [r.name, r.contact, f(r.headline)].filter(Boolean);
+  if (r.summary) L.push("", "SUMMARY", f(r.summary));
+  if (r.skills.length) L.push("", "SKILLS", r.skills.join(" · "));
+  if (r.experience.length) { L.push("", "EXPERIENCE"); r.experience.forEach(j => { L.push("", [j.title, j.company].filter(Boolean).join(", ") + (j.location || j.dates ? " | " + [j.location, j.dates].filter(Boolean).join(" · ") : "")); j.bullets.forEach(b => L.push("• " + f(b.text))); }); }
+  if (r.education.length) L.push("", "EDUCATION", ...r.education);
+  r.extras.forEach(x => L.push("", x.heading.toUpperCase(), x.items.join(" · ")));
+  return L.join("\n");
+}
+function resumeDocHTML(r){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(r.name || "Resume") + '</title><style>' +
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.4;color:#1b2233;max-width:7.5in;margin:.6in auto}' +
+    'h4{font-family:Georgia,serif;font-weight:normal;font-size:22pt;margin:0}.contact{color:#56607a;font-size:10pt}.headline{font-weight:bold;margin-top:6pt}' +
+    'h5{font-size:10pt;letter-spacing:1px;text-transform:uppercase;color:#1E3BB3;border-bottom:1px solid #ccc;margin:14pt 0 4pt;padding-bottom:2pt}' +
+    '.rjob{margin-top:8pt}.rjob-h span{color:#56607a;font-size:10pt;margin-left:8pt}ul{margin:3pt 0 0;padding-left:16pt}li{margin-top:2pt}p{margin:0 0 3pt}' +
+    '@page{margin:.5in}</style></head><body>' + resumeBody(r, "text") + "</body></html>";
+}
+
+function renderTailored(){
+  const st = tailorState, r = st.resume;
+  let h = '<span class="flag">Tailored for ' + esc(st.role) + '</span><h2 class="o-headline">Your resume, shaped for ' + esc(st.role) + ".</h2>";
+  if (r.fitBefore !== null || r.fitAfter !== null) h += '<div class="shift"><div><small>Fit before</small><b>' + (r.fitBefore ?? "–") + '</b></div><span aria-hidden="true">→</span><div class="after"><small>Estimated fit after</small><b>' + (r.fitAfter ?? "–") + "</b></div><p>An estimate. Filling the blanks with real details makes it stronger.</p></div>";
+  if (r.changes.length) h += '<div class="o-sec"><h3>What changed</h3><ul class="items">' + r.changes.map(c => '<li><i class="mark inferred" aria-hidden="true"></i><span class="why">' + esc(c) + "</span></li>").join("") + "</ul></div>";
+  if (r.blanks.length) h += '<div class="o-sec"><h3>Fill in the blanks</h3><p class="hint">Add only real details. Anything you leave empty stays marked in brackets so you don\'t miss it.</p><div class="blanks">' +
+    r.blanks.map((b, i) => '<div><label for="tb' + i + '">' + esc(b.question) + ' <span style="color:var(--brass)">[' + esc(b.placeholder) + ']</span></label><input class="input" id="tb' + i + '" data-ph="' + esc(b.placeholder) + '" type="text" maxlength="80"></div>').join("") + "</div></div>";
+  h += '<div class="o-sec"><h3>Your tailored resume</h3><div class="paper" id="paper">' + resumeBody(r, "html") + "</div></div>";
+  h += '<div class="o-foot"><button class="btn btn-primary" type="button" id="tWord">Download Word file</button><button class="btn btn-quiet" type="button" id="tPdf">Save as PDF</button><button class="btn btn-quiet" type="button" id="tCopy">Copy text</button><button class="btn btn-quiet" type="button" id="tAgain">Tailor for another role</button></div>';
+  h += '<p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
+  openOverlay("Tailor my DNA", h);
+  const body = $("oBody");
+  body.querySelectorAll("[data-ph]").forEach(inp => inp.oninput = () => { st.values[inp.dataset.ph] = inp.value; $("paper").innerHTML = resumeBody(r, "html"); });
+  const left = () => { const n = (resumeText(r).match(/\[[^\]]{1,60}\]/g) || []).length; return n ? " " + n + (n === 1 ? " blank is" : " blanks are") + " still marked in [brackets]." : ""; };
+  const fileBase = (r.name || "Resume") + " - " + (st.role || "tailored");
+  $("tWord").onclick = () => {
+    const blob = new Blob(["﻿" + resumeDocHTML(r)], { type: "application/msword" });
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = fileBase.replace(/[^\w .-]/g, "") + ".doc"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    $("oNote").textContent = "Downloaded. It opens in Word or Google Docs." + left();
+  };
+  $("tPdf").onclick = () => {
+    const w = window.open("", "_blank");
+    if (!w) { $("oNote").textContent = "Your browser blocked the print window. Allow pop-ups for this site, or use Download Word file."; return; }
+    w.document.write(resumeDocHTML(r)); w.document.close(); w.focus();
+    setTimeout(() => w.print(), 400);
+    $("oNote").textContent = "Choose \"Save as PDF\" in the print window." + left();
+  };
+  $("tCopy").onclick = async () => {
+    const text = resumeText(r);
+    try { await navigator.clipboard.writeText(text); $("oNote").textContent = "Copied." + left(); }
+    catch (e) { $("oNote").textContent = "Your browser blocked copying. Use Download Word file instead."; }
+  };
+  $("tAgain").onclick = () => { st.role = ""; st.posting = ""; showTailorStart(); };
+}
+
 /* ---------- career path ---------- */
 async function planPath(p){
   const goal = $("goalInput").value.trim(), st = $("goalStatus"), btn = $("goalBtn");
@@ -1185,9 +1401,10 @@ function renderFit(job, fit){
     fit.tips.forEach(t => { h += '<li><i class="mark inferred" aria-hidden="true"></i><span class="why">' + esc(t) + "</span></li>"; });
     h += "</ul></div>";
   }
-  h += '<div class="o-foot">' + (job.url ? '<a class="btn btn-primary" href="' + esc(safeUrl(job.url)) + '" target="_blank" rel="noopener noreferrer">View and apply</a>' : "") + '<button class="btn btn-quiet" type="button" data-close>Back to jobs</button></div>';
+  h += '<div class="o-foot">' + (job.url ? '<a class="btn btn-primary" href="' + esc(safeUrl(job.url)) + '" target="_blank" rel="noopener noreferrer">View and apply</a>' : "") + '<button class="btn btn-quiet" type="button" id="fitTailorBtn">Tailor my DNA for this job</button><button class="btn btn-quiet" type="button" data-close>Back to jobs</button></div>';
   openOverlay(job.title || "Fit check", h);
   animateRing("fit", toScore(fit.fitScore));
+  $("fitTailorBtn").onclick = () => openTailor(profile, { role: job.title, posting: job.description });
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $("oBody").querySelectorAll("[data-w]").forEach(el => { el.style.width = el.dataset.w + "%"; });
   }));
@@ -1221,9 +1438,11 @@ function renderJobDna(d){
   h += block("Nice to have", "", arr(d.niceToHaves).map(x => '<li><i class="mark unknown" aria-hidden="true"></i><span class="why">' + esc(x) + "</span></li>"));
   h += block("What it quietly expects", "Inferred from the posting, with the reasoning shown.", arr(d.hidden).map(x => '<li><i class="mark inferred" aria-hidden="true"></i><b>' + esc(x.item) + "</b>" + (x.why ? '<span class="ev">' + esc(x.why) + "</span>" : "") + "</li>"));
   h += block("Evidence that proves a fit", "What to look for on a resume, or show on yours.", arr(d.evidence).map(x => '<li><i class="mark potential" aria-hidden="true"></i><span class="why">' + esc(x) + "</span></li>"));
-  h += '<div class="o-foot">' + (profile && !profile.isExample ? '<button class="btn btn-primary" type="button" id="dnaFitBtn">Check my fit for this role</button>' : "") + '<button class="btn btn-quiet" type="button" data-close>Close</button></div>';
+  const mine = profile && !profile.isExample;
+  h += '<div class="o-foot">' + (mine ? '<button class="btn btn-primary" type="button" id="dnaFitBtn">Check my fit for this role</button><button class="btn btn-quiet" type="button" id="dnaTailorBtn">Tailor my DNA for this role</button>' : "") + '<button class="btn btn-quiet" type="button" data-close>Close</button></div>';
   openOverlay("Job DNA", h);
   const b = $("dnaFitBtn"); if (b) b.onclick = () => $("postingFitBtn").click();
+  const tb = $("dnaTailorBtn"); if (tb) tb.onclick = () => openTailor(profile, { role: d.title, posting: $("postingText").value.trim() });
 }
 
 /* ---------- waitlist ---------- */
@@ -1254,6 +1473,7 @@ syncHead();
 
 /* ---------- start ---------- */
 setProfile(loadSaved());
+resumeSrc = loadResume();
 track("visit");
 </script>
 </body>
