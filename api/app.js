@@ -521,6 +521,7 @@ const TAILOR_BUILD_SYSTEM = `You are Trazerr's resume tailor. You rewrite one re
 
 Hard rules, never broken:
 - Keep every employer, job title, date, location, school, degree and certification exactly as written in the resume. Add none. Don't drop any job.
+- If the resume gives no job title for an entry, leave "title" as an empty string. Never create, upgrade, rename or merge job titles.
 - Use only facts from the resume and the skills listed as confirmed. Never add a number, tool, result, title or responsibility the resume doesn't support.
 - Where a specific detail would make a bullet stronger and the resume doesn't give it, put a short placeholder in square brackets and add it to "blanks" with a plain question. Every placeholder must be unique and specific to what it asks for, like [accounts managed] or [% growth in 2023], never a generic [number] reused in several places.
 - The headline describes the person's strengths for the target role. It must not claim a job title they have never held.
@@ -548,6 +549,37 @@ ${JSON_ONLY} Use exactly this shape:
 }
 fitBefore is the fit of the original resume for this role; fitAfter is the honest estimate for the tailored version with blanks still unfilled. Don't inflate fitAfter: tailoring changes presentation, not experience.
 Give 3-6 changes and at most 8 blanks. Skills must come from the resume or the confirmed list.`;
+
+// Guard for text resumes: a title or employer in the tailored resume must appear in the original.
+// Small differences (a fixed typo) are allowed; anything else is removed rather than shown.
+const squash = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+function editDistanceWithin(a, b, max) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      best = Math.min(best, cur[j]);
+    }
+    if (best > max) return false;
+    prev = cur;
+  }
+  return prev[b.length] <= max;
+}
+function appearsIn(value, sourceSquashed) {
+  const v = squash(value);
+  if (!v || sourceSquashed.includes(v)) return true;
+  if (v.length < 6) return false;
+  const max = Math.max(1, Math.floor(v.length / 10));
+  // Compare against every stretch of the original that's up to `max` letters shorter or longer,
+  // so an added or missing letter still counts as a match.
+  for (let len = v.length - max; len <= v.length + max; len++) {
+    for (let i = 0; i + len <= sourceSquashed.length; i++) {
+      if (editDistanceWithin(v, sourceSquashed.slice(i, i + len), max)) return true;
+    }
+  }
+  return false;
+}
 
 function resumeContent(body) {
   const r = body?.resume;
@@ -601,6 +633,14 @@ async function tailor(req, res) {
     fitBefore: toScore(p.fitBefore), fitAfter: toScore(p.fitAfter)
   };
   if (!resume.experience.length) throw new UserError(502, "The tailored resume came back incomplete. Try again.");
+  if (body?.resume?.kind === "text") {
+    const src = squash(body.resume.text);
+    for (const j of resume.experience) {
+      for (const field of ["title", "company"]) {
+        if (j[field] && !appearsIn(j[field], src)) { console.error("Removed a " + field + " not in the resume:", j[field]); j[field] = ""; }
+      }
+    }
+  }
   return res.status(200).json({ resume });
 }
 
