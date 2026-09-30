@@ -12,6 +12,7 @@
 | `supabase/job_alerts.sql` | The job alerts table and its access rules. |
 | `supabase/talent.sql` | Talent pool tables: candidate profiles, employers, contact requests. |
 | `employers.html` | The employer area: sign up, search candidates, contact requests. |
+| `supabase/email-magic-link.html` | Branded sign-in email to paste into Supabase (Authentication > Emails). |
 | `tests/` | Automatic tests. Not deployed. |
 | `vercel.json` | Server time limit and the daily keepalive. |
 

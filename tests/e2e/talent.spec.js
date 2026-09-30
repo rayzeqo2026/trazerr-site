@@ -36,11 +36,23 @@ test("candidates: preview the anonymous profile, go visible, then accept a conta
   expect(db.talent).toMatchObject({ user_id: USER.id, visible: true, location: "Newark, NJ", remote_ok: true, profile: TALENT });
   expect(seen.events).toContain("talent_opt_in");
 
-  // A request is waiting; accepting shares details.
+  // A request is waiting: the Employers tab shows it, and the account button has a dot.
   await expect(page.locator("#acctRequests")).toContainText("Acme Logistics · Shift supervisor");
+  await expect(page.locator("#reqBadge")).toHaveText("1");
+  await expect(page.locator("#acctBtn")).toHaveClass(/has-news/);
+  // Tabs work with the keyboard.
+  await page.focus("#tab-employers");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator("#tab-alerts")).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#panel-alerts")).toBeVisible();
+  await expect(page.locator("#panel-employers")).toBeHidden();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator("#tab-employers")).toBeFocused();
   await page.click("[data-req][data-accept='1']");
   await expect(page.locator("#acctRequests")).toContainText("Accepted. Contact: Pat Lee, hire@acme.com");
   expect(answered).toEqual({ id: "r1", accept: true });
+  await expect(page.locator("#reqBadge")).toBeHidden();
+  await expect(page.locator("#acctBtn")).not.toHaveClass(/has-news/);
 
   // Hide and remove.
   await page.click("#talentToggle");

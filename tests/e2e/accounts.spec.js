@@ -27,7 +27,7 @@ test("sign in by email link, save, download and delete everything", async ({ pag
   // Opening the emailed link signs in and finishes the save.
   await page.goto("about:blank");
   await page.goto("/" + linkHash(), { waitUntil: "networkidle" });
-  await page.waitForSelector("#signOutBtn", { timeout: 10000 });
+  await page.waitForSelector(".acct-tabs", { timeout: 10000 });
   expect(await page.evaluate(() => location.hash.includes("access_token")), "tokens are removed from the address").toBe(false);
   await expect.poll(() => db.row && db.row.user_id).toBe(USER.id);
   expect(db.row.career_dna.fullName).toBe("Sam Rivera");
@@ -43,7 +43,8 @@ test("sign in by email link, save, download and delete everything", async ({ pag
   expect(file.careerDNA).toBeTruthy();
   expect(file.resume).toBeTruthy();
 
-  // Delete everything: server record, this browser's copy and the session.
+  // Delete everything (Settings tab): server record, this browser's copy and the session.
+  await page.click("#tab-settings");
   await page.click("#delAsk");
   await page.click("#delYes");
   await expect.poll(() => db.row).toBeNull();
@@ -91,6 +92,7 @@ test("job alerts: turn one on from a search while signed out, then manage it fro
   await page.click("#alertBtn");
   await expect(page.locator("#alertStatus")).toHaveText("You already have this job alert.");
   await page.click("#acctBtn");
+  await page.click("#tab-alerts");
   await page.locator("#acctAlerts [data-act=stop]").click();
   await expect(page.locator("#acctAlerts")).toContainText("No job alerts yet");
   expect(db.alerts).toEqual([]);

@@ -1133,30 +1133,10 @@ function renderJobDna(d){
   const tb = $("dnaTailorBtn"); if (tb) tb.onclick = () => openTailor(profile, { role: d.title, posting: $("postingText").value.trim() });
 }
 
-/* ---------- waitlist ---------- */
-$("waitlist").addEventListener("submit", async e => {
-  e.preventDefault();
-  const email = $("wlEmail").value.trim(), st = $("wlStatus"), btn = e.target.querySelector("button");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setStatus(st, "Enter a valid email address, like name@example.com.", true); return; }
-  btn.disabled = true; setStatus(st, "Adding you…");
-  try {
-    const data = await api("waitlist", { body: { email, company: $("wlCompany").value } });
-    e.target.reset();
-    if (!data.already) track("waitlist_joined");
-    setStatus(st, data.already ? "You're already on the waitlist. We'll be in touch." : "You're on the waitlist. We'll email you when early access opens.");
-  } catch (err) { setStatus(st, err.message, true); }
-  finally { btn.disabled = false; }
-});
-
-/* ---------- header over the hero image ---------- */
-const siteHead = document.querySelector(".site-head"), darkEnd = document.querySelector(".sample") || document.querySelector(".hero");
-function syncHead(){
-  const y = window.scrollY;
-  siteHead.classList.toggle("on-dark", document.documentElement.dataset.theme === "dark" && y < darkEnd.offsetTop + darkEnd.offsetHeight - siteHead.offsetHeight);
-  siteHead.classList.toggle("scrolled", y > 8);
-}
+/* ---------- header shadow once the page scrolls ---------- */
+const siteHead = document.querySelector(".site-head");
+function syncHead(){ siteHead.classList.toggle("scrolled", window.scrollY > 8); }
 window.addEventListener("scroll", syncHead, { passive: true });
-window.addEventListener("resize", syncHead);
 syncHead();
 
 /* ---------- light and dark themes ---------- */
@@ -1619,7 +1599,7 @@ async function afterSignIn(){
     const rec = await fetchRecord(true);
     if (rec && !local) { saveProfile(normalize(rec.career_dna)); if (rec.resume) saveResume(rec.resume); resumeSrc = loadResume(); setProfile(loadSaved()); }
   } catch (e) {}
-  openAccount({ note: "You're signed in." + alertNote });
+  openAccount({ note: "You're signed in." + alertNote, tab: alertNote ? "alerts" : undefined });
 }
 function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return ""; } }
 async function openAccount(o){
@@ -1653,27 +1633,44 @@ async function openAccount(o){
   const local = loadSaved();
   let h = '<span class="flag">Your account</span><h2 class="o-headline">Signed in</h2><p class="greet" style="margin-top:6px">as <b>' + esc(sbUser.email || "") + "</b></p>";
   if (o.note) h += '<p class="saved-note">' + esc(o.note) + "</p>";
-  h += '<div class="o-sec"><h3>Saved to your account</h3>';
+  // Four tabs keep the panel short: what's saved, employers, job alerts, and account settings.
+  const tab = o.tab || (o.startTalent || o.focus === "requests" ? "employers" : "dna");
+  const TABS = [["dna", "Career DNA"], ["employers", "Employers"], ["alerts", "Job alerts"], ["settings", "Settings"]];
+  h += '<div class="acct-tabs" role="tablist" aria-label="Your account">' + TABS.map(([k, l]) => '<button type="button" role="tab" id="tab-' + k + '" aria-controls="panel-' + k + '" aria-selected="' + (k === tab) + '" tabindex="' + (k === tab ? 0 : -1) + '">' + l + (k === "employers" ? '<span class="tab-badge" id="reqBadge" hidden></span>' : "") + "</button>").join("") + "</div>";
+  h += '<p class="o-note acct-note" id="acctNote" role="status" aria-live="polite"></p>';
+  const panel = (k, inner) => '<div class="acct-panel" role="tabpanel" id="panel-' + k + '" aria-labelledby="tab-' + k + '" tabindex="0"' + (k === tab ? "" : " hidden") + ">" + inner + "</div>";
+  let dnaH = '<div class="o-sec"><h3>Saved to your account</h3>';
   if (rec) {
     const p = normalize(rec.career_dna);
-    h += '<div class="acct-rec"><div><b>' + esc(p.fullName || "Your Career DNA") + "</b><span>" + esc(p.headline).slice(0, 140) + '</span><small>Saved ' + esc(fmtDate(rec.updated_at)) + '</small></div><div class="acct-actions"><button class="btn btn-primary btn-sm" type="button" id="acctOpen">Open it</button><button class="btn btn-quiet btn-sm" type="button" id="acctDownload">Download my data</button></div></div>';
+    dnaH += '<div class="acct-rec"><div><b>' + esc(p.fullName || "Your Career DNA") + "</b><span>" + esc(p.headline).slice(0, 140) + '</span><small>Saved ' + esc(fmtDate(rec.updated_at)) + '</small></div><div class="acct-actions"><button class="btn btn-primary btn-sm" type="button" id="acctOpen">Open it</button><button class="btn btn-quiet btn-sm" type="button" id="acctDownload">Download my data</button></div></div>';
   } else {
-    h += '<p class="hint">Nothing saved yet. Build your Career DNA, then choose "Save to my account" on the result.</p>';
-    if (local) h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="acctSaveLocal">Save the Career DNA on this device to my account</button></div>';
+    dnaH += '<p class="hint">Nothing saved yet. Build your Career DNA, then choose "Save to my account" on the result.</p>';
+    if (local) dnaH += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="acctSaveLocal">Save the Career DNA on this device to my account</button></div>';
   }
-  h += "</div>";
-  h += '<div class="o-sec" id="talentSec"><h3>Let employers find you</h3><div id="acctTalent"><p class="hint">Loading…</p></div></div>';
-  h += '<div class="o-sec" id="requestsSec"><h3>Contact requests</h3><div id="acctRequests"><p class="hint">Loading…</p></div></div>';
-  h += '<div class="o-sec"><h3>Job alerts</h3><div id="acctAlerts"><p class="hint">Loading…</p></div></div>';
-  h += '<div class="o-sec"><h3>Delete everything</h3><p class="hint">Permanently deletes your saved Career DNA, your resume and your account, and removes them from this device too. This can\'t be undone.</p>';
-  h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-quiet btn-danger" type="button" id="delAsk">Delete everything</button></div>';
-  h += '<div class="acct-confirm" id="delConfirm" hidden><p><b>Delete your account and everything saved in it?</b></p><div class="o-foot" style="margin-top:12px"><button class="btn btn-danger-solid" type="button" id="delYes">Yes, delete everything</button><button class="btn btn-quiet" type="button" id="delNo">Keep my account</button></div></div></div>';
-  h += '<div class="o-foot"><button class="btn btn-quiet" type="button" id="signOutBtn">Sign out</button></div><p class="o-note" id="acctNote" role="status" aria-live="polite"></p>';
+  dnaH += "</div>";
+  h += panel("dna", dnaH);
+  h += panel("employers", '<div class="o-sec" id="requestsSec"><h3>Contact requests</h3><div id="acctRequests"><p class="hint">Loading…</p></div></div><div class="o-sec" id="talentSec"><h3>Let employers find you</h3><div id="acctTalent"><p class="hint">Loading…</p></div></div>');
+  h += panel("alerts", '<div class="o-sec"><h3>Job alerts</h3><div id="acctAlerts"><p class="hint">Loading…</p></div></div>');
+  h += panel("settings", '<div class="o-sec"><h3>Signed in</h3><p class="hint">as <b>' + esc(sbUser.email || "") + '</b></p><div class="o-foot" style="margin-top:12px"><button class="btn btn-quiet" type="button" id="signOutBtn">Sign out</button></div></div>' +
+    '<div class="o-sec"><h3>Delete everything</h3><p class="hint">Permanently deletes your saved Career DNA, your resume, your employer profile, your job alerts and your account, and removes them from this device too. This can\'t be undone.</p>' +
+    '<div class="o-foot" style="margin-top:14px"><button class="btn btn-quiet btn-danger" type="button" id="delAsk">Delete everything</button></div>' +
+    '<div class="acct-confirm" id="delConfirm" hidden><p><b>Delete your account and everything saved in it?</b></p><div class="o-foot" style="margin-top:12px"><button class="btn btn-danger-solid" type="button" id="delYes">Yes, delete everything</button><button class="btn btn-quiet" type="button" id="delNo">Keep my account</button></div></div></div>');
   openOverlay("Your account", h);
   const note = $("acctNote");
+  const tabBtns = [...document.querySelectorAll(".acct-tabs [role=tab]")];
+  const show = (btn, focus) => {
+    tabBtns.forEach(b => { const on = b === btn; b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; $(b.getAttribute("aria-controls")).hidden = !on; });
+    if (focus) btn.focus();
+  };
+  tabBtns.forEach((b, i) => {
+    b.onclick = () => show(b);
+    b.onkeydown = e => {
+      const n = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? tabBtns.length - 1 : null;
+      if (n === null) return; e.preventDefault(); show(tabBtns[(n + tabBtns.length) % tabBtns.length], true);
+    };
+  });
   loadAlerts(); loadRequests();
   loadTalent(o.startTalent ? (rec && rec.career_dna ? normalize(rec.career_dna) : local) : null);
-  if (o.startTalent || o.focus === "requests") setTimeout(() => { const el = $(o.startTalent ? "talentSec" : "requestsSec"); if (el) el.scrollIntoView({ block: "start" }); }, 50);
   const op = $("acctOpen"); if (op) op.onclick = () => showProfile(normalize(rec.career_dna));
   const dl = $("acctDownload"); if (dl) dl.onclick = async () => {
     try { const full = await fetchRecord(true); const blob = new Blob([JSON.stringify({ email: sbUser.email, savedAt: full.updated_at, careerDNA: full.career_dna, resume: full.resume }, null, 2)], { type: "application/json" });
@@ -1761,10 +1758,20 @@ async function draftTalent(dna, existing){
     };
   } catch (e) { if ($("acctTalent")) box.innerHTML = '<p class="hint">' + esc(e.message) + '</p><div class="o-foot" style="margin-top:12px"><button class="btn btn-quiet btn-sm" type="button" id="talentRetry">Try again</button></div>'; const rt = $("talentRetry"); if (rt) rt.onclick = () => draftTalent(dna, existing); }
 }
+// Waiting contact requests show as a number on the Employers tab and a dot on the account button.
+function paintRequestBadge(n){
+  const b = $("reqBadge"); if (b) { b.textContent = n; b.hidden = !n; b.setAttribute("aria-label", n + " waiting"); }
+  $("acctBtn").classList.toggle("has-news", n > 0);
+  if (sbUser) $("acctBtn").setAttribute("aria-label", "Your account, signed in as " + (sbUser.email || "") + (n ? ", " + n + " contact request" + (n === 1 ? "" : "s") + " waiting" : ""));
+}
+async function checkRequests(){
+  try { const out = await authed("myrequests"); paintRequestBadge(out.requests.filter(r => r.status === "pending").length); } catch (e) {}
+}
 async function loadRequests(){
   const box = $("acctRequests"); if (!box) return;
   let out; try { out = await authed("myrequests"); } catch (e) { if ($("acctRequests")) box.innerHTML = '<p class="hint">' + esc(e.message) + "</p>"; return; }
   if (!$("acctRequests")) return;
+  paintRequestBadge(out.requests.filter(r => r.status === "pending").length);
   if (!out.requests.length) { box.innerHTML = '<p class="hint">No contact requests yet. When an approved employer wants to talk to you, it shows here and you get an email.</p>'; return; }
   box.innerHTML = '<ul class="acct-alerts">' + out.requests.map(r => '<li><div><b>' + esc(r.company) + " · " + esc(r.jobTitle) + "</b>" +
     (r.message ? "<p class=\"hint\" style=\"margin:4px 0\">" + esc(r.message) + "</p>" : "") +
@@ -1805,7 +1812,7 @@ if (ACCOUNTS_ON && location.hash === "#account" && !linkHash) {
   acct().then(() => { history.replaceState(history.state, "", location.pathname + location.search); openAccount({ focus: "requests" }); }).catch(() => {});
 } else if (ACCOUNTS_ON && (linkHash || hadSession())) {
   acct().then(() => {
-    if (!linkHash) return;
+    if (!linkHash) { if (sbUser) checkRequests(); return; }
     if (sbUser) return afterSignIn();
     history.replaceState(history.state, "", location.pathname + location.search);
     const expired = /expired|invalid/i.test(linkHash.get("error_description") || "");

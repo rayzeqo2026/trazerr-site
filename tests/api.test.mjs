@@ -343,7 +343,7 @@ test("contact requests: anonymous until the candidate accepts, then both get eac
   tables.career_records.push({ user_id: CAND.id, career_dna: { fullName: "Sam Rivera" } });
   const sent = await call("contactrequest", { auth: "Bearer emp-token", body: { candidate: tp.public_id, jobTitle: "Shift supervisor", message: "We'd love to talk." } });
   assert.equal(sent.status, 200);
-  assert.deepEqual(emails[0].to, ["sam@example.com"]); assert.match(emails[0].subject, /Acme would like to talk to you/);
+  assert.deepEqual(emails[0].to, ["sam@example.com"]); assert.match(emails[0].subject, /Acme would like to talk to you about a Shift supervisor role/);
   assert.ok(!emails[0].text.includes("hire@acme.com"), "the employer's email isn't shared before accepting");
   assert.equal((await call("contactrequest", { auth: "Bearer emp-token", body: { candidate: tp.public_id, jobTitle: "Shift supervisor" } })).status, 409);
 

@@ -996,7 +996,18 @@ async function sendEmail({ to, subject, text, html, replyTo, from }) {
     return true;
   } catch (e) { await recordError("server", "email", "Email failed: " + e.message, false); return false; }
 }
-const simpleHtml = (paras) => '<div style="font-family:Arial,Helvetica,sans-serif;color:#16233F;max-width:560px;margin:0 auto;line-height:1.5">' + paras.map(p => '<p style="margin:0 0 14px">' + p + "</p>").join("") + "</div>";
+// Every email shares one branded frame: logo, a brick accent line, and the same footer. Tables and
+// inline styles, so it looks right in Gmail, Outlook and Apple Mail.
+function emailLayout(inner, footer) {
+  return '<div style="background:#F6F4F0;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #DCD8D0;border-top:4px solid #B42A1F;border-radius:6px;border-collapse:separate">' +
+    '<tr><td style="padding:20px 24px 4px"><a href="' + SITE + '" style="text-decoration:none;color:#16233F;font-weight:bold;font-size:20px;letter-spacing:-0.3px"><img src="' + SITE + '/logo.png" width="28" height="28" alt="" style="vertical-align:middle;border:0;margin-right:8px">Trazerr</a></td></tr>' +
+    '<tr><td style="padding:12px 24px 24px;color:#16233F;font-size:15px;line-height:1.55">' + inner + "</td></tr></table>" +
+    '<p style="max-width:560px;margin:14px auto 0;color:#4A5163;font-size:12px;line-height:1.5;text-align:center">' + (footer ? footer + "<br>" : "") + 'Trazerr · Career intelligence, built on evidence · <a href="' + SITE + '" style="color:#4A5163">trazerr.com</a></p></div>';
+}
+const emailButton = (href, label) => '<a href="' + escHtml(href) + '" style="display:inline-block;background:#1F3F82;color:#FFFFFF;padding:11px 20px;border-radius:4px;text-decoration:none;font-weight:bold">' + escHtml(label) + "</a>";
+const aOrAn = (word) => (/^[aeiou]/i.test(String(word || "").trim()) ? "an " : "a ") + word;
+const simpleHtml = (paras, footer) => emailLayout(paras.map(p => '<p style="margin:0 0 14px">' + p + "</p>").join(""), footer);
 
 async function countEvent(name, n = 1) {
   const rc = redisConfig();
@@ -1150,14 +1161,13 @@ async function contactrequest(req, res) {
   if (made && made.conflict) throw new UserError(409, "You've already contacted this candidate.");
   await countEvent("contact_requested");
   const to = await emailOf(cfg, cand.user_id);
-  await sendEmail({ to, from: "Trazerr <hello@trazerr.com>", subject: emp.company + " would like to talk to you about a " + jobTitle + " role",
-    text: emp.company + " found your anonymous profile on Trazerr and would like to talk to you about a " + jobTitle + " role." + (message ? "\n\nTheir message:\n" + message : "") +
+  await sendEmail({ to, from: "Trazerr <hello@trazerr.com>", subject: emp.company + " would like to talk to you about " + aOrAn(jobTitle) + " role",
+    text: emp.company + " found your anonymous profile on Trazerr and would like to talk to you about " + aOrAn(jobTitle) + " role." + (message ? "\n\nTheir message:\n" + message : "") +
       "\n\nThey don't have your name or contact details. If you accept, we'll share your name and email with them, and theirs with you.\n\nAccept or decline: " + SITE + "/#account\n\nYou get this because you chose to let employers find you on Trazerr. You can hide your profile any time from your account.",
-    html: simpleHtml(["<b>" + escHtml(emp.company) + "</b> found your anonymous profile on Trazerr and would like to talk to you about a <b>" + escHtml(jobTitle) + "</b> role.",
-      ...(message ? ["Their message:<br>" + escHtml(message).replace(/\n/g, "<br>")] : []),
+    html: simpleHtml(["<b>" + escHtml(emp.company) + "</b> found your anonymous profile on Trazerr and would like to talk to you about " + (/^[aeiou]/i.test(jobTitle) ? "an" : "a") + " <b>" + escHtml(jobTitle) + "</b> role.",
+      ...(message ? ['<span style="display:block;border-left:3px solid #B42A1F;padding:4px 0 4px 12px;color:#4A5163;font-style:italic">' + escHtml(message).replace(/\n/g, "<br>") + "</span>"] : []),
       "They don't have your name or contact details. If you accept, we'll share your name and email with them, and theirs with you.",
-      '<a href="' + SITE + '/#account" style="display:inline-block;background:#1F3F82;color:#fff;padding:10px 18px;border-radius:4px;text-decoration:none;font-weight:bold">Accept or decline</a>',
-      '<span style="color:#4A5163;font-size:13px">You get this because you chose to let employers find you on Trazerr. You can hide your profile any time from your account.</span>']) });
+      emailButton(SITE + "/#account", "Accept or decline")], "You get this because you chose to let employers find you on Trazerr. You can hide your profile any time from your account.") });
   return res.status(200).json({ ok: true });
 }
 
@@ -1192,7 +1202,8 @@ async function respondrequest(req, res) {
       text: name + " accepted your contact request on Trazerr about the " + r.job_title + " role.\n\nEmail: " + me.email + "\n\nReply to this email to reach them directly.",
       html: simpleHtml(["<b>" + escHtml(name) + "</b> accepted your contact request on Trazerr about the <b>" + escHtml(r.job_title) + "</b> role.", "Email: " + escHtml(me.email), "Reply to this email to reach them directly."]) });
     await sendEmail({ to: me.email, replyTo: empEmail, subject: "You're connected with " + (emp?.company || "the employer"),
-      text: "You accepted " + (emp?.company || "the employer") + "'s request about the " + r.job_title + " role. We've sent them your name and email.\n\nTheir contact: " + (emp?.contact_name || "") + ", " + empEmail + "\n\nReply to this email to reach them directly." });
+      text: "You accepted " + (emp?.company || "the employer") + "'s request about the " + r.job_title + " role. We've sent them your name and email.\n\nTheir contact: " + (emp?.contact_name || "") + ", " + empEmail + "\n\nReply to this email to reach them directly.",
+      html: simpleHtml(["You accepted <b>" + escHtml(emp?.company || "the employer") + "</b>'s request about the <b>" + escHtml(r.job_title) + "</b> role. We've sent them your name and email.", "Their contact: " + escHtml([emp?.contact_name, empEmail].filter(Boolean).join(", ")), "Reply to this email to reach them directly. Good luck!"]) });
   }
   return res.status(200).json({ status: accept ? "accepted" : "declined" });
 }
@@ -1210,7 +1221,7 @@ async function adminemployers(req, res) {
     if (decision === "approved" && emp.status !== "approved") {
       await sendEmail({ to: await emailOf(cfg, id), subject: "You can now find candidates on Trazerr",
         text: "Hi " + emp.contact_name + ",\n\n" + emp.company + " is approved. You can now describe a job and see the candidates who fit it best: " + SITE + "/employers.html\n\nCandidates stay anonymous until they accept your contact request.",
-        html: simpleHtml(["Hi " + escHtml(emp.contact_name) + ",", "<b>" + escHtml(emp.company) + "</b> is approved. You can now describe a job and see the candidates who fit it best.", '<a href="' + SITE + '/employers.html" style="display:inline-block;background:#1F3F82;color:#fff;padding:10px 18px;border-radius:4px;text-decoration:none;font-weight:bold">Find candidates</a>', "Candidates stay anonymous until they accept your contact request."]) });
+        html: simpleHtml(["Hi " + escHtml(emp.contact_name) + ",", "<b>" + escHtml(emp.company) + "</b> is approved. You can now describe a job and see the candidates who fit it best.", emailButton(SITE + "/employers.html", "Find candidates"), "Candidates stay anonymous until they accept your contact request."]) });
     }
     return res.status(200).json({ ok: true });
   }
@@ -1259,8 +1270,7 @@ function alertEmail(groups, unsub) {
   const label = (a) => a.query + (a.remote ? " (remote)" : a.location ? " near " + a.location : "");
   const subject = total + " new job" + (total === 1 ? "" : "s") + " for " + label(groups[0].alert) + (groups.length > 1 ? " and more" : "");
   const searchUrl = (a) => SITE + "/?" + new URLSearchParams({ q: a.query, where: a.location || "", ...(a.remote ? { remote: "1" } : {}), src: "alert" }) + "#jobs";
-  let html = '<div style="font-family:Arial,Helvetica,sans-serif;color:#16233F;max-width:560px;margin:0 auto;padding:8px 4px">' +
-    '<p style="font-size:20px;font-weight:bold;margin:0 0 4px">New jobs for you</p>' +
+  let html = '<p style="font-size:20px;font-weight:bold;margin:0 0 4px">New jobs for you</p>' +
     '<p style="color:#4A5163;margin:0 0 18px">Posted in the past week, matching your job alerts on Trazerr.</p>';
   let text = "New jobs for you, posted in the past week.\n";
   for (const g of groups) {
@@ -1273,11 +1283,10 @@ function alertEmail(groups, unsub) {
         (meta ? '<div style="color:#4A5163;font-size:14px;margin-top:3px">' + escHtml(meta) + "</div>" : "") + "</div>";
       text += "- " + j.title + (meta ? " (" + meta + ")" : "") + "\n  " + j.url + "\n";
     }
-    html += '<p style="margin:4px 0 0"><a href="' + escHtml(searchUrl(g.alert)) + '" style="color:#1F3F82">See these on Trazerr and check your fit →</a></p>';
+    html += '<p style="margin:12px 0 0">' + emailButton(searchUrl(g.alert), "See these on Trazerr and check your fit") + "</p>";
     text += "See these on Trazerr and check your fit: " + searchUrl(g.alert) + "\n";
   }
-  html += '<p style="color:#4A5163;font-size:13px;margin-top:28px;border-top:1px solid #DCD8D0;padding-top:12px">You get this because you turned on job alerts at trazerr.com. ' +
-    '<a href="' + escHtml(unsub) + '" style="color:#4A5163">Stop all job alerts</a> or manage them from your account on the site.</p></div>';
+  html = emailLayout(html, 'You get this because you turned on job alerts at trazerr.com. <a href="' + escHtml(unsub) + '" style="color:#4A5163">Stop all job alerts</a> or manage them from your account.');
   text += "\nYou get this because you turned on job alerts at trazerr.com.\nStop all job alerts: " + unsub + "\n";
   return { subject, html, text };
 }

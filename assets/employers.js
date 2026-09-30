@@ -42,12 +42,28 @@
   }
   $("empSignOut").onclick = async () => { await sb.auth.signOut().catch(() => {}); $("empSignOut").hidden = true; showSignIn("You're signed out."); };
 
+  // What an employer gets, shown before they sign up: one sample candidate, as search results look.
+  function exampleHTML(){
+    return '<aside class="emp-example" aria-label="Example search result"><p class="emp-example-tag">Example result · Operations supervisor, Newark NJ</p>' +
+      '<article class="emp-cand"><div class="emp-cand-top"><div class="emp-score" aria-label="Fit 86 out of 100"><b>86</b><small>fit</small></div><div><h3>Warehouse lead who trains teams and cuts errors</h3><p class="hint">About 6 years · Newark, NJ</p></div></div>' +
+      '<ul class="plain"><li><i class="mark verified" aria-hidden="true"></i>Leads a night shift of 9, the size of this team</li><li><i class="mark verified" aria-hidden="true"></i>Cut picking errors by 20%, the metric this role owns</li><li><i class="mark verified" aria-hidden="true"></i>Trains every new hire on safety procedures</li></ul>' +
+      '<p class="emp-gap"><i class="mark unknown" aria-hidden="true"></i>No budget ownership shown yet</p>' +
+      '<div class="emp-ask"><span class="btn btn-primary btn-sm" aria-hidden="true">Ask to talk</span></div></article>' +
+      '<p class="hint emp-example-note">A title search would miss this person: they\'ve never been called a supervisor.</p></aside>';
+  }
+  function promisesHTML(){
+    return '<ul class="emp-promises">' +
+      '<li><b>Ranked by evidence</b><span>Every match comes with the reasons from their experience, and the biggest gap.</span></li>' +
+      '<li><b>People who want to be found</b><span>Only candidates who chose to be visible, so your message is welcome.</span></li>' +
+      '<li><b>Free while we launch</b><span>No card, no contract. Each employer is reviewed to keep candidates safe.</span></li></ul>';
+  }
+
   function showSignIn(note){
-    app.innerHTML = '<section class="emp-card"><h2>Sign in or create an employer account</h2>' +
+    app.innerHTML = promisesHTML() + '<div class="emp-grid"><section class="emp-card"><h2>Sign in or create an employer account</h2>' +
       '<p class="hint">Use your work email. We\'ll email you a sign-in link, so there\'s no password. New employers are reviewed by the Trazerr team before they can search, usually within a day.</p>' +
       (note ? '<p class="saved-note">' + esc(note) + "</p>" : "") +
       '<form class="t-field" id="empSignin" novalidate><label for="empEmail">Work email</label><div class="goal-form"><input class="input" id="empEmail" type="email" autocomplete="email" required placeholder="you@company.com"><button class="btn btn-primary" type="submit" id="empSigninBtn">Email me a sign-in link</button></div></form>' +
-      '<p class="status" id="empSigninStatus" role="status" aria-live="polite"></p></section>' + howItWorks();
+      '<p class="status" id="empSigninStatus" role="status" aria-live="polite"></p></section>' + exampleHTML() + "</div>" + howItWorks();
     $("empSignin").onsubmit = async (e) => {
       e.preventDefault();
       const email = $("empEmail").value.trim(), st = $("empSigninStatus"), btn = $("empSigninBtn");

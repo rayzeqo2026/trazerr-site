@@ -43,14 +43,14 @@
   <p class="seqlay-count" id="seqlayCount" aria-hidden="true"></p>
   <button class="seqlay-hide" id="seqlayHide" type="button">Hide</button>
 </div>
-<header class="site-head on-dark">
+<header class="site-head">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
     <nav class="site-nav" aria-label="Main">
       <a href="#try">Career DNA</a>
       <a href="#tailor">Tailor my DNA</a>
       <a href="#jobs">Jobs</a>
-      <a href="#employers">Job DNA</a>
+      <a href="/employers.html">For employers</a>
       <a href="#about">About</a>
     </nav>
     <button class="acct-btn" id="acctBtn" type="button" aria-label="Sign in">
@@ -67,21 +67,27 @@
 
 <main id="top">
   <section class="hero">
-    <div class="hero-bg">
-      <picture>
-        <source type="image/avif" srcset="/img/career-dna-640.avif 640w, /img/career-dna-960.avif 960w, /img/career-dna-1280.avif 1280w, /img/career-dna-1672.avif 1672w" sizes="100vw">
-        <source type="image/webp" srcset="/img/career-dna-640.webp 640w, /img/career-dna-960.webp 960w, /img/career-dna-1280.webp 1280w, /img/career-dna-1672.webp 1672w" sizes="100vw">
-        <img src="/img/career-dna-1280.jpg" srcset="/img/career-dna-640.jpg 640w, /img/career-dna-960.jpg 960w, /img/career-dna-1280.jpg 1280w, /img/career-dna-1672.jpg 1672w" sizes="100vw"
-          width="1672" height="941" fetchpriority="high" decoding="async"
-          alt="A professional walks forward as their resume turns into a glowing DNA strand that branches into many career paths.">
-      </picture>
-    </div>
     <div class="wrap">
       <div class="hero-copy">
         <h1>What could your career become?</h1>
         <p class="lede">Upload your resume. Trazerr reads it the way a great recruiter would, shows you the strengths it reveals, and finds the jobs where you'd fit, including ones you haven't considered.</p>
         <a class="hero-link" href="#tailor">New: tailor your resume for any job <span aria-hidden="true">→</span></a>
       </div>
+
+      <figure class="hero-visual" aria-label="How Trazerr works: a line from your resume becomes a proven strength in your Career DNA, which leads to jobs that fit and employers who can find you.">
+        <div class="hv-card hv-resume"><small>A line from your resume</small><p>“Led a team of 9 on the night shift and cut picking errors by 20%.”</p></div>
+        <div class="hv-card hv-dna"><small>Your Career DNA</small>
+          <ul>
+            <li><i class="mark verified" aria-hidden="true"></i><b>Team leadership</b><span>On your resume</span></li>
+            <li><i class="mark verified" aria-hidden="true"></i><b>Process improvement</b><span>On your resume</span></li>
+            <li><i class="mark inferred" aria-hidden="true"></i><b>Training and coaching</b><span>Between the lines</span></li>
+          </ul>
+        </div>
+        <div class="hv-row">
+          <div class="hv-card hv-job"><small>A job that fits</small><b>Operations supervisor</b><span class="hv-fit"><em>86</em> fit</span></div>
+          <div class="hv-card hv-emp"><small>An employer finds you</small><b>“We’d love to talk about a supervisor role.”</b><span>You choose what to share</span></div>
+        </div>
+      </figure>
 
       <div class="hero-card" id="try">
         <h2>See your Career DNA</h2>
@@ -150,19 +156,15 @@
   <section class="block" id="how">
     <div class="wrap">
       <div class="sec-head">
-        <h2>Your resume is the start, not the finished product.</h2>
-        <p class="lede">Trazerr builds on your real history at every step of your search.</p>
+        <h2>Your Career DNA is the start. Here's what it unlocks.</h2>
+        <p class="lede">Everything below uses the same evidence from your resume, so nothing is made up along the way.</p>
       </div>
-      <ol class="steps">
-        <li><b>Resume</b><span>Your work history, read as raw evidence.</span></li>
-        <li><b>Career DNA</b><span>A clear picture of what you can do, and how we know.</span></li>
-        <li><b>Discover</b><span>Directions your experience supports that you may not have considered.</span></li>
-        <li><b>Match</b><span>Live job openings, with an honest fit check for each one.</span></li>
-        <li><b>Optimize</b><span>Tailor my DNA reshapes your resume for one role, using only your real evidence.</span></li>
-        <li><b>Plan</b><span>A step-by-step path from where you are to where you want to be.</span></li>
-        <li><b>Evolve</b><span>Update your resume and your Career DNA grows with you.</span></li>
-      </ol>
-      <div class="steps-cta"><p>It starts with step 1.<span>Paste your resume. Your Career DNA is ready in about 20 seconds.</span></p><a class="btn btn-primary" href="#try">Build my Career DNA</a></div>
+      <ul class="next-up">
+        <li><span class="nu-num" aria-hidden="true">1</span><b>Tailor your resume</b><p>Reshape it for one job using only what you've really done. Download it for Word or as a PDF.</p><a href="#tailor">How tailoring works <span aria-hidden="true">→</span></a></li>
+        <li><span class="nu-num" aria-hidden="true">2</span><b>Find jobs that fit</b><p>Live openings near you, an honest fit score for each, and new matches by email every week.</p><a href="#jobs">Search jobs <span aria-hidden="true">→</span></a></li>
+        <li><span class="nu-num" aria-hidden="true">3</span><b>Plan your next steps</b><p>Name a goal role and see what you've already done, what's missing, and the steps in between.</p><a href="#try">Build my Career DNA first <span aria-hidden="true">→</span></a></li>
+        <li><span class="nu-num" aria-hidden="true">4</span><b>Get found by employers</b><p>Let approved employers find your anonymous profile. Your name and contact details stay private until you say yes.</p><a href="#employers">For employers <span aria-hidden="true">→</span></a></li>
+      </ul>
     </div>
   </section>
 
@@ -222,27 +224,10 @@
     </div>
   </section>
 
-  <section class="block chap" id="paths">
+  <section class="block chap" id="employers">
     <span class="chap-num" aria-hidden="true">03</span>
     <div class="wrap">
-      <p class="chapter"><b>03</b>Career paths</p>
-      <div class="sec-head">
-        <h2>Not just the next job. The one after that.</h2>
-        <p class="lede">Name a goal and Trazerr maps what you've already done, what's missing, and the steps in between. Build your Career DNA, then use "Plan a path" in your results.</p>
-      </div>
-      <ol class="path">
-        <li class="done"><small>Where you are</small><b>Sales Representative</b></li>
-        <li class="next"><small>Next step</small><b>Senior Account Executive</b></li>
-        <li><small>Experience to build</small><b>Team leadership, forecasting</b></li>
-        <li class="goal"><small>Your goal</small><b>VP of Sales</b></li>
-      </ol>
-    </div>
-  </section>
-
-  <section class="block chap" id="employers">
-    <span class="chap-num" aria-hidden="true">04</span>
-    <div class="wrap">
-      <p class="chapter"><b>04</b>Job DNA</p>
+      <p class="chapter"><b>03</b>For employers</p>
       <div class="sec-head">
         <h2>For employers: matches you can explain.</h2>
         <p class="lede">Paste a job posting and Trazerr builds its Job DNA: what the role truly requires, what it quietly expects, and the experience that would show a fit.</p>
@@ -274,9 +259,9 @@
   </section>
 
   <section class="block chap" id="about">
-    <span class="chap-num" aria-hidden="true">05</span>
+    <span class="chap-num" aria-hidden="true">04</span>
     <div class="wrap">
-      <p class="chapter"><b>05</b>Why Trazerr exists</p>
+      <p class="chapter"><b>04</b>Why Trazerr exists</p>
       <p class="manifesto">Resumes undersell people. Hiring tools reward keywords. Trazerr reads a career the way a good mentor would: <em>carefully, honestly, and on your side.</em></p>
       <div class="principles">
         <div><b>Your word first</b><p>We take your resume at its word. Every strength points to something you wrote, and anything we read between the lines is labeled.</p></div>
@@ -285,8 +270,8 @@
         <div><b>Talk to us</b><p>Questions, or a result that seemed off? Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything.</p></div>
       </div>
       <div class="roadmap">
-        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Career paths</li><li>Job DNA</li><li>Accounts</li></ul></div>
-        <div><h3>Coming next</h3><ul class="pills soon"><li>Career Passport</li><li>Candidate discovery for employers</li><li>Interview practice</li></ul></div>
+        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Job alerts</li><li>Career paths</li><li>Job DNA</li><li>Employers find you</li><li>Accounts</li></ul></div>
+        <div><h3>Coming next</h3><ul class="pills soon"><li>Career Passport</li><li>Interview practice</li></ul></div>
       </div>
     </div>
   </section>
@@ -296,15 +281,12 @@
       <div class="join">
         <div>
           <h2>Your resume says more than you think. Find out what.</h2>
-          <p>Join the waitlist for early access to the Career Passport and employer tools.</p>
+          <p>Free, ready in about 20 seconds, and nothing is stored unless you choose to save it.</p>
         </div>
-        <form id="waitlist" novalidate>
-          <label for="wlEmail">Email address</label>
-          <input class="input" id="wlEmail" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-          <div class="trap" aria-hidden="true"><label for="wlCompany">Company</label><input id="wlCompany" name="company" type="text" tabindex="-1" autocomplete="off"></div>
-          <button class="btn btn-primary" type="submit">Join the waitlist</button>
-          <p class="status" id="wlStatus" role="status" aria-live="polite"></p>
-        </form>
+        <div class="join-actions">
+          <a class="btn btn-primary" href="#try">Build my Career DNA</a>
+          <a class="btn btn-quiet" href="/employers.html">I'm hiring</a>
+        </div>
       </div>
     </div>
   </section>
@@ -322,6 +304,7 @@
     <span class="foot-brand"><img src="/logo.png" alt="" width="28" height="28">© 2026 Trazerr · Career intelligence, built on evidence.</span>
     <nav class="foot-links" aria-label="Footer">
       <a href="#about">About</a>
+      <a href="/employers.html">For employers</a>
       <a href="/privacy.html">Privacy</a>
       <a href="/terms.html">Terms</a>
       <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>

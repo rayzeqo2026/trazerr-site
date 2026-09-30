@@ -1089,3 +1089,97 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 @media (max-width:439px){ .emp-tag{display:none} }
 .emp-link{margin:18px 0 0; padding-top:16px; border-top:1px solid var(--d-border); color:var(--d-text2)}
 .emp-link b{color:var(--d-text)}
+
+/* ---------- Hero: a product visual instead of a photo (both themes) ---------- */
+:root[data-design="1"] .hero{min-height:0; margin-top:calc(-1 * var(--head)); padding:calc(var(--head) + 64px) 0 80px; color:var(--d-text);
+  background:radial-gradient(900px 520px at 8% 20%, var(--d-action-soft), transparent 70%), var(--d-bg)}
+:root[data-design="1"] .hero .wrap{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto 1fr; column-gap:64px}
+:root[data-design="1"] .hero-copy{grid-column:1; grid-row:1; align-self:start; padding-right:0; display:block}
+:root[data-design="1"] .hero h1{text-shadow:none; font-size:clamp(44px,5.4vw,72px); color:var(--d-text)}
+:root[data-design="1"] .hero-card{grid-column:1; grid-row:2; justify-self:start; align-self:start; width:100%; max-width:460px; margin:28px 0 0}
+:root[data-design="1"][data-theme="dark"] .hero-card{background:var(--d-surface); backdrop-filter:none; -webkit-backdrop-filter:none}
+.hero-visual{grid-column:2; grid-row:1 / span 2; align-self:start; margin:8px 0 0; position:relative; display:grid; gap:18px; padding-left:28px}
+.hero-visual::before{content:""; position:absolute; left:8px; top:28px; bottom:28px; width:2px; background:linear-gradient(var(--d-accent), var(--d-action)); border-radius:2px; opacity:.55}
+.hv-card{position:relative; background:var(--d-surface); border:1px solid var(--d-border); border-radius:var(--d-r-card); padding:16px 18px; box-shadow:0 18px 40px -28px rgba(22,35,63,.45)}
+.hv-card::before{content:""; position:absolute; left:-26px; top:22px; width:12px; height:12px; border-radius:50%; background:var(--d-bg); border:3px solid var(--d-accent)}
+.hv-row{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+.hv-row .hv-card + .hv-card::before{display:none}
+.hv-card small{display:block; font-size:.8125rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--d-accent-text); margin-bottom:6px}
+.hv-resume p{margin:0; font-size:1.05rem; color:var(--d-text); font-style:italic; line-height:1.5}
+.hv-dna ul{list-style:none; margin:0; padding:0; display:grid; gap:8px}
+.hv-dna li{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px}
+.hv-dna li b{color:var(--d-text)}
+.hv-dna li span{font-size:.8125rem; color:var(--d-text2); white-space:nowrap}
+.hv-job b, .hv-emp b{display:block; color:var(--d-text); line-height:1.35}
+.hv-fit{display:inline-flex; align-items:baseline; gap:4px; margin-top:10px; color:var(--d-text2); font-size:.875rem}
+.hv-fit em{font-style:normal; font-weight:700; font-size:1.6rem; color:var(--d-action); line-height:1}
+.hv-emp span{display:block; margin-top:8px; font-size:.875rem; color:var(--d-text2)}
+:root[data-theme="dark"] .hv-card{box-shadow:none}
+@media (prefers-reduced-motion:no-preference){
+  .hv-card{animation:hv-in .6s cubic-bezier(.2,.7,.2,1) both}
+  .hv-dna{animation-delay:.12s} .hv-job{animation-delay:.24s} .hv-emp{animation-delay:.34s}
+  @keyframes hv-in{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+}
+@media (max-width:900px){
+  :root[data-design="1"] .hero{padding:calc(var(--head) + 36px) 0 48px}
+  :root[data-design="1"] .hero .wrap{display:flex; flex-direction:column}
+  :root[data-design="1"] .hero-copy{display:contents}
+  :root[data-design="1"] .hero-card{max-width:none; margin-top:24px}
+  .hero-visual{order:5; margin-top:36px}
+}
+@media (max-width:480px){ .hv-row{grid-template-columns:1fr} .hv-row .hv-card + .hv-card::before{display:block} .hv-dna li{grid-template-columns:auto 1fr} .hv-dna li span{grid-column:2; margin-top:-6px} }
+
+/* ---------- "What your Career DNA unlocks" ---------- */
+.next-up{list-style:none; margin:32px 0 0; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px}
+.next-up li{background:var(--d-surface); border:1px solid var(--d-border); border-radius:var(--d-r-card); padding:22px; display:flex; flex-direction:column}
+.nu-num{display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:var(--d-action-soft); color:var(--d-action); font-weight:700; margin-bottom:14px}
+.next-up b{font-size:1.15rem; color:var(--d-text)}
+.next-up p{margin:8px 0 16px; color:var(--d-text2); flex:1}
+.next-up a{font-weight:600; color:var(--d-link); text-decoration:none}
+.next-up a:hover{text-decoration:underline}
+@media (max-width:1000px){ .next-up{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:560px){ .next-up{grid-template-columns:1fr} }
+
+/* ---------- Ending: two ways in ---------- */
+.join-actions{display:flex; flex-wrap:wrap; gap:12px; justify-content:flex-end}
+.join-actions .btn{min-width:180px}
+@media (max-width:800px){ .join-actions{justify-content:flex-start} }
+:root[data-design="1"] .join .join-actions .btn-quiet{background:transparent; color:#fff; border-color:rgba(255,255,255,.6)}
+:root[data-design="1"] .join .join-actions .btn-quiet:hover{border-color:#fff; color:#fff}
+
+/* ---------- Account panel tabs ---------- */
+.acct-tabs{display:flex; gap:4px; margin-top:22px; border-bottom:1px solid var(--d-border); overflow-x:auto; scrollbar-width:none}
+.acct-tabs::-webkit-scrollbar{display:none}
+.acct-tabs [role=tab]{flex:0 0 auto; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 14px; border:0; border-bottom:3px solid transparent; margin-bottom:-1px;
+  background:none; font:600 1rem/1 var(--d-font); color:var(--d-text2); cursor:pointer}
+.acct-tabs [role=tab]:hover{color:var(--d-text)}
+.acct-tabs [role=tab][aria-selected="true"]{color:var(--d-text); border-bottom-color:var(--d-accent)}
+.tab-badge{min-width:22px; height:22px; padding:0 6px; border-radius:11px; background:var(--d-accent); color:#fff; font-size:.8125rem; display:inline-flex; align-items:center; justify-content:center}
+:root[data-theme="dark"] .tab-badge{background:var(--d-accent-text); color:#0B1426}
+.acct-note{margin:12px 0 0}
+.acct-note:empty{display:none}
+.acct-panel:focus-visible{outline-offset:6px}
+.acct-panel > .o-sec:first-child{margin-top:18px}
+.acct-btn{position:relative}
+.acct-btn.has-news::after{content:""; position:absolute; top:2px; right:2px; width:11px; height:11px; border-radius:50%; background:var(--d-accent); border:2px solid var(--d-bg)}
+
+/* Employer page: promises, and the example result beside the sign-in */
+.emp-promises{list-style:none; margin:0 0 8px; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px}
+.emp-promises li{border-top:3px solid var(--d-accent); padding-top:12px}
+.emp-promises b{display:block; color:var(--d-text)}
+.emp-promises span{display:block; margin-top:4px; color:var(--d-text2); font-size:.95rem}
+.emp-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start}
+.emp-example{margin-top:20px}
+.emp-example-tag{margin:0; font-size:.8125rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--d-accent-text)}
+.emp-example .emp-cand{margin-top:8px; box-shadow:0 24px 50px -30px rgba(22,35,63,.5)}
+.emp-example-note{margin:10px 0 0}
+.emp-example .emp-ask .btn{pointer-events:none}
+:root[data-theme="dark"] .emp-example .emp-cand{box-shadow:none}
+.emp-main{max-width:1040px}
+@media (max-width:860px){ .emp-grid, .emp-promises{grid-template-columns:1fr} .emp-promises{gap:12px} }
+.emp-grid .goal-form{display:grid; grid-template-columns:1fr; gap:10px}
+.emp-grid .goal-form .btn{width:100%}
+.emp-how > .hint{margin-top:14px}
+@media (max-width:480px){ .acct-tabs{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; overflow:visible} .acct-tabs [role=tab]{justify-content:center; text-align:center; padding:6px 4px; min-height:52px; font-size:.9rem; line-height:1.2; gap:4px; flex-wrap:wrap} .tab-badge{min-width:20px; height:20px; font-size:.75rem} }
+@media (max-width:480px){ .acct-tabs{grid-template-columns:1fr 1.4fr 1fr 1fr} .acct-tabs [role=tab]{flex-wrap:nowrap} .acct-tabs .tab-badge{min-width:18px; height:18px; padding:0 5px; font-size:.7rem} }
+@media (max-width:360px){ .acct-tabs [role=tab]{font-size:.8125rem; padding:6px 2px} }
