@@ -2406,7 +2406,9 @@ function renderJobs(data){
       (j.description ? '<p class="job-snip">' + esc(snippet(j.description, 260)) + "</p>" : "") +
       '<div class="job-actions"><button class="btn btn-primary btn-sm" type="button" data-fit="' + i + '">Check my fit</button><a class="btn btn-quiet btn-sm" href="' + esc(safeUrl(j.url)) + '" target="_blank" rel="noopener noreferrer">View job</a></div></li>';
   }).join("");
-  listEl.querySelectorAll("[data-fit]").forEach(b => b.onclick = () => checkFit(jobState.list[+b.dataset.fit]));
+  // Keep a reference to the jobs shown, so a button still works while a new search is loading.
+  const shown = jobState.list;
+  listEl.querySelectorAll("[data-fit]").forEach(b => b.onclick = () => { const j = shown[+b.dataset.fit]; if (j) checkFit(j); });
   const foot = $("jobsFoot");
   foot.hidden = jobState.list.length === 0;
   $("jobsSource").innerHTML = data.source === "adzuna"
