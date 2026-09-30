@@ -363,3 +363,13 @@ test("contact requests: anonymous until the candidate accepts, then both get eac
   const after = await call("employerme", { auth: "Bearer emp-token" });
   assert.equal(after.body.requests[0].email, "sam@example.com"); assert.equal(after.body.requests[0].name, "Sam Rivera");
 });
+
+test("Job DNA reads an uploaded PDF and returns its text", async () => {
+  aiReply = { title: "Operations Supervisor", summary: "Leads a night shift.", level: "Mid", mustHaves: ["Warehouse experience"], niceToHaves: [], hidden: [], evidence: ["Led a team"], postingText: "Operations Supervisor\\nLead a night shift." };
+  const r = await call("jobdna", { body: { file: { kind: "pdf", data: "J".repeat(400) } } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.dna.postingText, "Operations Supervisor\\nLead a night shift.");
+  const pasted = await call("jobdna", { body: { text: "x".repeat(200) } });
+  assert.equal(pasted.body.dna.postingText, undefined, "pasted postings don't echo text back");
+  assert.equal((await call("jobdna", { body: { file: { kind: "pdf", data: "short" } } })).status, 400);
+});

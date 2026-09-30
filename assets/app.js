@@ -1099,12 +1099,37 @@ function renderFit(job, fit){
 }
 
 /* ---------- Job DNA ---------- */
+// A posting can be pasted, or uploaded like a resume. Word and text files are read here and fill the box,
+// so the person can check the text. A PDF is sent as is: the server reads it and sends back its text,
+// which then fills the box so "Check my fit" and "Tailor" work the same way.
+let postingPdf = null;
+function clearPostingFile(){ postingPdf = null; $("postingFileName").hidden = true; $("postingFileName").textContent = ""; $("postingFile").value = ""; }
+async function handlePostingFile(file){
+  const st = $("jobdnaStatus");
+  if (!file) return;
+  try {
+    const f = await readResumeFile(file);
+    $("postingFileName").textContent = file.name || "posting"; $("postingFileName").hidden = false;
+    if (f.kind === "text") { postingPdf = null; $("postingText").value = f.text.trim(); setStatus(st, "Loaded. Check the text above, then choose Build Job DNA."); }
+    else { postingPdf = f; $("postingText").value = ""; setStatus(st, "Ready to read " + (file.name || "the PDF") + ". Choose Build Job DNA."); }
+    track("posting_file");
+  } catch (e) { clearPostingFile(); setStatus(st, e.message, true); }
+}
+$("postingFile").addEventListener("change", e => handlePostingFile(e.target.files[0]));
+const postingDrop = $("postingDrop");
+["dragenter","dragover"].forEach(t => postingDrop.addEventListener(t, e => { e.preventDefault(); postingDrop.classList.add("over"); }));
+["dragleave","drop"].forEach(t => postingDrop.addEventListener(t, e => { e.preventDefault(); postingDrop.classList.remove("over"); }));
+postingDrop.addEventListener("drop", e => handlePostingFile(e.dataTransfer.files[0]));
+$("postingText").addEventListener("input", () => { if (postingPdf) clearPostingFile(); });
+
 $("jobdnaBtn").addEventListener("click", async () => {
   const text = $("postingText").value.trim(), st = $("jobdnaStatus"), btn = $("jobdnaBtn");
-  if (text.length < 120) { setStatus(st, "Paste the full job posting, at least a few lines.", true); return; }
-  btn.disabled = true; setStatus(st, "Reading the posting…"); track("job_dna");
+  const usePdf = postingPdf && !text;
+  if (!usePdf && text.length < 120) { setStatus(st, "Paste the full job posting, at least a few lines, or upload it.", true); return; }
+  btn.disabled = true; setStatus(st, usePdf ? "Reading the PDF…" : "Reading the posting…"); track("job_dna");
   try {
-    const { dna } = await api("jobdna", { body: { text } });
+    const { dna } = await api("jobdna", { body: usePdf ? { file: postingPdf } : { text } });
+    if (usePdf && dna.postingText) { $("postingText").value = dna.postingText; postingPdf = null; }
     setStatus(st, "");
     renderJobDna(dna);
   } catch (e) { setStatus(st, e.message, true); }
@@ -1112,7 +1137,8 @@ $("jobdnaBtn").addEventListener("click", async () => {
 });
 $("postingFitBtn").addEventListener("click", () => {
   const text = $("postingText").value.trim(), st = $("jobdnaStatus");
-  if (text.length < 120) { setStatus(st, "Paste the full job posting first.", true); return; }
+  if (postingPdf && !text) { setStatus(st, "Choose Build Job DNA first, so Trazerr can read the PDF.", true); return; }
+  if (text.length < 120) { setStatus(st, "Paste the full job posting first, or upload it.", true); return; }
   setStatus(st, "");
   const firstLine = text.split("\n").map(s => s.trim()).find(Boolean) || "This role";
   checkFit({ title: snippet(firstLine, 90), company: "", location: "", description: text, url: "" });

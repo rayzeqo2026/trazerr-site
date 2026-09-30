@@ -1172,3 +1172,4 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 @media (max-width:480px){ .acct-tabs{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; overflow:visible} .acct-tabs [role=tab]{justify-content:center; text-align:center; padding:6px 4px; min-height:52px; font-size:.9rem; line-height:1.2; gap:4px; flex-wrap:wrap} .tab-badge{min-width:20px; height:20px; font-size:.75rem} }
 @media (max-width:480px){ .acct-tabs{grid-template-columns:1fr 1.4fr 1fr 1fr} .acct-tabs [role=tab]{flex-wrap:nowrap} .acct-tabs .tab-badge{min-width:18px; height:18px; padding:0 5px; font-size:.7rem} }
 @media (max-width:360px){ .acct-tabs [role=tab]{font-size:.8125rem; padding:6px 2px} }
+.posting-upload{margin-top:10px}

@@ -477,20 +477,31 @@ ${JSON_ONLY} Use exactly this shape:
   "evidence": [ "short phrase" ]
 }
 Give 3-7 must-haves, 0-5 nice-to-haves, 2-4 hidden requirements and 3-6 evidence items.
+If the posting is an attached file, also include "postingText": the posting's full text as plain text, in its original order and wording (headings and bullet points on their own lines), up to about 6,000 characters.
 If the text is not a job posting, return exactly {"error":"not_a_job"}.`;
 
 async function jobdna(req, res) {
   const body = getBody(req);
-  const text = str(stripHtml(body?.text), 12000);
-  if (text.length < 120) throw new UserError(400, "Paste the full job posting, at least a few lines.");
-  const p = await askClaude(JOBDNA_SYSTEM, [{ type: "text", text: "Job posting:\n\n" + text + "\n\nReturn the JSON object." }]);
-  if (p.error === "not_a_job") throw new UserError(422, "That doesn't look like a job posting. Paste the full posting text.");
+  // A posting can be pasted text, or an uploaded PDF that the model reads directly (Word files are read in the browser).
+  const pdf = body?.file?.kind === "pdf" ? body.file.data : null;
+  let content;
+  if (pdf) {
+    if (typeof pdf !== "string" || pdf.length < 100 || pdf.length > 4_500_000) throw new UserError(400, "That PDF couldn't be read. Try a smaller file or paste the posting text.");
+    content = [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: pdf } }, { type: "text", text: "This file is a job posting. Return the JSON object, including postingText." }];
+  } else {
+    const text = str(stripHtml(body?.text), 12000);
+    if (text.length < 120) throw new UserError(400, "Paste the full job posting, at least a few lines.");
+    content = [{ type: "text", text: "Job posting:\n\n" + text + "\n\nReturn the JSON object." }];
+  }
+  const p = await askClaude(JOBDNA_SYSTEM, content);
+  if (p.error === "not_a_job") throw new UserError(422, pdf ? "That file doesn't look like a job posting. Upload the posting, or paste its text." : "That doesn't look like a job posting. Paste the full posting text.");
   const dna = {
     title: str(p.title, 120), summary: str(p.summary, 400), level: str(p.level, 80),
     mustHaves: list(p.mustHaves, 7).map(x => str(x, 120)).filter(Boolean),
     niceToHaves: list(p.niceToHaves, 5).map(x => str(x, 120)).filter(Boolean),
     hidden: list(p.hidden, 4).map(h => ({ item: str(h?.item, 120), why: str(h?.why, 240) })).filter(h => h.item),
-    evidence: list(p.evidence, 6).map(x => str(x, 140)).filter(Boolean)
+    evidence: list(p.evidence, 6).map(x => str(x, 140)).filter(Boolean),
+    ...(pdf ? { postingText: String(p.postingText ?? "").replace(/\r/g, "").trim().slice(0, 8000) } : {})
   };
   if (!dna.summary) throw new UserError(502, "The breakdown came back incomplete. Try again.");
   return res.status(200).json({ dna });
@@ -755,7 +766,7 @@ const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
   "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark", "account_signed_in", "account_saved", "account_deleted",
-  "alert_created", "alert_stopped", "alert_opened", "talent_opt_in", "talent_opt_out", "employer_page"
+  "alert_created", "alert_stopped", "alert_opened", "talent_opt_in", "talent_opt_out", "employer_page", "posting_file"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 

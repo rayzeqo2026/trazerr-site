@@ -239,8 +239,14 @@
 
       <div class="sheet tool" id="jobdnaTool">
         <h2>Try Job DNA</h2>
-        <p class="sub">Paste any job posting. Works for hiring managers and job seekers alike.</p>
+        <p class="sub">Paste or upload any job posting. Works for hiring managers and job seekers alike.</p>
         <textarea id="postingText" style="margin-top:18px; min-height:160px" placeholder="Paste the full job posting here" aria-label="Job posting text"></textarea>
+        <label class="upload posting-upload" id="postingDrop" for="postingFile">
+          <input id="postingFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
+          <span class="upload-text">Or upload the posting (PDF, Word)</span>
+          <span class="file-name" id="postingFileName" hidden></span>
+        </label>
         <div class="actions">
           <button class="btn btn-primary" id="jobdnaBtn" type="button">Build Job DNA</button>
           <button class="btn btn-quiet" id="postingFitBtn" type="button" hidden>Check my fit for this posting</button>

@@ -65,3 +65,47 @@ test("a link from a job alert email runs that search", async ({ page }) => {
   expect(seen.events).toContain("alert_opened");
   expect(seen.errors).toEqual([]);
 });
+
+const JOB_DNA = { title: "Operations Supervisor", summary: "Leads a night shift and owns picking accuracy.", level: "Mid-level", mustHaves: ["3+ years in a warehouse"], niceToHaves: [], hidden: [], evidence: ["Led a team of 10 or more"] };
+
+test("Job DNA from an uploaded Word posting: the text fills the box, then builds as usual", async ({ page }) => {
+  let sent = null;
+  const seen = await mockSite(page, { jobdna: r => { sent = JSON.parse(r.request().postData()); return json(r, 200, { dna: JOB_DNA }); } });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.setInputFiles("#postingFile", new URL("../fixtures/posting.docx", import.meta.url).pathname);
+  await expect(page.locator("#postingText")).toHaveValue(/lead a night shift team of 10-15 associates/);
+  await expect(page.locator("#postingFileName")).toHaveText("posting.docx");
+  await page.click("#jobdnaBtn");
+  await expect(page.locator("#oBody")).toContainText("Leads a night shift");
+  expect(sent.text).toContain("Must have 3+ years");
+  expect(sent.file).toBeUndefined();
+  expect(seen.events).toContain("posting_file");
+  expect(seen.errors).toEqual([]);
+  expect(seen.reports).toEqual([]);
+});
+
+test("Job DNA from an uploaded PDF: the file is sent, and its text comes back for fit checks", async ({ page }) => {
+  let sent = null, fitJob = null;
+  const seen = await mockSite(page, {
+    jobdna: r => { sent = JSON.parse(r.request().postData()); return json(r, 200, { dna: { ...JOB_DNA, postingText: "Operations Supervisor - Acme Logistics\nLead a night shift team of 10-15 associates. Must have 3+ years of warehouse experience and 1+ year leading a team." } }); },
+    match: r => { fitJob = JSON.parse(r.request().postData()).job; return json(r, 200, { fit: { fitScore: 80, summary: "A good fit.", factors: [], strengths: [], gaps: [], unknowns: [], tips: [] } }); }
+  });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await buildDNA(page);
+  await page.keyboard.press("Escape");
+  await page.fill("#postingText", "");
+  await page.setInputFiles("#postingFile", new URL("../fixtures/posting.pdf", import.meta.url).pathname);
+  await expect(page.locator("#jobdnaStatus")).toContainText("Ready to read posting.pdf");
+  await page.click("#postingFitBtn");
+  await expect(page.locator("#jobdnaStatus")).toContainText("Build Job DNA first");
+  await page.click("#jobdnaBtn");
+  await expect(page.locator("#oBody")).toContainText("Leads a night shift");
+  expect(sent.file.kind).toBe("pdf");
+  expect(sent.file.data.length).toBeGreaterThan(100);
+  expect(sent.text).toBeUndefined();
+  await expect(page.locator("#postingText")).toHaveValue(/Must have 3\+ years/);
+  await page.click("#dnaFitBtn");
+  await expect(page.locator("#oBody")).toContainText("A good fit.");
+  expect(fitJob.description).toContain("Lead a night shift team");
+  expect(seen.errors).toEqual([]);
+});
