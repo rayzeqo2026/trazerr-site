@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Privacy policy · Trazerr</title>
 <meta name="description" content="How Trazerr handles your resume and personal information.">
-<meta name="theme-color" content="#F4F5F1">
+<meta name="theme-color" content="#FFFFFF">
+<script>(function(){var t="light";try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}document.documentElement.dataset.theme=t;if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#070B14"})()</script>
 <link rel="canonical" href="https://www.trazerr.com/privacy.html">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -37,6 +38,10 @@ strong{color:var(--ink); font-weight:600}
 footer{border-top:1px solid var(--line-soft); padding:32px 0 48px; color:var(--ink-2); font-size:14px}
 footer .wrap{display:flex; flex-wrap:wrap; gap:10px 22px; justify-content:space-between}
 footer a{color:var(--ink-2)}
+:root[data-theme="light"]{--paper:#FFFFFF; --ink:#0B1633; --ink-2:#4B5775; --line:#DCE3EF; --line-soft:#EBF0F7; --blue:#0B5CFF; --blue-deep:#0846C7; --card:#F4F7FD; color-scheme:light}
+:root[data-theme="dark"]{--paper:#070B14; --ink:#E8ECF5; --ink-2:#A0ABC2; --line:#26344D; --line-soft:#18233A; --blue:#2F7BFF; --blue-deep:#8DB8FF; --card:#0F1828; color-scheme:dark}
+:root[data-theme] .summary{background:var(--card)}
+:root[data-theme] h1, :root[data-theme] h2, :root[data-theme] .brand{font-weight:600; letter-spacing:-.02em}
 </style>
 </head>
 <body>

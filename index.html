@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Trazerr · What could your career become?</title>
 <meta name="description" content="Upload your resume and Trazerr builds your Career DNA: the strengths your experience shows, the talent you may be under-selling, and the jobs where you'd fit.">
-<meta name="theme-color" content="#F4F5F1">
+<meta name="theme-color" content="#FFFFFF">
+<script>(function(){var t="light";try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}document.documentElement.dataset.theme=t;if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#070B14"})()</script>
 <link rel="canonical" href="https://www.trazerr.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Trazerr">
@@ -53,7 +54,7 @@ p{margin:0}
 .btn:disabled{opacity:.6; cursor:progress}
 .btn-sm{padding:10px 16px; min-height:44px; font-size:15px}
 .linkish{background:none; border:0; padding:0; font:inherit; color:var(--blue-deep); text-decoration:underline; text-underline-offset:3px; cursor:pointer}
-.input, textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:13px 14px; font:16px/1.4 var(--sans); color:var(--ink); background:#FBFBFA}
+.input, textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:13px 14px; font:16px/1.4 var(--sans); color:var(--ink); background:var(--field, #FBFBFA)}
 .input:focus, textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft)}
 textarea{min-height:120px; resize:vertical; line-height:1.5}
 .field label{display:block; font-size:14px; color:var(--ink-2); margin-bottom:6px}
@@ -66,14 +67,14 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .mark.unknown{border:2px dotted var(--grey)}
 
 /* Header */
-.site-head{position:sticky; top:0; z-index:20; background:rgba(244,245,241,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line-soft); padding-top:env(safe-area-inset-top,0px)}
+.site-head{position:sticky; top:0; z-index:20; background:var(--head-bg, rgba(244,245,241,.94)); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line-soft); padding-top:env(safe-area-inset-top,0px)}
 .site-head .wrap{display:flex; align-items:center; gap:28px; height:68px}
 .brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-family:var(--serif); font-size:24px; font-weight:600}
 .brand img{width:40px; height:40px}
 .site-nav{display:flex; gap:24px; margin-left:auto}
 .site-nav a{color:var(--ink-2); text-decoration:none; font-size:15px; font-weight:500}
 .site-nav a:hover{color:var(--ink)}
-.site-head .btn{padding:10px 16px; min-height:42px; font-size:15px}
+.site-head .btn{padding:10px 16px; min-height:42px; font-size:15px; white-space:nowrap}
 @media (max-width:820px){ .site-nav{display:none} .site-head .btn{margin-left:auto} }
 .site-head{transition:background-color .25s, border-color .25s}
 .site-head.on-dark{background:linear-gradient(rgba(2,6,15,.9), rgba(2,6,15,.62) 62%, rgba(2,6,15,0)); border-bottom-color:transparent; backdrop-filter:none; -webkit-backdrop-filter:none}
@@ -233,7 +234,7 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 .dm-meta{color:var(--ink-2); font-size:14.5px; margin-top:2px}
 .dm-score{text-align:center; flex:none}
 .dm-ring{width:68px; height:68px; border-radius:50%; display:grid; place-items:center; background:conic-gradient(var(--blue) 0 78%, var(--line-soft) 0)}
-.dm-ring b{width:54px; height:54px; border-radius:50%; background:#fff; display:grid; place-items:center; font:500 24px/1 var(--serif)}
+.dm-ring b{width:54px; height:54px; border-radius:50%; background:var(--surface); display:grid; place-items:center; font:500 24px/1 var(--serif)}
 .dm-score small{display:block; letter-spacing:0; color:var(--ink-2); font-weight:500; font-size:12px; margin-top:6px}
 .dm-head{font-family:var(--serif); font-size:20px; line-height:1.35; margin-top:18px; padding-bottom:18px; border-bottom:1px solid var(--line-soft)}
 .dm-list{list-style:none; padding:0; margin:6px 0 0}
@@ -392,7 +393,7 @@ section#tailor .hint-sm{color:#AEB8CC}
 /* Overlay */
 .overlay{position:fixed; inset:0; z-index:50; background:var(--paper); overflow-y:auto; -webkit-overflow-scrolling:touch; display:none}
 .overlay.open{display:block}
-.o-bar{position:sticky; top:0; z-index:2; background:rgba(244,245,241,.96); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line-soft); padding-top:env(safe-area-inset-top,0px)}
+.o-bar{position:sticky; top:0; z-index:2; background:var(--head-bg, rgba(244,245,241,.96)); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line-soft); padding-top:env(safe-area-inset-top,0px)}
 .o-bar .inner{max-width:760px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; gap:12px}
 .o-bar img{width:34px; height:34px}
 .o-bar .who{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1}
@@ -615,6 +616,161 @@ section#paths{border-top:0}
 .privacy-line svg{width:22px; height:22px; flex:none; color:var(--gold-deep); margin-top:2px}
 .privacy-line p{color:var(--ink-2); font-size:15px; max-width:95ch}
 .privacy-line b{color:var(--ink)}
+/* ================= Themes =================
+   Light: white pages, deep ink text and one confident blue.
+   Dark: the night palette all the way down, with gold accents. */
+:root[data-theme="light"]{
+  --paper:#FFFFFF; --alt:#F4F7FD; --surface:#FFFFFF; --ink:#0B1633; --ink-2:#4B5775;
+  --line:#DCE3EF; --line-soft:#EBF0F7; --blue:#0B5CFF; --blue-deep:#0846C7; --blue-soft:#EAF1FF;
+  --brass:#A8660A; --brass-soft:#FFF3DF; --gold:#0B5CFF; --gold-deep:#0B5CFF; --grey:#8A93A8; --err:#B42318;
+  --field:#FFFFFF; --head-bg:rgba(255,255,255,.86); --link:#0846C7;
+  --cta-grad:linear-gradient(135deg,#0B5CFF 0%,#2F6BFF 55%,#4F46E5 110%);
+  --deep-grad:linear-gradient(150deg,#0A1B4D 0%,#0C2F8C 60%,#1552F0 120%);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --paper:#070B14; --alt:#0B1220; --surface:#0F1828; --ink:#E8ECF5; --ink-2:#A0ABC2;
+  --line:#26344D; --line-soft:#18233A; --blue:#2F7BFF; --blue-deep:#1F63E0; --blue-soft:rgba(47,123,255,.16);
+  --brass:#E0B070; --brass-soft:rgba(224,176,112,.14); --gold:#E0B070; --gold-deep:#E0B070; --grey:#7C879E; --err:#FF8B7E;
+  --field:#0B1322; --head-bg:rgba(7,11,20,.82); --link:#8DB8FF;
+  color-scheme:dark;
+}
+html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease !important}
+
+/* Theme switch in the menu bar */
+.theme-toggle{flex:none; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; cursor:pointer;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); transition:border-color .2s, transform .2s}
+.theme-toggle:hover{border-color:var(--blue); transform:rotate(-12deg)}
+.theme-toggle svg{width:19px; height:19px}
+.theme-toggle .i-sun{display:none}
+:root[data-theme="dark"] .theme-toggle .i-sun{display:block}
+:root[data-theme="dark"] .theme-toggle .i-moon{display:none}
+.site-head.on-dark .theme-toggle{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.28); color:#fff}
+@media (max-width:820px){ .theme-toggle{margin-left:auto} .site-head .btn{margin-left:0} }
+
+/* Shared fixes for both themes */
+:where(:root[data-theme="dark"]) a, :where(:root[data-theme="dark"]) .linkish{color:var(--link)}
+:root[data-theme="dark"] .chip:hover, :root[data-theme="dark"] .skills .q, :root[data-theme="dark"] .dm-list em.inf, :root[data-theme="dark"] .live-tag{color:var(--link)}
+:root[data-theme="dark"] .next-grid button.primary{background:var(--blue); border-color:var(--blue); color:#fff}
+:root[data-theme="dark"] .skip{color:var(--paper)}
+:root[data-theme="dark"] .steps li:first-child::before{background:var(--gold); border-color:var(--gold); color:var(--night)}
+:root[data-theme="dark"] .pills li{border:1px solid var(--line)}
+:root[data-theme="dark"] .join, :root[data-theme="dark"] .steps-cta, :root[data-theme="dark"] .o-hero{box-shadow:0 0 0 1px var(--line)}
+:root[data-theme="dark"] .site-head:not(.on-dark){border-bottom-color:var(--line-soft)}
+:root[data-theme="dark"] .sheet, :root[data-theme="dark"] .score, :root[data-theme="dark"] .fit{box-shadow:none}
+
+/* ---------- Light: hero ---------- */
+:root[data-theme="light"] .hero{color:var(--ink); min-height:min(max(760px, 54vw), 900px); padding:calc(var(--head) + 64px) 0 64px;
+  background:radial-gradient(900px 520px at 8% 28%, rgba(11,92,255,.08), transparent 70%), radial-gradient(700px 500px at 60% 110%, rgba(79,70,229,.06), transparent 70%), var(--paper)}
+:root[data-theme="light"] .hero-bg{inset:auto; top:calc(var(--head) + 28px); bottom:40px; left:calc(50% + 12px); right:max(24px, calc((100% - var(--wrap)) / 2 + 24px));
+  border-radius:28px; overflow:hidden; box-shadow:0 50px 90px -45px rgba(11,22,51,.55), 0 0 0 1px rgba(11,22,51,.06)}
+:root[data-theme="light"] .hero-bg img{object-position:62% 50%}
+:root[data-theme="light"] .hero-bg::after{background:none}
+:root[data-theme="light"] .hero .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto 1fr; column-gap:48px}
+:root[data-theme="light"] .hero-copy{grid-column:1; grid-row:1; align-self:start; padding-right:8px}
+:root[data-theme="light"] .hero h1{color:var(--ink); text-shadow:none; font-size:clamp(44px,5.4vw,72px)}
+:root[data-theme="light"] .hero .lede{color:var(--ink-2); max-width:36ch}
+:root[data-theme="light"] .hero-link{color:var(--blue); border-bottom-color:rgba(11,92,255,.35)}
+:root[data-theme="light"] .hero-link:hover{color:var(--blue-deep); border-color:var(--blue-deep)}
+:root[data-theme="light"] .hero-card{grid-column:1; grid-row:2; justify-self:start; align-self:start; max-width:460px; margin:24px 0 0; background:#fff; border:1px solid var(--line);
+  box-shadow:0 30px 60px -34px rgba(11,22,51,.45); backdrop-filter:none; -webkit-backdrop-filter:none}
+:root[data-theme="light"] .hero-card h2{color:var(--ink)}
+:root[data-theme="light"] .hero-card textarea{background:#fff; border-color:var(--line); color:var(--ink)}
+:root[data-theme="light"] .hero-card textarea::placeholder{color:#8A93A8}
+:root[data-theme="light"] .hero-card textarea:focus{border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft)}
+:root[data-theme="light"] .upload{border-color:#B8C5DD; color:var(--ink)}
+:root[data-theme="light"] .upload:hover, :root[data-theme="light"] .upload.over{border-color:var(--blue); background:var(--blue-soft)}
+:root[data-theme="light"] .upload .file-name{color:var(--blue-deep)}
+:root[data-theme="light"] .hero-card .mini, :root[data-theme="light"] .hero-card .mini a{color:var(--ink-2)}
+:root[data-theme="light"] .hero-card .mini .linkish{color:var(--blue-deep)}
+:root[data-theme="light"] .hero-card .status{color:var(--ink-2)}
+:root[data-theme="light"] .hero-card .status.err{color:var(--err)}
+:root[data-theme="light"] .hero-card .saved-note{background:var(--blue-soft); color:var(--ink)}
+:root[data-theme="light"] .hero-card .saved-note .linkish{color:var(--blue-deep)}
+:root[data-theme="light"] .hero-progress{background:var(--line-soft)}
+:root[data-theme="light"] .hero-progress i{background:var(--blue)}
+:root[data-theme="light"] .welcome{background:var(--blue-soft); border-color:transparent; color:var(--ink); backdrop-filter:none; -webkit-backdrop-filter:none}
+:root[data-theme="light"] .btn-ghost{background:#fff; color:var(--ink); border-color:#C5CFE0}
+:root[data-theme="light"] .btn-ghost:hover{border-color:var(--blue); color:var(--blue-deep)}
+@media (max-width:900px){
+  :root[data-theme="light"] .hero{min-height:0; padding:calc(var(--head) + 58vw + 40px) 0 44px}
+  :root[data-theme="light"] .hero-bg{top:calc(var(--head) + 14px); left:16px; right:16px; bottom:auto; height:58vw; border-radius:22px}
+  :root[data-theme="light"] .hero-bg img{object-position:72% 45%}
+  :root[data-theme="light"] .hero-bg::after{background:none}
+  :root[data-theme="light"] .hero-copy{padding-right:0}
+  :root[data-theme="light"] .hero-card{margin:24px 0 0; max-width:none; align-self:stretch; box-shadow:0 24px 50px -24px rgba(11,22,51,.35); border-color:var(--line)}
+}
+
+/* ---------- Light: the demo and "what you get" ---------- */
+:root[data-theme="light"] .seq{background:var(--paper)}
+:root[data-theme="light"] .seq-stage{color:var(--ink); background:radial-gradient(1100px 600px at 70% 62%, rgba(11,92,255,.09), transparent 70%), linear-gradient(180deg, #FFFFFF 0%, var(--alt) 100%)}
+:root[data-theme="light"] .grain::after{display:none}
+:root[data-theme="light"] .seq-kicker{color:var(--blue)}
+:root[data-theme="light"] .seq-h{color:var(--ink)}
+:root[data-theme="light"] .seq-h em{color:var(--blue)}
+:root[data-theme="light"] .seq-steps li{border-color:var(--line); color:var(--ink-2); background:#fff}
+:root[data-theme="light"] .seq-steps b{background:var(--line-soft); color:var(--ink-2)}
+:root[data-theme="light"] .seq-steps li.on{color:var(--ink); border-color:var(--blue); background:var(--blue-soft)}
+:root[data-theme="light"] .seq-steps li.on b{background:var(--blue); color:#fff}
+:root[data-theme="light"] .seq-steps li.done{color:var(--ink)}
+:root[data-theme="light"] .seq-steps li.done b{background:rgba(11,92,255,.16); color:var(--blue-deep)}
+:root[data-theme="light"] .seq-note{color:var(--ink-2)}
+:root[data-theme="light"] .seq-replay{background:#fff; color:var(--ink); border-color:var(--line); box-shadow:0 10px 24px -14px rgba(11,22,51,.4)}
+:root[data-theme="light"] .seq-replay:hover{border-color:var(--blue)}
+:root[data-theme="light"] .sample{background:var(--alt); color:var(--ink)}
+:root[data-theme="light"] .sample h2{color:var(--ink)}
+:root[data-theme="light"] .sample .lede, :root[data-theme="light"] .sample .legend li{color:var(--ink-2)}
+:root[data-theme="light"] .sample .legend b{color:var(--ink)}
+:root[data-theme="light"] .sample .mark.verified{background:var(--ink)}
+:root[data-theme="light"] .sample .legend .mark.inferred{border-color:var(--blue)}
+:root[data-theme="light"] .sample .legend .mark.potential{border-color:var(--brass)}
+:root[data-theme="light"] .dna-mock{box-shadow:0 50px 90px -50px rgba(11,22,51,.45), 0 0 0 1px var(--line); border-top-color:var(--blue)}
+
+/* ---------- Light: steps, chapters, tools ---------- */
+:root[data-theme="light"] .steps li:first-child::before{background:var(--blue); border-color:var(--blue); color:#fff}
+:root[data-theme="light"] .steps-cta{background:var(--cta-grad); border-top:0; box-shadow:0 30px 60px -30px rgba(11,92,255,.6)}
+:root[data-theme="light"] .steps-cta p span{color:rgba(255,255,255,.82)}
+:root[data-theme="light"] .steps-cta .btn-primary, :root[data-theme="light"] .join .btn-primary{background:#fff; color:var(--blue-deep)}
+:root[data-theme="light"] .steps-cta .btn-primary:hover, :root[data-theme="light"] .join .btn-primary:hover{background:#EAF1FF}
+:root[data-theme="light"] .chap-num, :root[data-theme="light"] section#tailor .chap-num, :root[data-theme="light"] section#employers .chap-num{color:rgba(11,92,255,.06)}
+:root[data-theme="light"] section#tailor, :root[data-theme="light"] section#employers{background:var(--alt); color:var(--ink)}
+:root[data-theme="light"] section#tailor h2, :root[data-theme="light"] section#employers h2{color:var(--ink)}
+:root[data-theme="light"] section#tailor .lede, :root[data-theme="light"] section#employers .lede{color:var(--ink-2)}
+:root[data-theme="light"] section#tailor .trio li{background:#fff; border-color:var(--line); box-shadow:0 12px 30px -24px rgba(11,22,51,.35)}
+:root[data-theme="light"] section#tailor .trio li::before{color:var(--blue)}
+:root[data-theme="light"] section#tailor .trio span, :root[data-theme="light"] section#tailor .hint-sm{color:var(--ink-2)}
+:root[data-theme="light"] section#employers .fit, :root[data-theme="light"] section#employers .sheet{border-color:var(--line); box-shadow:0 30px 60px -40px rgba(11,22,51,.35)}
+:root[data-theme="light"] .ba{background:#fff; border-color:var(--line); box-shadow:0 12px 30px -24px rgba(11,22,51,.35)}
+:root[data-theme="light"] .ba small{color:var(--blue)}
+:root[data-theme="light"] .ba-row, :root[data-theme="light"] .ba p{color:var(--ink-2)}
+:root[data-theme="light"] .ba-row b{color:var(--ink)}
+:root[data-theme="light"] .ba-bar{background:var(--line-soft)}
+:root[data-theme="light"] .ba-bar i{background:#A9B8D4}
+:root[data-theme="light"] .ba-bar.gold i{background:linear-gradient(90deg, #0B5CFF, #4F46E5)}
+:root[data-theme="light"] .pills li{background:var(--blue-soft); color:var(--blue-deep)}
+:root[data-theme="light"] .pills.soon li{background:transparent; color:var(--ink); border-color:#B8C5DD}
+:root[data-theme="light"] .join{background:var(--cta-grad); border-top:0; box-shadow:0 40px 80px -40px rgba(11,92,255,.6)}
+:root[data-theme="light"] .join p, :root[data-theme="light"] .join label{color:rgba(255,255,255,.86)}
+:root[data-theme="light"] .join .input{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.42); color:#fff}
+:root[data-theme="light"] .join .input::placeholder{color:rgba(255,255,255,.72)}
+:root[data-theme="light"] .join .input:focus{border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+:root[data-theme="light"] .join .status{color:#fff}
+:root[data-theme="light"] .join .status.err{color:#FFE1DC}
+
+/* ---------- Light: results ---------- */
+:root[data-theme="light"] .o-hero{background:var(--deep-grad); border-top:0; box-shadow:0 30px 60px -30px rgba(11,40,140,.55)}
+:root[data-theme="light"] .o-hero .greet{color:rgba(255,255,255,.78)}
+:root[data-theme="light"] .overlay{background:var(--paper)}
+:root[data-theme="light"] .score, :root[data-theme="light"] .fb, :root[data-theme="light"] .next-grid button{box-shadow:0 12px 30px -26px rgba(11,22,51,.4)}
+:root[data-theme="light"] .items .ex-line{background:var(--alt)}
+
+/* ---------- Light: the sequencing screen ---------- */
+:root[data-theme="light"] .seqlay{background:radial-gradient(1000px 600px at 70% 70%, rgba(11,92,255,.08), transparent 70%), #fff; color:var(--ink)}
+:root[data-theme="light"] .seqlay-top h2{color:var(--ink)}
+:root[data-theme="light"] .seqlay-bar{background:var(--line-soft)}
+:root[data-theme="light"] .seqlay-bar i{background:linear-gradient(90deg, #0B5CFF, #4F46E5)}
+:root[data-theme="light"] .seqlay-hide{color:var(--ink-2)}
+:root[data-theme="light"] .seqlay-count{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none !important; animation:none !important} }
 </style>
 </head>
@@ -641,6 +797,10 @@ section#paths{border-top:0}
       <a href="#employers">Job DNA</a>
       <a href="#about">About</a>
     </nav>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
+      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+    </button>
     <a class="btn btn-primary" href="#try">Try it free</a>
   </div>
 </header>
@@ -1955,12 +2115,28 @@ $("waitlist").addEventListener("submit", async e => {
 const siteHead = document.querySelector(".site-head"), darkEnd = document.querySelector(".sample") || document.querySelector(".hero");
 function syncHead(){
   const y = window.scrollY;
-  siteHead.classList.toggle("on-dark", y < darkEnd.offsetTop + darkEnd.offsetHeight - siteHead.offsetHeight);
+  siteHead.classList.toggle("on-dark", document.documentElement.dataset.theme === "dark" && y < darkEnd.offsetTop + darkEnd.offsetHeight - siteHead.offsetHeight);
   siteHead.classList.toggle("scrolled", y > 8);
 }
 window.addEventListener("scroll", syncHead, { passive: true });
 window.addEventListener("resize", syncHead);
 syncHead();
+
+/* ---------- light and dark themes ---------- */
+function applyTheme(t){
+  const root = document.documentElement;
+  root.classList.add("theme-anim");
+  root.dataset.theme = t;
+  try { localStorage.setItem("trazerr.theme", t); } catch (e) {}
+  const b = $("themeToggle");
+  b.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
+  b.setAttribute("aria-pressed", String(t === "dark"));
+  document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#070B14" : "#FFFFFF";
+  syncHead(); readPalette(); window.dispatchEvent(new Event("themechange"));
+  setTimeout(() => root.classList.remove("theme-anim"), 420);
+}
+$("themeToggle").addEventListener("click", () => { const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; applyTheme(t); track("theme_" + t); });
+if (document.documentElement.dataset.theme === "dark") { $("themeToggle").setAttribute("aria-label", "Switch to light theme"); $("themeToggle").setAttribute("aria-pressed", "true"); }
 
 /* ---------- signature: the sequencer ---------- */
 const TAU = Math.PI * 2;
@@ -1969,7 +2145,23 @@ const seg = (p, a, b) => clamp((p - a) / (b - a));
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const lerp = (a, b, t) => a + (b - a) * t;
 const F_SANS = '"Instrument Sans", system-ui, sans-serif', F_SERIF = '"Instrument Sans", system-ui, sans-serif';
-const LEVEL_COL = { verified: "#FFFFFF", inferred: "#6FB4FF", potential: "#E0B25A" };
+// Canvas colors for each theme. "r,g,b" strings are used where the alpha changes per frame.
+let P;
+function readPalette(){
+  const light = document.documentElement.dataset.theme === "light";
+  P = light ? {
+    light, a: "11,92,255", b: "99,102,241", rung: "11,22,51", text: "#0B1633", text2: "#5A6682",
+    lvl: { verified: "#0B1633", inferred: "#0B5CFF", potential: "#C27C0E" }, glowV: "11,92,255", glowI: "11,92,255", mode: "source-over", glowK: .5,
+    dust: "11,92,255", dustK: .5, trail: "11,92,255", dot: "#0B5CFF", dir: "11,92,255", dirSolid: "#0B5CFF", cur: "90,102,130", curSolid: "#5A6682",
+    shadow: "rgba(11,22,51,.2)", edge: "rgba(11,22,51,.12)", scan: "75,87,117", hot: "11,92,255", flash: "11,92,255", flashK: .12
+  } : {
+    light, a: "130,190,255", b: "224,176,112", rung: "255,255,255", text: "#FFFFFF", text2: "#98A3BA",
+    lvl: { verified: "#FFFFFF", inferred: "#6FB4FF", potential: "#E0B25A" }, glowV: "255,236,200", glowI: "111,180,255", mode: "lighter", glowK: 1,
+    dust: "150,196,255", dustK: 1, trail: "255,214,140", dot: "#FFFFFF", dir: "224,176,112", dirSolid: "#E0B070", cur: "255,255,255", curSolid: "#FFFFFF",
+    shadow: "rgba(0,0,0,.55)", edge: "", scan: "201,209,227", hot: "224,176,112", flash: "255,236,200", flashK: .35
+  };
+}
+readPalette();
 
 // A double helix along any axis. Returns where the highlighted rungs are, so labels and flying lines can find them.
 function drawDNA(ctx, o){
@@ -1983,7 +2175,7 @@ function drawDNA(ctx, o){
   }
   const strands = list => { for (const [p0, p1, z, off] of list) {
     const d = (z + 1) / 2;
-    ctx.strokeStyle = off ? `rgba(224,176,112,${(.16 + .74 * d) * a})` : `rgba(130,190,255,${(.16 + .78 * d) * a})`;
+    ctx.strokeStyle = off ? `rgba(${P.b},${(.16 + .74 * d) * a})` : `rgba(${P.a},${(.16 + .78 * d) * a})`;
     ctx.lineWidth = 1 + 2.8 * d; ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
   } };
   ctx.lineCap = "round";
@@ -1993,7 +2185,7 @@ function drawDNA(ctx, o){
   for (let j = 0; j < plain; j++) {
     const t = (j + .5) / plain; if (t > reveal) break;
     const A = pt(t, 0), B = pt(t, Math.PI);
-    ctx.strokeStyle = `rgba(255,255,255,${.12 * a})`; ctx.lineWidth = 1.2;
+    ctx.strokeStyle = `rgba(${P.rung},${.12 * a})`; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
   }
   for (const r of o.rungs || []) {
@@ -2001,10 +2193,10 @@ function drawDNA(ctx, o){
     const A = pt(r.t, 0), B = pt(r.t, Math.PI), base = { x: o.x0 + dx * r.t, y: o.y0 + dy * r.t };
     out.push({ ...r, base, A, B });
     if (!r.on) continue;
-    const col = LEVEL_COL[r.kind] || "#fff";
-    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const col = P.lvl[r.kind] || P.text;
+    ctx.save(); ctx.globalCompositeOperation = P.mode;
     const g = ctx.createRadialGradient(base.x, base.y, 0, base.x, base.y, 26 + 30 * (r.pulse || 0));
-    g.addColorStop(0, r.kind === "inferred" ? `rgba(111,180,255,${.45 * a})` : `rgba(255,236,200,${.4 * a})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    g.addColorStop(0, r.kind === "inferred" ? `rgba(${P.glowI},${.45 * a * P.glowK})` : `rgba(${P.glowV},${.4 * a * P.glowK})`); g.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(base.x, base.y, 26 + 30 * (r.pulse || 0), 0, TAU); ctx.fill(); ctx.restore();
     ctx.strokeStyle = col; ctx.globalAlpha = a; ctx.lineWidth = 3;
     if (r.kind === "inferred") ctx.setLineDash([5, 5]);
@@ -2030,7 +2222,7 @@ function pill(ctx, text, x, y, size, alpha, col){
 function bezier(a, c1, c2, b, t){ const u = 1 - t; return { x: u*u*u*a.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*b.x, y: u*u*u*a.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*b.y }; }
 function makeDust(n){ const r = seeded("trazerr-dust"); return Array.from({ length: n }, () => ({ x: r(), y: r(), s: .5 + r() * 1.6, a: .08 + r() * .3, v: .2 + r() * .8 })); }
 function drawDust(ctx, dust, W, H, time, drift){
-  for (const d of dust) { const y = ((d.y - time * .004 * d.v - drift * d.v * .3) % 1 + 1) % 1; ctx.fillStyle = `rgba(150,196,255,${d.a})`; ctx.beginPath(); ctx.arc(d.x * W, y * H, d.s, 0, TAU); ctx.fill(); }
+  for (const d of dust) { const y = ((d.y - time * .004 * d.v - drift * d.v * .3) % 1 + 1) % 1; ctx.fillStyle = `rgba(${P.dust},${d.a * P.dustK})`; ctx.beginPath(); ctx.arc(d.x * W, y * H, d.s, 0, TAU); ctx.fill(); }
 }
 
 (() => {
@@ -2146,8 +2338,9 @@ function drawDust(ctx, dust, W, H, time, drift){
     if (pa > .01) {
       ctx.save(); ctx.globalAlpha = pa;
       ctx.translate(px + paper.pw / 2, py + paper.ph / 2); ctx.rotate(rot); ctx.translate(-paper.pw / 2, -paper.ph / 2);
-      ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
+      ctx.shadowColor = P.shadow; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24;
       ctx.drawImage(paper.c, 0, 0, paper.pw, paper.ph); ctx.shadowColor = "transparent";
+      if (P.edge) { ctx.strokeStyle = P.edge; ctx.lineWidth = 1; roundRect(ctx, .5, .5, paper.pw - 1, paper.ph - 1, 10 * paper.s); ctx.stroke(); }
       EVID.forEach((e, k) => {
         const h = seg(p, .14 + k * .03, .19 + k * .03), f = seg(p, .27 + k * .035, .4 + k * .035), R = e.rect, s = paper.s;
         const rx = R.x * s, ry = R.y * s, rw = R.w * s, rh = R.h * s;
@@ -2169,7 +2362,7 @@ function drawDust(ctx, dust, W, H, time, drift){
     ctx.textBaseline = "alphabetic";
     for (const r of hx.out) {
       const la = seg(p, r.land, r.land + .04) * ha; if (la <= 0) continue;
-      const e = EVID[r.k], col = LEVEL_COL[e.level];
+      const e = EVID[r.k], col = P.lvl[e.level];
       let lx, ly, align;
       if (L.portrait) { lx = L.x0 + L.amp + 22; ly = r.base.y + 4; align = "left"; }
       else { const side = r.k % 2 ? 1 : -1; lx = r.base.x; ly = r.base.y + side * (L.amp + 40) + (side > 0 ? 10 : 0); align = "center"; }
@@ -2177,7 +2370,7 @@ function drawDust(ctx, dust, W, H, time, drift){
       if (L.portrait) { ctx.moveTo(L.x0 + L.amp + 6, r.base.y); ctx.lineTo(lx - 6, r.base.y); }
       else { const side = r.k % 2 ? 1 : -1; ctx.moveTo(r.base.x, r.base.y + side * (L.amp + 6)); ctx.lineTo(r.base.x, ly - (side > 0 ? 24 : -8)); }
       ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = la;
-      ctx.textAlign = align; ctx.font = `600 ${L.portrait ? 14 : 13.5}px ${F_SANS}`; ctx.fillStyle = "#fff";
+      ctx.textAlign = align; ctx.font = `600 ${L.portrait ? 14 : 13.5}px ${F_SANS}`; ctx.fillStyle = P.text;
       ctx.fillText(e.name, lx, L.portrait ? ly - 4 : ly - 6);
       ctx.font = `500 11.5px ${F_SANS}`; ctx.fillStyle = col;
       ctx.fillText(e.level === "inferred" ? "Between the lines" : !L.portrait ? "On resume" : "On resume · " + (e.text || "").replace(/\.$/, "").split(" ").slice(0, 4).join(" ") + "…", lx, L.portrait ? ly + 13 : ly + 11);
@@ -2192,11 +2385,11 @@ function drawDust(ctx, dust, W, H, time, drift){
       const c1 = L.portrait ? { x: from.x + 40, y: from.y + 40 } : { x: from.x + 120, y: from.y - 120 };
       const c2 = L.portrait ? { x: to.x + 120, y: to.y - 40 } : { x: to.x - 40, y: to.y - 140 };
       const q = bezier(from, c1, c2, to, ease(f));
-      for (let i = 1; i <= 6; i++) { const tq = bezier(from, c1, c2, to, ease(Math.max(0, f - i * .025))); ctx.fillStyle = `rgba(255,214,140,${.28 - i * .04})`; ctx.beginPath(); ctx.arc(tq.x, tq.y, 3 - i * .35, 0, TAU); ctx.fill(); }
-      ctx.save(); ctx.globalCompositeOperation = "lighter";
-      const glow = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 16); glow.addColorStop(0, e.level === "inferred" ? "rgba(111,180,255,.8)" : "rgba(255,214,140,.8)"); glow.addColorStop(1, "rgba(0,0,0,0)");
+      for (let i = 1; i <= 6; i++) { const tq = bezier(from, c1, c2, to, ease(Math.max(0, f - i * .025))); ctx.fillStyle = `rgba(${P.trail},${.28 - i * .04})`; ctx.beginPath(); ctx.arc(tq.x, tq.y, 3 - i * .35, 0, TAU); ctx.fill(); }
+      ctx.save(); ctx.globalCompositeOperation = P.mode;
+      const glow = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 16); glow.addColorStop(0, e.level === "inferred" ? `rgba(${P.glowI},${.8 * P.glowK})` : `rgba(${P.trail},${.8 * P.glowK})`); glow.addColorStop(1, `rgba(${P.trail},0)`);
       ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(q.x, q.y, 16, 0, TAU); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(q.x, q.y, 3.2, 0, TAU); ctx.fill(); ctx.restore();
+      ctx.fillStyle = P.dot; ctx.beginPath(); ctx.arc(q.x, q.y, 3.2, 0, TAU); ctx.fill(); ctx.restore();
     });
 
     // where it leads
@@ -2208,20 +2401,20 @@ function drawDust(ctx, dust, W, H, time, drift){
       const c2 = L.portrait ? { x: T.x, y: T.y - 50 } : { x: T.x - 70, y: T.y };
       const gold = d.kind === "dir";
       for (const [w, a] of gold ? [[8, .12], [2.2, .95]] : [[1.6, .6]]) {
-        ctx.strokeStyle = gold ? `rgba(224,176,112,${a})` : `rgba(255,255,255,${a})`; ctx.lineWidth = w; ctx.beginPath();
+        ctx.strokeStyle = gold ? `rgba(${P.dir},${a})` : `rgba(${P.cur},${a})`; ctx.lineWidth = w; ctx.beginPath();
         for (let j = 0; j <= 40; j++) { const q = bezier(E, c1, c2, T, b * j / 40); j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); } ctx.stroke();
       }
       const tip = bezier(E, c1, c2, T, b);
-      ctx.fillStyle = gold ? "#E0B070" : "#fff"; ctx.beginPath(); ctx.arc(tip.x, tip.y, 4.5, 0, TAU); ctx.fill();
-      if (!isStatic && b >= 1) { const q = bezier(E, c1, c2, T, (time * .45 + i * .3) % 1); ctx.fillStyle = gold ? "rgba(255,226,170,.9)" : "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, TAU); ctx.fill(); }
+      ctx.fillStyle = gold ? P.dirSolid : P.curSolid; ctx.beginPath(); ctx.arc(tip.x, tip.y, 4.5, 0, TAU); ctx.fill();
+      if (!isStatic && b >= 1) { const q = bezier(E, c1, c2, T, (time * .45 + i * .3) % 1); ctx.fillStyle = gold ? `rgba(${P.dir},.9)` : `rgba(${P.cur},.7)`; ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, TAU); ctx.fill(); }
       const la = seg(b, .8, 1); if (la <= 0) return;
       ctx.globalAlpha = la;
       if (L.portrait) {
-        ctx.textAlign = "center"; ctx.font = `500 ${W < 420 ? 14.5 : 16}px ${F_SERIF}`; ctx.fillStyle = "#fff"; ctx.fillText(d.role, T.x, T.y + 24);
-        ctx.font = `600 10.5px ${F_SANS}`; ctx.fillStyle = gold ? "#E0B070" : "#98A3BA"; ctx.fillText(d.tag.toUpperCase(), T.x, T.y + 40); ctx.textAlign = "left";
+        ctx.textAlign = "center"; ctx.font = `500 ${W < 420 ? 14.5 : 16}px ${F_SERIF}`; ctx.fillStyle = P.text; ctx.fillText(d.role, T.x, T.y + 24);
+        ctx.font = `600 10.5px ${F_SANS}`; ctx.fillStyle = gold ? P.dirSolid : P.text2; ctx.fillText(d.tag.toUpperCase(), T.x, T.y + 40); ctx.textAlign = "left";
       } else {
-        ctx.font = `600 11px ${F_SANS}`; ctx.fillStyle = gold ? "#E0B070" : "#98A3BA"; ctx.fillText(d.tag.toUpperCase(), T.x + 16, T.y - 8);
-        ctx.font = `500 22px ${F_SERIF}`; ctx.fillStyle = "#fff"; ctx.fillText(d.role, T.x + 16, T.y + 14);
+        ctx.font = `600 11px ${F_SANS}`; ctx.fillStyle = gold ? P.dirSolid : P.text2; ctx.fillText(d.tag.toUpperCase(), T.x + 16, T.y - 8);
+        ctx.font = `500 22px ${F_SERIF}`; ctx.fillStyle = P.text; ctx.fillText(d.role, T.x + 16, T.y + 14);
       }
       ctx.globalAlpha = 1;
     });
@@ -2242,6 +2435,7 @@ function drawDust(ctx, dust, W, H, time, drift){
   io.observe(sec);
   replay.addEventListener("click", () => { elapsed = 0; playing = true; replay.hidden = true; kick(); });
   window.addEventListener("resize", () => { layout(); kick(); });
+  window.addEventListener("themechange", () => { if (L) kick(); });
   const go = () => { layout(); kick(); };
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go();
 })();
@@ -2288,8 +2482,8 @@ window.Seqlay = (() => {
         nextRung = (nextRung + 7) % RUNGS;
       }
       const hot = ln.proof && passed;
-      if (ln.bar) { ctx.fillStyle = hot ? "rgba(224,176,112,.55)" : `rgba(201,209,227,${.1 + .25 * near})`; roundRect(ctx, g.lx0, y - 9, (g.lx1 - g.lx0) * ln.bar, 7, 3.5); ctx.fill(); }
-      else { ctx.fillStyle = hot ? "rgba(224,176,112,.9)" : `rgba(201,209,227,${.28 + .55 * near})`; ctx.fillText(cut(ctx, ln.text, g.lx1 - g.lx0), g.lx0, y); }
+      if (ln.bar) { ctx.fillStyle = hot ? `rgba(${P.hot},.55)` : `rgba(${P.scan},${.1 + .25 * near})`; roundRect(ctx, g.lx0, y - 9, (g.lx1 - g.lx0) * ln.bar, 7, 3.5); ctx.fill(); }
+      else { ctx.fillStyle = hot ? `rgba(${P.hot},.95)` : `rgba(${P.scan},${.28 + .55 * near})`; ctx.fillText(cut(ctx, ln.text, g.lx1 - g.lx0), g.lx0, y); }
     }
     ctx.restore();
     const sg = ctx.createLinearGradient(g.lx0, 0, g.lx1, 0); sg.addColorStop(0, "rgba(92,168,255,0)"); sg.addColorStop(.5, "rgba(92,168,255,.8)"); sg.addColorStop(1, "rgba(92,168,255,0)");
@@ -2303,12 +2497,12 @@ window.Seqlay = (() => {
       const c1 = W >= 900 ? { x: f.from.x + 200, y: f.from.y - 160 } : { x: f.from.x + 60, y: f.from.y + 60 }, c2 = { x: target.x, y: target.y - (W >= 900 ? 160 : 60) };
       const q = bezier(f.from, c1, c2, target, ease(k)), sh = ease(seg(k, .5, 1));
       ctx.font = `500 12px ${F_SANS}`;
-      if (f.text && sh < .9) pill(ctx, cut(ctx, f.text, W >= 900 ? 280 : W * .6), q.x, q.y, lerp(12, 7, sh), 1 - sh, f.inf ? "#6FB4FF" : "#E0B070");
-      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,220,160,.95)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2 + 3 * sh, 0, TAU); ctx.fill(); ctx.restore();
+      if (f.text && sh < .9) pill(ctx, cut(ctx, f.text, W >= 900 ? 280 : W * .6), q.x, q.y, lerp(12, 7, sh), 1 - sh, f.inf ? P.lvl.inferred : P.dirSolid);
+      ctx.save(); ctx.globalCompositeOperation = P.mode; ctx.fillStyle = P.light ? P.dot : "rgba(255,220,160,.95)"; ctx.beginPath(); ctx.arc(q.x, q.y, 2 + 3 * sh, 0, TAU); ctx.fill(); ctx.restore();
       return true;
     });
     $("seqlayCount").textContent = found ? `${found} ${found === 1 ? "strength" : "strengths"} spotted` : "";
-    if (done) { done = Math.min(1.001, done + .03); ctx.fillStyle = `rgba(255,236,200,${.35 * Math.sin(Math.min(1, done) * Math.PI)})`; ctx.fillRect(0, 0, W, H); }
+    if (done) { done = Math.min(1.001, done + .03); ctx.fillStyle = `rgba(${P.flash},${P.flashK * Math.sin(Math.min(1, done) * Math.PI)})`; ctx.fillRect(0, 0, W, H); }
     raf = requestAnimationFrame(frame);
   }
   function start(payload){

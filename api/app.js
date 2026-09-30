@@ -717,7 +717,7 @@ async function redisPipeline(cfg, commands) {
 const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
-  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied"
+  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
