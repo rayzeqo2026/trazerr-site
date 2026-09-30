@@ -678,8 +678,8 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 .acct-btn.on svg{display:none}
 .site-head.on-dark .acct-btn:not(.on){background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.28); color:#fff}
 @media (max-width:820px){ .site-head .acct-btn{margin-left:auto} .site-head .acct-btn ~ .theme-toggle{margin-left:0} }
-@media (max-width:480px){ .site-head .wrap{gap:10px} .site-head .btn{padding:10px 14px} }
-@media (max-width:359px){ .site-head .brand{font-size:0; gap:0} }
+@media (max-width:480px){ .site-head .wrap{gap:10px} .site-head .btn{display:none} .site-head .brand{flex-shrink:0; white-space:nowrap} }
+@media (max-width:299px){ .site-head .brand{font-size:0; gap:0} }
 .acct-rec{display:flex; flex-wrap:wrap; gap:14px 20px; align-items:center; justify-content:space-between; margin-top:14px; padding:18px 20px; background:var(--surface); border:1px solid var(--line); border-radius:14px}
 .acct-rec > div:first-child{display:grid; gap:4px; min-width:0; flex:1 1 260px}
 .acct-rec span{color:var(--ink-2); font-size:15px}
