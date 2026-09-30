@@ -1190,7 +1190,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
       <a href="#employers">Job DNA</a>
       <a href="#about">About</a>
     </nav>
-    <button class="acct-btn" id="acctBtn" type="button" aria-label="Sign in">
+    <button class="acct-btn" id="acctBtn" type="button" aria-label="Sign in" hidden>
       <svg class="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.5 20.2c1.3-3.6 4.2-5.4 7.5-5.4s6.2 1.8 7.5 5.4"/></svg>
       <span class="acct-initial" id="acctInitial" aria-hidden="true" hidden></span>
     </button>
@@ -1234,7 +1234,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
         <button class="btn btn-primary" id="analyzeBtn" type="button">Build my Career DNA</button>
         <div class="hero-progress" id="heroProg" hidden aria-hidden="true"><i id="heroBar"></i></div>
         <p class="status" id="status" role="status" aria-live="polite"></p>
-        <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy">Stored only if you save it</a></div>
+        <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy">Never stored on servers</a></div>
       </div>
     </div>
   </section>
@@ -1412,12 +1412,12 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
       <div class="principles">
         <div><b>Your word first</b><p>We take your resume at its word. Every strength points to something you wrote, and anything we read between the lines is labeled.</p></div>
         <div><b>Honest about gaps</b><p>What your resume doesn't show is named, not hidden. We never add a skill, title or number you didn't give us.</p></div>
-        <div><b>Yours to keep</b><p>Nothing is stored on our servers unless you choose to save it to your account, and you can delete it all any time.</p></div>
+        <div><b>Yours to keep</b><p>We don't store your resume. Your Career DNA stays on your device unless you ask for something that needs it.</p></div>
         <div><b>Talk to us</b><p>Questions, or a result that seemed off? Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything.</p></div>
       </div>
       <div class="roadmap">
-        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Career paths</li><li>Job DNA</li><li>Accounts</li></ul></div>
-        <div><h3>Coming next</h3><ul class="pills soon"><li>Career Passport</li><li>Candidate discovery for employers</li><li>Interview practice</li></ul></div>
+        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Career paths</li><li>Job DNA</li></ul></div>
+        <div><h3>Coming next</h3><ul class="pills soon"><li>Accounts and Career Passport</li><li>Candidate discovery for employers</li><li>Interview practice</li></ul></div>
       </div>
     </div>
   </section>
@@ -1427,7 +1427,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
       <div class="join">
         <div>
           <h2>Your resume says more than you think. Find out what.</h2>
-          <p>Join the waitlist for early access to the Career Passport and employer tools.</p>
+          <p>Join the waitlist for early access to accounts, the Career Passport and employer tools.</p>
         </div>
         <form id="waitlist" novalidate>
           <label for="wlEmail">Email address</label>
@@ -1443,7 +1443,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
   <section class="privacy-line" id="privacy">
     <div class="wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-      <p><b>Your resume isn't stored on our servers unless you save it to your account.</b> It's sent securely to Claude, an AI model by Anthropic, to build your result. Otherwise your Career DNA stays in this browser unless you ask for something that needs it. <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms</a></p>
+      <p><b>Your resume is never stored on our servers.</b> It's sent securely to Claude, an AI model by Anthropic, to build your result. Your Career DNA stays in this browser unless you ask for something that needs it. <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms</a></p>
     </div>
   </section>
 </main>
@@ -1857,12 +1857,12 @@ function showProfile(p){
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
   else {
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
-    h += '<button class="btn btn-quiet" type="button" id="acctSaveBtn">Save to my account</button>';
+    if (ACCOUNTS_ON) h += '<button class="btn btn-quiet" type="button" id="acctSaveBtn">Save to my account</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
   h += '<button class="btn btn-quiet" type="button" id="cardBtn">' + (ex ? "Save this example card" : "Save my Career DNA card") + "</button>";
   h += "</div>";
-  if (!ex) h += '<p class="o-note">"Save to my account" keeps this Career DNA and your resume in your Trazerr account, so you can use them on any device. You can delete them any time.</p>';
+  if (!ex && ACCOUNTS_ON) h += '<p class="o-note">"Save to my account" keeps this Career DNA and your resume in your Trazerr account, so you can use them on any device. You can delete them any time.</p>';
   h += '<p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
 
   openOverlay(ex ? "Example Career DNA" : (p.fullName || "Your Career DNA"), h);
@@ -2993,6 +2993,8 @@ window.Seqlay = (() => {
 /* ---------- accounts: optional saving to a Trazerr account (Supabase) ----------
    Sign-in is an emailed link, no password. Nothing is stored in an account until the person chooses
    "Save to my account". The database only lets each signed-in person read and change their own row. */
+// Accounts stay hidden until Supabase setup is finished (return addresses, table, email sender). Then set to true.
+const ACCOUNTS_ON = false;
 const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js";
 const SB_STORE = "trazerr.auth", PENDING_KEY = "trazerr.pendingAccountSave";
 const linkHash = /access_token=|error_description=/.test(location.hash) ? new URLSearchParams(location.hash.slice(1)) : null;
@@ -3119,7 +3121,8 @@ $("acctBtn").addEventListener("click", async () => {
   catch (e) { openOverlay("Your account", errorHTML(e.message || "Sign-in isn't available right now. Try again in a moment.")); }
 });
 // Only load sign-in when it's needed: returning from an emailed link, or someone who signed in before.
-if (linkHash || hadSession()) {
+$("acctBtn").hidden = !ACCOUNTS_ON;
+if (ACCOUNTS_ON && (linkHash || hadSession())) {
   acct().then(() => {
     if (!linkHash) return;
     if (sbUser) return afterSignIn();
