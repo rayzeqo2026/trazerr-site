@@ -1,5 +1,5 @@
 // Trazerr server: one Vercel function for every feature.
-// Route: /api/app?action=analyze | jobs | match | jobdna | path | tailor | waitlist
+// Route: /api/app?action=analyze | jobs | match | jobdna | path | tailor | waitlist | openings | apply | ats
 //
 // Environment variables (Vercel > Project > Settings > Environment Variables):
 //   ANTHROPIC_API_KEY   required: Career DNA, fit checks, Job DNA, career paths
@@ -12,8 +12,10 @@
 //   AI_DAILY_LIMIT      optional: most AI requests per day across all visitors (default 500; needs storage)
 //   STATS_KEY           optional: a long random password for viewing usage counts at
 //                       /api/app?action=stats&key=YOUR_STATS_KEY
+//   ATS_ADMIN_KEY       required for hiring: a long random password for the candidate dashboard at /ats.html
+//                       (job applications also need the storage above)
 
-import { createHash } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 const FALLBACK_MODEL = process.env.ANTHROPIC_FALLBACK_MODEL || "claude-sonnet-5-5";
@@ -62,8 +64,8 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20 };
-const MEMORY_ONLY = new Set(["track", "jobs"]); // cheap requests; not worth a storage round trip
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, openings: 60, apply: 5, ats: 300 };
+const MEMORY_ONLY = new Set(["track", "jobs", "openings"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -817,15 +819,258 @@ async function waitlist(req, res) {
   return res.status(200).json({ ok: true, already: data.result === 0 });
 }
 
+/* ---------------- Hiring (ATS) ---------------- */
+// Employers post jobs, candidates apply at /careers.html, and each resume is screened against the job.
+// The dashboard at /ats.html sends ATS_ADMIN_KEY in the x-ats-key header on every request.
+// Unlike the rest of Trazerr, applications ARE stored: the candidate's details, their resume file
+// and the screening, until an admin deletes them.
+
+const ATS_JOBS = "trazerr:ats:jobs";   // hash: job id -> job JSON
+const ATS_CANDS = "trazerr:ats:cands"; // hash: candidate id -> candidate JSON (without the resume)
+const resumeKey = (id, n) => "trazerr:ats:resume:" + id + ":" + n; // resume file, base64, in chunks
+const RESUME_CHUNK = 700_000; // keeps every storage request under Upstash's 1 MB request limit
+const STAGES = ["new", "reviewing", "interview", "offer", "hired", "rejected"];
+
+// New York City ZIP codes by borough. Ranges cover every residential ZIP in the five boroughs.
+const BOROUGH_ZIPS = [
+  ["Manhattan", 10001, 10282], ["Staten Island", 10301, 10314], ["Bronx", 10451, 10475],
+  ["Queens", 11004, 11005], ["Queens", 11101, 11120], ["Brooklyn", 11201, 11256],
+  ["Queens", 11351, 11439], ["Queens", 11691, 11697]
+];
+function boroughForZip(zip) {
+  const n = parseInt(String(zip || "").slice(0, 5), 10);
+  if (!Number.isFinite(n)) return "";
+  const hit = BOROUGH_ZIPS.find(([, lo, hi]) => n >= lo && n <= hi);
+  return hit ? hit[0] : "";
+}
+
+function storage() {
+  const cfg = redisConfig();
+  if (!cfg) throw new UserError(503, "Applications aren't switched on yet. Please check back soon.");
+  return cfg;
+}
+
+async function hashGet(cfg, key, field) {
+  const out = await redisPipeline(cfg, [["HGET", key, field]]);
+  try { return out[0]?.result ? JSON.parse(out[0].result) : null; } catch { return null; }
+}
+
+async function hashAll(cfg, key) {
+  const flat = (await redisPipeline(cfg, [["HGETALL", key]]))[0]?.result || [];
+  const items = [];
+  for (let i = 0; i < flat.length; i += 2) { try { items.push(JSON.parse(flat[i + 1])); } catch { /* skip a damaged entry */ } }
+  return items;
+}
+
+const saveCandidate = (cfg, c) => redisPipeline(cfg, [["HSET", ATS_CANDS, c.id, JSON.stringify(c)]]);
+
+function cleanJobPost(j) {
+  return {
+    title: str(j?.title, 120), company: str(j?.company, 100), location: str(j?.location, 100),
+    pay: str(j?.pay, 80), type: str(j?.type, 40), description: str(j?.description, 12000)
+  };
+}
+const publicJob = (j) => ({ id: j.id, ...cleanJobPost(j), postedAt: j.createdAt });
+
+async function openings(req, res) {
+  const cfg = redisConfig();
+  const all = cfg ? await hashAll(cfg, ATS_JOBS) : [];
+  const jobs = all.filter(j => j.open).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).map(publicJob);
+  res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+  return res.status(200).json({ jobs });
+}
+
+const SCREEN_SYSTEM = `You are Trazerr's hiring screener. You read one applicant's resume and compare it with one job posting, for the employer who posted the job.
+
+Rules:
+- Only use what the resume shows. Never invent employers, titles, dates, numbers, licenses or skills.
+- Judge only job-related evidence: experience, skills, results, licenses and education the posting asks for. Never consider or mention the applicant's name, age, gender, race, ethnicity, national origin, religion, disability, family status, appearance or photo, and don't mark someone down for gaps between jobs.
+- Refer to the applicant by first name or as "the applicant". Never use he, she, his, her, him or hers.
+- Write in plain, everyday language. No jargon.
+
+Scoring guide for fitScore (0-100): 80+ strong, 60-79 good, 40-59 partial, under 40 weak.
+
+${JSON_ONLY} Use exactly this shape:
+{
+  "fitScore": 72,
+  "summary": "one sentence verdict for the employer",
+  "currentRole": "most recent job title and employer, or empty string",
+  "yearsExperience": "short phrase, worked out from the dates in the resume up to today, e.g. '9 years total'",
+  "relevantExperience": "short phrase on experience in work like this job, e.g. '4 years in B2B sales, none in medical devices'",
+  "location": "where the applicant lives now, as 'City, ST' from the contact details, or empty string",
+  "zip": "5-digit ZIP code from the contact details, or empty string",
+  "requirements": [ { "item": "short phrase from the posting", "met": "yes, partly, no or unclear", "evidence": "one sentence" } ],
+  "strengths": [ "one sentence each" ],
+  "concerns": [ "one sentence each" ],
+  "questions": [ "one interview question each, to confirm something the resume leaves open" ]
+}
+Give 3-6 requirements (the posting's most important), 2-4 strengths, 0-3 concerns and 2-3 questions. fitScore must be a whole number.
+If the document is not a resume, return exactly {"error":"not_a_resume"}.`;
+
+async function readResume(cfg, c) {
+  const n = Number(c.resumeChunks) || 0;
+  if (!n) return "";
+  const out = await redisPipeline(cfg, Array.from({ length: n }, (_, i) => ["GET", resumeKey(c.id, i)]));
+  return out.map(o => o?.result || "").join("");
+}
+
+// Screens one candidate and saves the result on the record. Never throws: a failed screening is
+// saved as "failed" so the dashboard can offer to try again.
+async function screen(cfg, c, job, resume) {
+  let content;
+  if (c.resumeType === "pdf") content = [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: resume.data } }];
+  else content = [{ type: "text", text: "Resume:\n\n" + str(resume.text, 30000) }];
+  const j = cleanJobPost(job);
+  content.push({ type: "text", text: "Job posting:\nTitle: " + j.title + "\nCompany: " + j.company + "\nLocation: " + j.location + "\n\n" + j.description + "\n\nScreen this applicant and return the JSON object." });
+  try {
+    const p = await askClaude(SCREEN_SYSTEM, content);
+    if (p.error === "not_a_resume") {
+      c.screen = null; c.screenStatus = "not_a_resume";
+    } else {
+      const met = (v) => (["yes", "partly", "no"].includes(v) ? v : "unclear");
+      c.screen = {
+        fitScore: toScore(p.fitScore), summary: str(p.summary, 300), currentRole: str(p.currentRole, 160),
+        yearsExperience: str(p.yearsExperience, 80), relevantExperience: str(p.relevantExperience, 160),
+        location: str(p.location, 80), zip: (str(p.zip, 10).match(/\d{5}/) || [""])[0],
+        requirements: list(p.requirements, 6).map(r => ({ item: str(r?.item, 120), met: met(r?.met), evidence: str(r?.evidence, 240) })).filter(r => r.item),
+        strengths: list(p.strengths, 4).map(x => str(x, 240)).filter(Boolean),
+        concerns: list(p.concerns, 3).map(x => str(x, 240)).filter(Boolean),
+        questions: list(p.questions, 3).map(x => str(x, 240)).filter(Boolean),
+        at: new Date().toISOString()
+      };
+      c.screen.resumeBorough = boroughForZip(c.screen.zip);
+      c.screenStatus = c.screen.summary ? "done" : "failed";
+    }
+  } catch (e) {
+    console.error("Screening failed", c.id, e.message);
+    c.screenStatus = "failed";
+  }
+  await saveCandidate(cfg, c);
+  return c;
+}
+
+async function apply(req, res) {
+  const body = getBody(req) || {};
+  if (body.website) return res.status(200).json({ ok: true }); // spam trap
+  const cfg = storage();
+  const job = await hashGet(cfg, ATS_JOBS, str(body.jobId, 40));
+  if (!job?.open) throw new UserError(404, "This job isn't taking applications anymore.");
+
+  const name = str(body.name, 100), email = str(body.email, 200).toLowerCase(), phone = str(body.phone, 40);
+  const zip = (str(body.zip, 10).match(/^\d{5}/) || [""])[0];
+  if (name.length < 2) throw new UserError(400, "Enter your full name.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new UserError(400, "Enter a valid email address, like name@example.com.");
+  if (!zip) throw new UserError(400, "Enter the 5-digit ZIP code where you live.");
+  if (body.consent !== true) throw new UserError(400, "Please agree to the privacy policy to apply.");
+
+  const r = body.resume || {};
+  const type = r.kind === "pdf" || r.kind === "docx" ? r.kind : "";
+  if (!type || typeof r.data !== "string" || r.data.length < 100 || r.data.length > 4_300_000) {
+    throw new UserError(400, "Attach your resume as a PDF or Word file under 3 MB.");
+  }
+  if (type === "docx" && str(r.text, 30000).length < 80) throw new UserError(400, "That Word file couldn't be read. Try saving it as a PDF.");
+
+  // One record per person per job: applying again replaces the resume and keeps the hiring stage and notes.
+  const id = createHash("sha256").update(email + "|" + job.id).digest("hex").slice(0, 16);
+  const prev = await hashGet(cfg, ATS_CANDS, id);
+  const chunks = [];
+  for (let i = 0; i < r.data.length; i += RESUME_CHUNK) chunks.push(r.data.slice(i, i + RESUME_CHUNK));
+  for (let i = 0; i < chunks.length; i++) await redisPipeline(cfg, [["SET", resumeKey(id, i), chunks[i]]]);
+  const stale = Array.from({ length: Math.max(0, (Number(prev?.resumeChunks) || 0) - chunks.length) }, (_, i) => ["DEL", resumeKey(id, chunks.length + i)]);
+
+  const c = {
+    id, jobId: job.id, jobTitle: job.title, name, email, phone, zip, borough: boroughForZip(zip),
+    linkedin: str(body.linkedin, 200), note: str(body.note, 2000),
+    resumeName: str(r.name, 120) || "resume." + type, resumeType: type, resumeChunks: chunks.length,
+    resumeText: type === "docx" ? str(r.text, 30000) : "",
+    appliedAt: new Date().toISOString(), firstAppliedAt: prev?.firstAppliedAt || prev?.appliedAt || new Date().toISOString(),
+    stage: prev?.stage || "new", notes: prev?.notes || "", screen: null, screenStatus: "pending"
+  };
+  await redisPipeline(cfg, [["HSET", ATS_CANDS, id, JSON.stringify(c)], ...stale]);
+  await screen(cfg, c, job, { data: r.data, text: c.resumeText });
+  return res.status(200).json({ ok: true });
+}
+
+function atsAuthorized(req) {
+  const expected = process.env.ATS_ADMIN_KEY || "";
+  const given = String(req.headers["x-ats-key"] || "");
+  if (expected.length < 12 || given.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+}
+
+// Admin requests: one action, with "op" saying what to do.
+async function ats(req, res) {
+  if (!atsAuthorized(req)) throw new UserError(401, "That password isn't right.");
+  const cfg = storage();
+  const body = getBody(req) || {};
+  const id = str(body.id, 40);
+  res.setHeader("Cache-Control", "no-store");
+
+  switch (body.op) {
+    case "list": {
+      const [jobs, cands] = await Promise.all([hashAll(cfg, ATS_JOBS), hashAll(cfg, ATS_CANDS)]);
+      jobs.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      cands.sort((a, b) => String(b.appliedAt).localeCompare(String(a.appliedAt)));
+      return res.status(200).json({ jobs, candidates: cands.map(({ resumeText, ...c }) => c) });
+    }
+    case "savejob": {
+      const post = cleanJobPost(body.job);
+      if (!post.title || post.description.length < 60) throw new UserError(400, "Give the job a title and a full description.");
+      const prev = id ? await hashGet(cfg, ATS_JOBS, id) : null;
+      const job = { ...post, id: prev?.id || randomBytes(5).toString("hex"), open: body.job?.open !== false, createdAt: prev?.createdAt || new Date().toISOString() };
+      await redisPipeline(cfg, [["HSET", ATS_JOBS, job.id, JSON.stringify(job)]]);
+      return res.status(200).json({ job });
+    }
+    case "deletejob": {
+      await redisPipeline(cfg, [["HDEL", ATS_JOBS, id]]);
+      return res.status(200).json({ ok: true });
+    }
+    case "update": {
+      const c = await hashGet(cfg, ATS_CANDS, id);
+      if (!c) throw new UserError(404, "That candidate wasn't found.");
+      if (STAGES.includes(body.stage)) c.stage = body.stage;
+      if (typeof body.notes === "string") c.notes = str(body.notes, 5000);
+      await saveCandidate(cfg, c);
+      return res.status(200).json({ candidate: c });
+    }
+    case "resume": {
+      const c = await hashGet(cfg, ATS_CANDS, id);
+      if (!c) throw new UserError(404, "That candidate wasn't found.");
+      const data = await readResume(cfg, c);
+      if (!data) throw new UserError(404, "This resume file is missing.");
+      return res.status(200).json({ name: c.resumeName, type: c.resumeType, data });
+    }
+    case "rescreen": {
+      const c = await hashGet(cfg, ATS_CANDS, id);
+      if (!c) throw new UserError(404, "That candidate wasn't found.");
+      const job = await hashGet(cfg, ATS_JOBS, c.jobId);
+      if (!job) throw new UserError(404, "The job this candidate applied to has been deleted.");
+      const data = await readResume(cfg, c);
+      if (!data) throw new UserError(404, "This resume file is missing.");
+      const done = await screen(cfg, c, job, { data, text: c.resumeText });
+      const { resumeText, ...out } = done;
+      return res.status(200).json({ candidate: out });
+    }
+    case "delete": {
+      const c = await hashGet(cfg, ATS_CANDS, id);
+      const n = Number(c?.resumeChunks) || 0;
+      await redisPipeline(cfg, [["HDEL", ATS_CANDS, id], ...Array.from({ length: n }, (_, i) => ["DEL", resumeKey(id, i)])]);
+      return res.status(200).json({ ok: true });
+    }
+    default:
+      throw new UserError(400, "Unknown request.");
+  }
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, openings, apply, ats };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = action === "jobs" || action === "stats" ? "GET" : "POST";
+  const method = action === "jobs" || action === "stats" || action === "openings" ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hiring · Trazerr</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F4F5F1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F5F1; --surface:#FFFFFF; --ink:#15203A; --ink-2:#4A5470; --line:#DADDE3; --line-soft:#E9EBEF;
+  --blue:#0066E0; --blue-deep:#004FB0; --blue-soft:#E6F0FF; --ok:#1F6B3A; --ok-soft:#E5F3EA; --warn:#8F6419; --warn-soft:#F5ECDA; --err:#A12622; --err-soft:#FBE9E8;
+  --serif:"Newsreader", Georgia, "Times New Roman", serif; --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.5}
+a{color:var(--blue-deep)}
+:focus-visible{outline:3px solid var(--blue); outline-offset:2px; border-radius:4px}
+.wrap{max-width:1180px; margin:0 auto; padding:0 16px}
+header{border-bottom:1px solid var(--line-soft); background:var(--paper); position:sticky; top:0; z-index:5}
+header .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px; height:64px}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-family:var(--serif); font-size:22px; font-weight:500}
+.brand img{width:36px; height:36px}
+.tabs{display:flex; gap:4px}
+.tab{background:none; border:0; font:600 15px var(--sans); color:var(--ink-2); padding:10px 12px; border-radius:8px; cursor:pointer}
+.tab[aria-selected=true]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line)}
+main{padding:28px 0 64px}
+h1{font-family:var(--serif); font-weight:500; font-size:32px; line-height:1.1; margin:0}
+h2{font-family:var(--serif); font-weight:500; font-size:24px; line-height:1.2; margin:0}
+h3{font-size:14px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-2); margin:22px 0 6px}
+.muted{color:var(--ink-2)}
+.small{font-size:14px}
+.input, textarea, select{width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:15px/1.4 var(--sans); color:var(--ink); background:#FBFBFA}
+.input:focus, textarea:focus, select:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft)}
+textarea{min-height:90px; resize:vertical}
+label.lbl{display:block; font-size:13px; color:var(--ink-2); margin-bottom:4px}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; font:600 15px/1.2 var(--sans); padding:10px 16px; border-radius:10px;
+  border:1px solid transparent; cursor:pointer; min-height:42px; background:var(--blue); color:#fff; text-decoration:none}
+.btn:hover{background:var(--blue-deep)}
+.btn.quiet{background:var(--surface); color:var(--ink); border-color:var(--line)}
+.btn.quiet:hover{border-color:var(--ink-2)}
+.btn.danger{background:var(--surface); color:var(--err); border-color:#E7C2C0}
+.btn:disabled{opacity:.6; cursor:progress}
+.row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.status{font-size:14px; min-height:1.4em; margin-top:8px}
+.status.err{color:var(--err)}
+
+.login{max-width:420px; margin:60px auto 0; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:24px}
+
+.filters{display:grid; grid-template-columns:2fr 1.4fr 1.2fr 1.2fr 1.2fr; gap:10px; margin-top:18px; align-items:end}
+@media (max-width:900px){.filters{grid-template-columns:1fr 1fr}}
+.toggle{display:flex; gap:8px; align-items:center; font-size:15px; font-weight:500; min-height:42px}
+.toggle input{width:18px; height:18px}
+.summaryline{margin-top:14px; font-size:14px; color:var(--ink-2)}
+
+.layout{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:18px; margin-top:12px; align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.list{display:flex; flex-direction:column; gap:8px}
+.cand{display:grid; grid-template-columns:52px 1fr; gap:12px; text-align:left; width:100%; background:var(--surface); border:1px solid var(--line);
+  border-radius:12px; padding:12px 14px; cursor:pointer; font:inherit; color:inherit}
+.cand:hover{border-color:var(--ink-2)}
+.cand[aria-current=true]{border-color:var(--blue); box-shadow:0 0 0 2px var(--blue-soft)}
+.score{width:52px; height:52px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:600; font-size:20px;
+  background:var(--line-soft); color:var(--ink-2)}
+.score small{font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.04em}
+.score.hi{background:var(--ok-soft); color:var(--ok)} .score.mid{background:var(--blue-soft); color:var(--blue-deep)} .score.lo{background:var(--warn-soft); color:var(--warn)}
+.cand .name{font-weight:600}
+.cand .sub{font-size:14px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px}
+.chip{font-size:12px; font-weight:600; padding:2px 8px; border-radius:99px; background:var(--line-soft); color:var(--ink-2)}
+.chip.nyc{background:var(--ok-soft); color:var(--ok)}
+.chip.out{background:var(--warn-soft); color:var(--warn)}
+
+.detail{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 22px; position:sticky; top:80px; max-height:calc(100vh - 100px); overflow:auto}
+@media (max-width:900px){.detail{position:static; max-height:none}}
+.detail .contact{display:flex; flex-wrap:wrap; gap:4px 16px; font-size:14px; color:var(--ink-2); margin-top:6px}
+.note{border-radius:10px; padding:10px 12px; font-size:14px; margin-top:12px}
+.note.warn{background:var(--warn-soft); color:var(--warn)}
+.note.info{background:var(--blue-soft); color:var(--blue-deep)}
+ul.plain{margin:0; padding-left:18px} ul.plain li{margin-top:4px}
+.req{display:grid; grid-template-columns:64px 1fr; gap:8px; padding:8px 0; border-top:1px solid var(--line-soft); font-size:14px}
+.req:first-child{border-top:0}
+.met{font-size:12px; font-weight:600; text-transform:uppercase; text-align:center; border-radius:6px; padding:3px 0; height:fit-content}
+.met.yes{background:var(--ok-soft); color:var(--ok)} .met.partly{background:var(--blue-soft); color:var(--blue-deep)}
+.met.no{background:var(--err-soft); color:var(--err)} .met.unclear{background:var(--line-soft); color:var(--ink-2)}
+.twocol{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px}
+@media (max-width:560px){.twocol{grid-template-columns:1fr}}
+
+.jobcard{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-top:10px}
+.linkbox{display:flex; gap:8px; margin-top:10px}
+.linkbox .input{font-size:13px}
+.jobform{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
+.grid2 .full{grid-column:1 / -1}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.empty{background:var(--surface); border:1px dashed var(--line); border-radius:12px; padding:22px; color:var(--ink-2); text-align:center}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="/ats.html"><img src="/logo.png" alt="" width="36" height="36">Hiring</a>
+  <div class="tabs" id="tabs" hidden role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="cands">Candidates</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="jobs">Jobs</button>
+    <button class="tab" id="signOut" title="Sign out">Sign out</button>
+  </div>
+</div></header>
+<main><div class="wrap">
+
+<form class="login" id="login">
+  <h1>Hiring dashboard</h1>
+  <p class="muted" style="margin-top:6px">Enter the admin password (the ATS_ADMIN_KEY set in Vercel).</p>
+  <label class="lbl" for="pw" style="margin-top:16px">Password</label>
+  <input class="input" id="pw" type="password" autocomplete="current-password">
+  <button class="btn" style="margin-top:14px" type="submit">Open dashboard</button>
+  <p class="status" id="loginStatus" role="status"></p>
+</form>
+
+<section id="candsView" hidden>
+  <div class="row" style="justify-content:space-between">
+    <h1>Candidates</h1>
+    <div class="row"><button class="btn quiet" id="refresh">Refresh</button><button class="btn quiet" id="exportCsv">Export CSV</button></div>
+  </div>
+  <div class="filters">
+    <div><label class="lbl" for="q">Search</label><input class="input" id="q" placeholder="Name, email, role…"></div>
+    <div><label class="lbl" for="fJob">Job</label><select id="fJob"></select></div>
+    <div><label class="lbl" for="fBorough">Area</label><select id="fBorough">
+      <option value="nyc">5 boroughs only</option><option value="">Everywhere</option>
+      <option>Manhattan</option><option>Brooklyn</option><option>Queens</option><option>Bronx</option><option>Staten Island</option><option value="out">Outside NYC</option>
+    </select></div>
+    <div><label class="lbl" for="fStage">Stage</label><select id="fStage"><option value="">All active</option><option value="all">All, including rejected</option></select></div>
+    <div><label class="lbl" for="fSort">Sort</label><select id="fSort"><option value="fit">Best fit first</option><option value="new">Newest first</option></select></div>
+  </div>
+  <p class="summaryline" id="countLine"></p>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="detail" id="detail"><p class="muted">Select a candidate to see their screening, resume and notes.</p></div>
+  </div>
+</section>
+
+<section id="jobsView" hidden>
+  <div class="row" style="justify-content:space-between">
+    <h1>Jobs</h1>
+    <button class="btn" id="newJob">Post a job</button>
+  </div>
+  <p class="muted small" style="margin-top:6px">Each open job has an apply link. On Indeed, choose "apply on company website" and paste that link, so every applicant and resume comes here.</p>
+  <form class="jobform" id="jobForm" hidden>
+    <h2 id="jobFormTitle">Post a job</h2>
+    <div class="grid2">
+      <div class="full"><label class="lbl" for="jTitle">Job title</label><input class="input" id="jTitle" required></div>
+      <div><label class="lbl" for="jCompany">Company</label><input class="input" id="jCompany"></div>
+      <div><label class="lbl" for="jLocation">Location</label><input class="input" id="jLocation" placeholder="New York, NY"></div>
+      <div><label class="lbl" for="jPay">Pay</label><input class="input" id="jPay" placeholder="$95k to $350k with commission"></div>
+      <div><label class="lbl" for="jType">Type</label><input class="input" id="jType" placeholder="Full-time"></div>
+      <div class="full"><label class="lbl" for="jDesc">Description and requirements (the screening compares resumes with this)</label><textarea id="jDesc" style="min-height:220px"></textarea></div>
+      <label class="toggle full"><input type="checkbox" id="jOpen" checked> Open for applications</label>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn" type="submit">Save job</button><button class="btn quiet" type="button" id="cancelJob">Cancel</button></div>
+    <p class="status" id="jobStatus" role="status"></p>
+  </form>
+  <div id="jobList"></div>
+</section>
+
+</div></main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"];
+const STAGES = [["new", "New"], ["reviewing", "Reviewing"], ["interview", "Interview"], ["offer", "Offer"], ["hired", "Hired"], ["rejected", "Rejected"]];
+const stageName = (s) => (STAGES.find(x => x[0] === s) || ["", "New"])[1];
+let key = "", data = { jobs: [], candidates: [] }, selected = null, editingJob = null, flash = "";
+
+const store = {
+  get() { try { return sessionStorage.getItem("ats-key") || ""; } catch { return ""; } },
+  set(v) { try { v ? sessionStorage.setItem("ats-key", v) : sessionStorage.removeItem("ats-key"); } catch {} }
+};
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else if (v != null && v !== false) n.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c instanceof Node ? c : String(c));
+  return n;
+}
+
+async function api(op, extra) {
+  const r = await fetch("/api/app?action=ats", {
+    method: "POST", headers: { "Content-Type": "application/json", "x-ats-key": key }, body: JSON.stringify({ op, ...extra })
+  });
+  const out = await r.json().catch(() => ({}));
+  if (r.status === 401 && $("login").hidden) { signOut(); throw new Error(out.error || "Signed out."); }
+  if (!r.ok) throw new Error(out.error || "That didn't work. Try again.");
+  return out;
+}
+
+/* ---------- sign in ---------- */
+$("login").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  key = $("pw").value.trim();
+  $("loginStatus").className = "status"; $("loginStatus").textContent = "Checking…";
+  try { await refresh(); store.set(key); showApp(); }
+  catch (err) { $("loginStatus").className = "status err"; $("loginStatus").textContent = err.message; }
+});
+function showApp() { $("login").hidden = true; $("tabs").hidden = false; switchTab("cands"); }
+function signOut() { key = ""; store.set(""); location.reload(); }
+$("signOut").addEventListener("click", signOut);
+
+document.querySelectorAll(".tab[data-tab]").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+function switchTab(name) {
+  document.querySelectorAll(".tab[data-tab]").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+  $("candsView").hidden = name !== "cands"; $("jobsView").hidden = name !== "jobs";
+  if (name === "jobs") renderJobs(); else renderCands();
+}
+
+async function refresh() {
+  data = await api("list");
+  const cur = $("fJob").value;
+  $("fJob").replaceChildren(el("option", { value: "" }, "All jobs"), ...data.jobs.map(j => el("option", { value: j.id }, j.title + (j.open ? "" : " (closed)"))));
+  $("fJob").value = data.jobs.some(j => j.id === cur) ? cur : "";
+  if ($("fStage").options.length <= 2) STAGES.forEach(([v, t]) => $("fStage").append(el("option", { value: v }, t)));
+}
+$("refresh").addEventListener("click", async () => { await refresh().catch(e => alert(e.message)); renderCands(); });
+
+/* ---------- candidates ---------- */
+const scoreOf = (c) => (c.screen && Number.isFinite(c.screen.fitScore) ? c.screen.fitScore : null);
+function scoreBox(c) {
+  const s = scoreOf(c);
+  const cls = s == null ? "" : s >= 75 ? " hi" : s >= 55 ? " mid" : " lo";
+  const label = c.screenStatus === "pending" ? "…" : c.screenStatus === "failed" ? "!" : c.screenStatus === "not_a_resume" ? "?" : s;
+  return el("div", { class: "score" + cls, title: "Fit score" }, label, el("small", null, "fit"));
+}
+function areaChip(c) { return c.borough ? el("span", { class: "chip nyc" }, c.borough) : el("span", { class: "chip out" }, "Outside NYC · " + c.zip); }
+
+function filtered() {
+  const q = $("q").value.trim().toLowerCase(), job = $("fJob").value, area = $("fBorough").value, stage = $("fStage").value;
+  let out = data.candidates.filter(c => {
+    if (job && c.jobId !== job) return false;
+    if (area === "nyc" && !c.borough) return false;
+    if (area === "out" && c.borough) return false;
+    if (area && area !== "nyc" && area !== "out" && c.borough !== area) return false;
+    if (!stage && c.stage === "rejected") return false;
+    if (stage && stage !== "all" && c.stage !== stage) return false;
+    if (q) {
+      const hay = [c.name, c.email, c.phone, c.zip, c.borough, c.jobTitle, c.screen?.currentRole, c.screen?.relevantExperience, c.notes].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  if ($("fSort").value === "fit") out.sort((a, b) => (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1) || String(b.appliedAt).localeCompare(String(a.appliedAt)));
+  return out;
+}
+
+function renderCands() {
+  const rows = filtered();
+  const nyc = data.candidates.filter(c => c.borough).length;
+  $("countLine").textContent = "Showing " + rows.length + " of " + data.candidates.length + " candidates · " + nyc + " live in the five boroughs";
+  const list = $("list");
+  if (!data.candidates.length) {
+    list.replaceChildren(el("div", { class: "empty" }, "No applications yet. Post a job in the Jobs tab and share its apply link."));
+  } else if (!rows.length) {
+    list.replaceChildren(el("div", { class: "empty" }, "No candidates match these filters."));
+  } else {
+    list.replaceChildren(...rows.map(c => el("button", { class: "cand", "aria-current": String(selected === c.id), onclick: () => { selected = c.id; renderCands(); } },
+      scoreBox(c),
+      el("div", { style: "min-width:0" },
+        el("div", { class: "name" }, c.name),
+        el("div", { class: "sub" }, c.screen?.currentRole || c.jobTitle),
+        el("div", { class: "chips" }, areaChip(c), el("span", { class: "chip" }, stageName(c.stage)), el("span", { class: "chip" }, new Date(c.appliedAt).toLocaleDateString()))
+      ))));
+  }
+  renderDetail(data.candidates.find(c => c.id === selected));
+}
+["q", "fJob", "fBorough", "fStage", "fSort"].forEach(id => $(id).addEventListener("input", renderCands));
+
+function replaceCand(c) { data.candidates = data.candidates.map(x => (x.id === c.id ? c : x)); }
+
+function renderDetail(c) {
+  const box = $("detail");
+  if (!c) { box.replaceChildren(el("p", { class: "muted" }, "Select a candidate to see their screening, resume and notes.")); return; }
+  const s = c.screen;
+  const kids = [
+    el("div", { class: "row", style: "justify-content:space-between; align-items:flex-start" },
+      el("div", null, el("h2", null, c.name), el("div", { class: "muted small" }, "Applied for " + c.jobTitle + " · " + new Date(c.appliedAt).toLocaleString())),
+      scoreBox(c)),
+    el("div", { class: "contact" },
+      el("a", { href: "mailto:" + c.email }, c.email),
+      c.phone && el("a", { href: "tel:" + c.phone.replace(/[^\d+]/g, "") }, c.phone),
+      el("span", null, "ZIP " + c.zip + " · " + (c.borough || "outside NYC")),
+      c.linkedin && /^https?:\/\//i.test(c.linkedin) && el("a", { href: c.linkedin, target: "_blank", rel: "noopener" }, "LinkedIn"))
+  ];
+  if (s?.zip && s.zip !== c.zip && (s.resumeBorough || "") !== (c.borough || "")) {
+    kids.push(el("div", { class: "note warn" }, "The resume shows ZIP " + s.zip + " (" + (s.resumeBorough || "outside NYC") + "), but the application says " + c.zip + " (" + (c.borough || "outside NYC") + "). Worth confirming where they live."));
+  }
+  if (c.screenStatus === "pending") kids.push(el("div", { class: "note info" }, "Screening hasn't finished. Use Screen again if this doesn't change after a refresh."));
+  if (c.screenStatus === "failed") kids.push(el("div", { class: "note warn" }, "Screening didn't finish. Use Screen again."));
+  if (c.screenStatus === "not_a_resume") kids.push(el("div", { class: "note warn" }, "The attached file doesn't look like a resume. Open it to check."));
+  if (s) {
+    kids.push(el("p", { style: "margin-top:14px" }, s.summary));
+    kids.push(el("div", { class: "muted small", style: "margin-top:6px" }, [s.yearsExperience, s.relevantExperience, s.location && "Resume location: " + s.location].filter(Boolean).join(" · ")));
+    if (s.requirements.length) kids.push(el("h3", null, "Requirements"), el("div", null, s.requirements.map(r => el("div", { class: "req" }, el("span", { class: "met " + r.met }, r.met), el("div", null, el("strong", null, r.item), el("div", { class: "muted" }, r.evidence))))));
+    if (s.strengths.length) kids.push(el("h3", null, "Strengths"), el("ul", { class: "plain" }, s.strengths.map(x => el("li", null, x))));
+    if (s.concerns.length) kids.push(el("h3", null, "Concerns"), el("ul", { class: "plain" }, s.concerns.map(x => el("li", null, x))));
+    if (s.questions.length) kids.push(el("h3", null, "Questions to ask"), el("ul", { class: "plain" }, s.questions.map(x => el("li", null, x))));
+  }
+  if (c.note) kids.push(el("h3", null, "Message from the applicant"), el("p", { class: "muted", style: "white-space:pre-line" }, c.note));
+
+  const stageSel = el("select", { id: "dStage" }, STAGES.map(([v, t]) => el("option", { value: v }, t)));
+  stageSel.value = c.stage;
+  const notes = el("textarea", { id: "dNotes", placeholder: "Private notes about this candidate" }); notes.value = c.notes || "";
+  const status = el("p", { class: "status", role: "status" }, flash); flash = "";
+  const say = (msg, err) => { status.className = "status" + (err ? " err" : ""); status.textContent = msg; };
+  const busy = async (btn, fn) => { btn.disabled = true; try { await fn(); } catch (e) { say(e.message, true); } btn.disabled = false; };
+
+  kids.push(
+    el("h3", null, "Your review"),
+    el("div", { class: "twocol", style: "margin-top:0" }, el("div", null, el("label", { class: "lbl", for: "dStage" }, "Stage"), stageSel)),
+    el("div", { style: "margin-top:10px" }, el("label", { class: "lbl", for: "dNotes" }, "Notes"), notes),
+    el("div", { class: "row", style: "margin-top:12px" },
+      el("button", { class: "btn", onclick: (e) => busy(e.currentTarget, async () => {
+        const out = await api("update", { id: c.id, stage: stageSel.value, notes: notes.value }); replaceCand(out.candidate); flash = "Saved."; renderCands();
+      }) }, "Save"),
+      el("button", { class: "btn quiet", onclick: (e) => busy(e.currentTarget, async () => {
+        const out = await api("resume", { id: c.id });
+        const type = out.type === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        const bytes = Uint8Array.from(atob(out.data), ch => ch.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type }));
+        if (out.type === "pdf") window.open(url, "_blank");
+        else el("a", { href: url, download: out.name }).click();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }) }, "Open resume"),
+      el("button", { class: "btn quiet", onclick: (e) => busy(e.currentTarget, async () => {
+        say("Screening… this takes up to a minute.");
+        const out = await api("rescreen", { id: c.id }); replaceCand(out.candidate); renderCands();
+      }) }, "Screen again"),
+      el("button", { class: "btn danger", onclick: (e) => busy(e.currentTarget, async () => {
+        if (!confirm("Delete " + c.name + " and their resume for good?")) return;
+        await api("delete", { id: c.id }); data.candidates = data.candidates.filter(x => x.id !== c.id); selected = null; renderCands();
+      }) }, "Delete")),
+    status);
+  box.replaceChildren(...kids);
+}
+
+$("exportCsv").addEventListener("click", () => {
+  const cols = ["Name", "Email", "Phone", "ZIP", "Borough", "Job", "Stage", "Fit score", "Current role", "Experience", "Relevant experience", "Resume location", "Summary", "Applied", "Notes"];
+  const rows = filtered().map(c => [c.name, c.email, c.phone, c.zip, c.borough || "Outside NYC", c.jobTitle, stageName(c.stage), scoreOf(c) ?? "",
+    c.screen?.currentRole, c.screen?.yearsExperience, c.screen?.relevantExperience, c.screen?.location, c.screen?.summary, c.appliedAt, c.notes]);
+  const cell = (v) => { let s = String(v ?? ""); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+  const csv = [cols, ...rows].map(r => r.map(cell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
+  el("a", { href: url, download: "candidates-" + new Date().toISOString().slice(0, 10) + ".csv" }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+});
+
+/* ---------- jobs ---------- */
+const applyLink = (j) => location.origin + "/careers.html?job=" + encodeURIComponent(j.id);
+
+function renderJobs() {
+  const box = $("jobList");
+  if (!data.jobs.length) { box.replaceChildren(el("div", { class: "empty", style: "margin-top:18px" }, "No jobs yet. Use Post a job to add your first one.")); return; }
+  box.replaceChildren(...data.jobs.map(j => {
+    const count = data.candidates.filter(c => c.jobId === j.id), nyc = count.filter(c => c.borough).length;
+    const link = el("input", { class: "input", readonly: "", value: applyLink(j), "aria-label": "Apply link" });
+    return el("div", { class: "jobcard" },
+      el("div", { class: "row", style: "justify-content:space-between" },
+        el("div", null, el("h2", { style: "font-size:20px" }, j.title), el("div", { class: "muted small" }, [j.company, j.location, j.pay].filter(Boolean).join(" · "))),
+        el("div", { class: "chips" }, el("span", { class: "chip " + (j.open ? "nyc" : "out") }, j.open ? "Open" : "Closed"),
+          el("span", { class: "chip" }, count.length + " applied · " + nyc + " in NYC"))),
+      el("div", { class: "linkbox" }, link,
+        el("button", { class: "btn quiet", onclick: async (e) => { try { await navigator.clipboard.writeText(link.value); e.currentTarget.textContent = "Copied"; } catch { link.select(); } } }, "Copy")),
+      el("div", { class: "row", style: "margin-top:10px" },
+        el("button", { class: "btn quiet", onclick: () => { $("fJob").value = j.id; switchTab("cands"); } }, "See candidates"),
+        el("button", { class: "btn quiet", onclick: () => openJobForm(j) }, "Edit"),
+        el("button", { class: "btn quiet", onclick: async () => { try { await api("savejob", { id: j.id, job: { ...j, open: !j.open } }); await refresh(); renderJobs(); } catch (e) { alert(e.message); } } }, j.open ? "Close job" : "Reopen"),
+        el("button", { class: "btn danger", onclick: async () => {
+          if (!confirm("Delete this job? Its candidates stay in the Candidates tab.")) return;
+          try { await api("deletejob", { id: j.id }); await refresh(); renderJobs(); } catch (e) { alert(e.message); }
+        } }, "Delete")));
+  }));
+}
+
+function openJobForm(j) {
+  editingJob = j || null;
+  $("jobFormTitle").textContent = j ? "Edit job" : "Post a job";
+  $("jTitle").value = j?.title || ""; $("jCompany").value = j?.company || ""; $("jLocation").value = j?.location || "";
+  $("jPay").value = j?.pay || ""; $("jType").value = j?.type || ""; $("jDesc").value = j?.description || ""; $("jOpen").checked = j ? j.open : true;
+  $("jobStatus").textContent = ""; $("jobForm").hidden = false; $("jTitle").focus();
+}
+$("newJob").addEventListener("click", () => openJobForm(null));
+$("cancelJob").addEventListener("click", () => { $("jobForm").hidden = true; });
+$("jobForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const job = { title: $("jTitle").value, company: $("jCompany").value, location: $("jLocation").value, pay: $("jPay").value, type: $("jType").value, description: $("jDesc").value, open: $("jOpen").checked };
+  try {
+    await api("savejob", { id: editingJob?.id, job });
+    $("jobForm").hidden = true; await refresh(); renderJobs();
+  } catch (err) { $("jobStatus").className = "status err"; $("jobStatus").textContent = err.message; }
+});
+
+/* ---------- start ---------- */
+key = store.get();
+if (key) refresh().then(showApp).catch(() => { key = ""; store.set(""); });
+</script>
+</body>
+</html>

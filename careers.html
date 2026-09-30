@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Open jobs · Trazerr</title>
+<meta name="description" content="See open jobs and apply with your resume.">
+<meta name="theme-color" content="#F4F5F1">
+<link rel="canonical" href="https://www.trazerr.com/careers.html">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F5F1; --surface:#FFFFFF; --ink:#15203A; --ink-2:#4A5470; --line:#DADDE3; --line-soft:#E9EBEF;
+  --blue:#0066E0; --blue-deep:#004FB0; --blue-soft:#E6F0FF; --ok:#1F6B3A; --ok-soft:#E5F3EA; --err:#A12622;
+  --serif:"Newsreader", Georgia, "Times New Roman", serif; --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:17px; line-height:1.55}
+a{color:var(--blue-deep)}
+:focus-visible{outline:3px solid var(--blue); outline-offset:2px; border-radius:4px}
+.wrap{max-width:760px; margin:0 auto; padding:0 16px}
+header{border-bottom:1px solid var(--line-soft); padding-top:env(safe-area-inset-top,0px)}
+header .wrap{display:flex; align-items:center; justify-content:space-between; gap:16px; height:68px}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-family:var(--serif); font-size:24px; font-weight:500}
+.brand img{width:40px; height:40px}
+header nav a{color:var(--ink-2); font-size:15px; font-weight:500; text-decoration:none}
+main{padding:48px 0 72px}
+h1{font-family:var(--serif); font-weight:500; font-size:clamp(34px,6vw,50px); line-height:1.08; margin:0; letter-spacing:-.01em}
+h2{font-family:var(--serif); font-weight:500; font-size:26px; line-height:1.2; margin:0}
+.muted{color:var(--ink-2)}
+.lede{color:var(--ink-2); font-size:18px; margin:12px 0 0}
+.card{display:block; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-top:16px; text-decoration:none; color:inherit}
+a.card:hover{border-color:var(--ink-2)}
+.card h2{font-size:22px}
+.meta{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:8px; color:var(--ink-2); font-size:15px}
+.desc{white-space:pre-line; color:var(--ink-2); margin-top:20px}
+.back{display:inline-block; margin-bottom:20px; font-size:15px}
+form{margin-top:36px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:24px 22px}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px}
+.full{grid-column:1 / -1}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.field label{display:block; font-size:14px; color:var(--ink-2); margin-bottom:6px}
+.field .hint{font-size:13px; color:var(--ink-2); margin-top:4px}
+.input, textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:12px 14px; font:16px/1.4 var(--sans); color:var(--ink); background:#FBFBFA}
+.input:focus, textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft)}
+textarea{min-height:96px; resize:vertical}
+input[type=file].input{padding:10px}
+.check{display:flex; gap:10px; align-items:flex-start; font-size:15px; color:var(--ink-2); margin-top:18px}
+.check input{width:20px; height:20px; margin-top:2px; flex:none}
+.btn{display:inline-flex; align-items:center; justify-content:center; font:600 16px/1.2 var(--sans); padding:14px 22px; border-radius:10px; border:0;
+  cursor:pointer; min-height:48px; background:var(--blue); color:#fff; margin-top:20px}
+.btn:hover{background:var(--blue-deep)}
+.btn:disabled{opacity:.6; cursor:progress}
+.status{margin-top:14px; font-size:15px; min-height:1.5em}
+.status.err{color:var(--err)}
+.done{margin-top:36px; background:var(--ok-soft); border:1px solid #BFE0CB; border-radius:14px; padding:22px}
+.done h2{color:var(--ok); font-size:24px}
+.trap{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+footer{border-top:1px solid var(--line-soft); padding:32px 0 48px; color:var(--ink-2); font-size:14px}
+footer .wrap{display:flex; flex-wrap:wrap; gap:10px 22px; justify-content:space-between}
+footer a{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="/" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a><nav><a href="/careers.html">Open jobs</a></nav></div></header>
+<main><div class="wrap">
+
+<section id="listView">
+  <h1>Open jobs</h1>
+  <p class="lede">Pick a job to see the details and apply with your resume.</p>
+  <div id="jobList"><p class="muted" style="margin-top:24px">Loading jobs…</p></div>
+</section>
+
+<section id="jobView" hidden>
+  <a class="back" href="/careers.html">← All open jobs</a>
+  <h1 id="jobTitle"></h1>
+  <div class="meta" id="jobMeta"></div>
+  <div class="desc" id="jobDesc"></div>
+
+  <form id="applyForm" novalidate>
+    <h2>Apply for this job</h2>
+    <div class="grid">
+      <div class="field full"><label for="fName">Full name</label><input class="input" id="fName" autocomplete="name" required></div>
+      <div class="field"><label for="fEmail">Email</label><input class="input" id="fEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="fPhone">Phone (optional)</label><input class="input" id="fPhone" type="tel" autocomplete="tel"></div>
+      <div class="field"><label for="fZip">ZIP code where you live</label><input class="input" id="fZip" inputmode="numeric" autocomplete="postal-code" maxlength="10" required></div>
+      <div class="field"><label for="fLinkedin">LinkedIn (optional)</label><input class="input" id="fLinkedin" type="url" placeholder="https://linkedin.com/in/…"></div>
+      <div class="field full"><label for="fResume">Resume</label><input class="input" id="fResume" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+        <p class="hint">PDF or Word (.docx), under 3 MB.</p></div>
+      <div class="field full"><label for="fNote">Anything you'd like to add? (optional)</label><textarea id="fNote" maxlength="2000"></textarea></div>
+    </div>
+    <div class="trap" aria-hidden="true"><label for="fWebsite">Website</label><input id="fWebsite" tabindex="-1" autocomplete="off"></div>
+    <label class="check"><input type="checkbox" id="fConsent"> <span>I agree that my application and resume will be stored and shared with the employer for this job, and screened with AI, as described in the <a href="/privacy.html#applications" target="_blank">privacy policy</a>.</span></label>
+    <button class="btn" type="submit" id="fSubmit">Send application</button>
+    <p class="status" id="fStatus" role="status" aria-live="polite"></p>
+  </form>
+
+  <div class="done" id="doneBox" hidden>
+    <h2>Application sent</h2>
+    <p class="muted" style="margin-top:8px">Thank you. The employer has your application and will contact you by email or phone if there's a match.</p>
+  </div>
+</section>
+
+</div></main>
+<footer><div class="wrap"><span>© 2026 Trazerr</span><span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@trazerr.com">hello@trazerr.com</a></span></div></footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const jobId = new URLSearchParams(location.search).get("job");
+let jobs = [];
+
+function el(tag, attrs, text) {
+  const n = document.createElement(tag);
+  Object.assign(n, attrs || {});
+  if (text != null) n.textContent = text;
+  return n;
+}
+function metaBits(j) { return [j.company, j.location, j.type, j.pay].filter(Boolean); }
+
+function showList() {
+  const box = $("jobList"); box.textContent = "";
+  if (!jobs.length) { box.append(el("p", { className: "muted", style: "margin-top:24px" }, "There are no open jobs right now. Please check back soon.")); return; }
+  for (const j of jobs) {
+    const a = el("a", { className: "card", href: "?job=" + encodeURIComponent(j.id) });
+    a.append(el("h2", null, j.title));
+    const m = el("div", { className: "meta" }); metaBits(j).forEach(b => m.append(el("span", null, b)));
+    a.append(m); box.append(a);
+  }
+}
+
+function showJob(j) {
+  $("listView").hidden = true; $("jobView").hidden = false;
+  document.title = j.title + " · Open jobs · Trazerr";
+  $("jobTitle").textContent = j.title;
+  metaBits(j).forEach(b => $("jobMeta").append(el("span", null, b)));
+  $("jobDesc").textContent = j.description;
+}
+
+async function load() {
+  try {
+    const r = await fetch("/api/app?action=openings");
+    jobs = (await r.json()).jobs || [];
+  } catch { jobs = []; }
+  const j = jobId && jobs.find(x => x.id === jobId);
+  if (j) showJob(j);
+  else {
+    if (jobId) $("jobList").before(el("p", { className: "lede" }, "That job isn't open anymore. Here are the jobs that are."));
+    showList();
+  }
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s); });
+}
+function toBase64(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(new Error("read")); r.readAsDataURL(file); });
+}
+
+async function readResume(file) {
+  const name = file.name || "";
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(name);
+  const isDocx = /\.docx$/i.test(name);
+  if (!isPdf && !isDocx) throw new Error("Attach your resume as a PDF or Word (.docx) file.");
+  if (file.size > 3 * 1024 * 1024) throw new Error("That file is over 3 MB. Try a smaller PDF.");
+  const data = await toBase64(file);
+  if (isPdf) return { kind: "pdf", name, data };
+  if (!window.mammoth) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js");
+  const text = (await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+  return { kind: "docx", name, data, text };
+}
+
+$("applyForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const status = $("fStatus"), btn = $("fSubmit");
+  const fail = (msg) => { status.className = "status err"; status.textContent = msg; btn.disabled = false; btn.textContent = "Send application"; };
+  status.className = "status"; status.textContent = "";
+  const file = $("fResume").files[0];
+  if ($("fName").value.trim().length < 2) return fail("Enter your full name.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("fEmail").value.trim())) return fail("Enter a valid email address.");
+  if (!/^\d{5}/.test($("fZip").value.trim())) return fail("Enter the 5-digit ZIP code where you live.");
+  if (!file) return fail("Attach your resume.");
+  if (!$("fConsent").checked) return fail("Please agree to the privacy policy to apply.");
+  btn.disabled = true; btn.textContent = "Sending…";
+  status.textContent = "Uploading your resume. This can take up to a minute.";
+  let resume;
+  try { resume = await readResume(file); } catch (err) { return fail(err.message === "read" ? "That file couldn't be read. Try another copy." : err.message); }
+  try {
+    const r = await fetch("/api/app?action=apply", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId, name: $("fName").value, email: $("fEmail").value, phone: $("fPhone").value, zip: $("fZip").value,
+        linkedin: $("fLinkedin").value, note: $("fNote").value, website: $("fWebsite").value, consent: true, resume
+      })
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) return fail(out.error || "That didn't go through. Try again in a moment.");
+  } catch { return fail("That didn't go through. Check your connection and try again."); }
+  $("applyForm").hidden = true; $("doneBox").hidden = false;
+  $("doneBox").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+load();
+</script>
+</body>
+</html>
