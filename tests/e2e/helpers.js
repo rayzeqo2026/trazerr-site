@@ -5,6 +5,9 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const SUPABASE_LIB = readFileSync(require.resolve("@supabase/supabase-js/dist/umd/supabase.js"));
+const MAMMOTH_LIB = readFileSync(require.resolve("mammoth/mammoth.browser.min.js"));
+// Outside libraries load with integrity checks, which need CORS, like the real CDNs send.
+const lib = (route, body) => route.fulfill({ status: 200, contentType: "text/javascript", headers: { "access-control-allow-origin": "*" }, body });
 export const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 export const json = (route, status, body) => route.fulfill({ status, contentType: "application/json", body: body === undefined ? "" : JSON.stringify(body) });
@@ -22,10 +25,12 @@ export function job(i, extra = {}) {
 
 // Mocks the site's API and third-party requests, and collects page errors and error reports.
 export async function mockSite(page, api = {}) {
-  const seen = { errors: [], reports: [], events: [] };
+  const seen = { errors: [], reports: [], events: [], requests: [] };
+  page.on("request", r => seen.requests.push(r));
   page.on("pageerror", e => seen.errors.push(e.message));
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ status: 200, contentType: "text/css", body: "" }));
-  await page.route(/supabase-js@/, r => r.fulfill({ status: 200, contentType: "text/javascript", body: SUPABASE_LIB }));
+  await page.route(/supabase-js@/, r => lib(r, SUPABASE_LIB));
+  await page.route(/cdnjs\.cloudflare\.com\/ajax\/libs\/mammoth/, r => lib(r, MAMMOTH_LIB));
   await page.route("**/api/app?**", async route => {
     const url = new URL(route.request().url()), action = url.searchParams.get("action");
     if (action === "track") { try { seen.events.push(JSON.parse(route.request().postData()).e); } catch {} return route.fulfill({ status: 204 }); }

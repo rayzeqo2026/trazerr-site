@@ -20,12 +20,14 @@ globalThis.fetch = async (url, opts = {}) => {
       if (c[0] === "LRANGE") return { result: (stored[c[1]] || []) };
       if (c[0] === "LPUSH") { (stored[c[1]] ||= []).unshift(c[2]); return { result: 1 }; }
       if (c[0] === "INCR") return { result: 1 };
+      if (c[0] === "PING") return { result: "PONG" };
       return { result: 1 };
     }));
   }
   if (url === "https://api.resend.com/emails") { emails.push(JSON.parse(opts.body)); return res(200, { id: "e1" }); }
   if (url.startsWith(SB)) {
     if (supabaseDown) return res(503, {});
+    if (url.endsWith("/auth/v1/health")) return res(200, {});
     if (url.endsWith("/auth/v1/user")) return h.Authorization === "Bearer good-token" ? res(200, { id: "11111111-2222-3333-4444-555555555555" }) : res(401, {});
     if (url.includes("/rest/v1/career_records")) return res(opts.method === "DELETE" ? 204 : 200, []);
     if (url.includes("/auth/v1/admin/users/")) return adminFails ? res(500, {}) : res(200, {});
@@ -144,4 +146,25 @@ test("stats needs the key and includes errors and the last keepalive", async () 
   assert.equal(r.status, 200);
   assert.equal(r.body.recentErrors[0].action, "jobs");
   assert.equal(r.body.lastKeepalive, "2026-09-30T09:17:00Z");
+});
+
+test("health answers 200 when everything works, 503 naming what doesn't", async () => {
+  const ok = await call("health", { method: "GET" });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(ok.body.checks, { ai: true, storage: true, accounts: true });
+  supabaseDown = true;
+  const bad = await call("health", { method: "GET" });
+  assert.equal(bad.status, 503);
+  assert.equal(bad.body.checks.accounts, false);
+});
+
+test("the security rules allow every inline script and the services the site uses", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { inlineHashes } = await import("./inline-hashes.mjs");
+  const headers = Object.fromEntries(JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url))).headers[0].headers.map(h => [h.key, h.value]));
+  const csp = headers["Content-Security-Policy"];
+  for (const { file, hash } of inlineHashes()) assert.ok(csp.includes(hash), "An inline script in " + file + " changed. Add " + hash + " to script-src in vercel.json (run: node tests/inline-hashes.mjs)");
+  for (const host of ["https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://fonts.gstatic.com", ".supabase.co"]) assert.ok(csp.includes(host), host);
+  assert.match(csp, /frame-ancestors 'none'/);
+  for (const k of ["Strict-Transport-Security", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) assert.ok(headers[k], k);
 });

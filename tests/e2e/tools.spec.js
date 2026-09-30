@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { mockSite, buildDNA, job, json } from "./helpers.js";
+import { mockSite, buildDNA, job, json, PROFILE } from "./helpers.js";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -10,6 +10,20 @@ test("pasting a resume builds a Career DNA", async ({ page }) => {
   await expect(page.locator("#oBody")).toContainText("Team leadership");
   expect(seen.events).toEqual(expect.arrayContaining(["dna_started", "dna_built"]));
   expect(seen.errors).toEqual([]);
+});
+
+test("uploading a Word resume reads its text and builds a Career DNA", async ({ page }) => {
+  let sent = null;
+  const seen = await mockSite(page, { analyze: (r) => { sent = JSON.parse(r.request().postData()); return json(r, 200, { profile: PROFILE }); } });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.setInputFiles("#file", new URL("../fixtures/resume.docx", import.meta.url).pathname);
+  await expect(page.locator("#fileName")).toHaveText("resume.docx");
+  await page.click("#analyzeBtn");
+  await page.waitForSelector("#acctSaveBtn", { timeout: 15000 });
+  expect(sent.kind).toBe("text");
+  expect(sent.text).toContain("Led a team of 9");
+  expect(seen.errors).toEqual([]);
+  expect(seen.reports, "nothing blocked by the security rules").toEqual([]);
 });
 
 test("an analysis error is shown in plain words", async ({ page }) => {

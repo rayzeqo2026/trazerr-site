@@ -18,12 +18,13 @@ for (const theme of ["light", "dark"]) {
         }
         expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(theme);
         expect(seen.errors).toEqual([]);
+        expect(seen.reports, "nothing blocked by the security rules").toEqual([]);
       });
 
       test(path + " has no serious accessibility problems", async ({ page }) => {
         await mockSite(page);
         await page.goto(path, { waitUntil: "networkidle" });
-        await page.addScriptTag({ content: AXE });
+        await page.evaluate(AXE);
         const found = await page.evaluate(async () => {
           const r = await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] });
           return r.violations.filter(v => v.impact === "serious" || v.impact === "critical").map(v => v.id + ": " + v.nodes.slice(0, 3).map(n => n.target.join(" ")).join(", "));

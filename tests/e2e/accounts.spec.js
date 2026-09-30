@@ -77,6 +77,7 @@ test("sign in by email link, save, download and delete everything", async ({ pag
   expect(db.deleteAuthorized).toBe(true);
   await expect.poll(() => page.evaluate(() => [localStorage.getItem("trazerr.profile.v3"), localStorage.getItem("trazerr.resume.v1"), localStorage.getItem("trazerr.auth")])).toEqual([null, null, null]);
   expect(seen.errors).toEqual([]);
+  expect(seen.reports, "nothing blocked by the security rules").toEqual([]);
 });
 
 test("an expired sign-in link explains what to do", async ({ page }) => {

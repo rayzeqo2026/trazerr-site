@@ -65,8 +65,8 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6 };
-const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive"]); // cheap requests; not worth a storage round trip
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30 };
+const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -963,15 +963,31 @@ async function keepalive(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+/* ---------------- Uptime check ---------------- */
+// For an outside monitor (like UptimeRobot): answers 200 when the site and the services it
+// depends on are working, and 503 with the failing part named when not. Never returns keys.
+async function health(req, res) {
+  const checks = { ai: !!process.env.ANTHROPIC_API_KEY };
+  const rc = redisConfig();
+  if (rc) { try { checks.storage = (await redisPipeline(rc, [["PING"]]))[0]?.result === "PONG"; } catch (e) { checks.storage = false; } }
+  const sc = supabaseConfig();
+  if (sc && (sc.anon || sc.key)) {
+    try { checks.accounts = (await fetch(sc.url + "/auth/v1/health", { headers: { apikey: sc.anon || sc.key }, signal: AbortSignal.timeout(8000) })).ok; } catch (e) { checks.accounts = false; }
+  }
+  const ok = Object.values(checks).every(Boolean);
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(ok ? 200 : 503).json({ ok, checks });
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive"].includes(action) ? "GET" : "POST";
+  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health"].includes(action) ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });

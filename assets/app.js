@@ -52,6 +52,8 @@ function track(e){
     if (!e.message || !ours(e.filename)) return;
     report(e.message, (e.filename || "").replace(location.origin, "") + ":" + e.lineno + ":" + e.colno);
   });
+  // Something the security rules blocked (vercel.json): usually a sign a rule needs updating.
+  document.addEventListener("securitypolicyviolation", e => report("Blocked by security rules: " + e.effectiveDirective + " " + String(e.blockedURI || "").slice(0, 120), (e.sourceFile || "").replace(location.origin, "") + ":" + e.lineNumber));
   window.addEventListener("unhandledrejection", e => {
     const r = e.reason, stack = String(r && r.stack || "");
     if (stack && !stack.includes(location.origin + "/")) return;
@@ -233,8 +235,9 @@ function animateRing(id, target){
 function readAsBase64(file){
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(new Error("read")); r.readAsDataURL(file); });
 }
-function loadScript(src){
-  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+// Outside libraries load with a fingerprint (integrity), so the browser refuses a file that was changed.
+function loadScript(src, integrity){
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; if (integrity) { s.integrity = integrity; s.crossOrigin = "anonymous"; } s.onload = res; s.onerror = rej; document.head.appendChild(s); });
 }
 // Reads a resume file into what the server expects. Throws an Error with a readable message.
 async function readResumeFile(file){
@@ -245,7 +248,7 @@ async function readResumeFile(file){
   try {
     if (ext === "pdf" || file.type === "application/pdf") out = { kind: "pdf", data: await readAsBase64(file) };
     else if (ext === "docx") {
-      if (!window.mammoth) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js");
+      if (!window.mammoth) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js", "sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz");
       out = { kind: "text", text: (await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value };
     } else if (ext === "txt" || file.type === "text/plain") out = { kind: "text", text: await file.text() };
   } catch (e) { throw new Error("That file couldn't be read. Try saving it as a PDF, or paste the text instead."); }
@@ -1489,7 +1492,7 @@ window.Seqlay = (() => {
    "Save to my account". The database only lets each signed-in person read and change their own row. */
 // Accounts stay hidden until Supabase setup is finished (return addresses, table, email sender). Then set to true.
 const ACCOUNTS_ON = true;
-const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js";
+const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js", SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
 const SB_STORE = "trazerr.auth", PENDING_KEY = "trazerr.pendingAccountSave";
 const linkHash = /access_token=|error_description=/.test(location.hash) ? new URLSearchParams(location.hash.slice(1)) : null;
 let sb = null, sbUser = null, sbLoading = null, acctRecord, signinHandled = false;
@@ -1497,7 +1500,7 @@ function hadSession(){ try { return !!localStorage.getItem(SB_STORE); } catch (e
 function acct(){
   if (!sbLoading) sbLoading = (async () => {
     const cfg = await api("authconfig");
-    if (!window.supabase) { try { await loadScript(SB_LIB); } catch (e) { throw new Error("Sign-in couldn't load. Check your connection and try again."); } }
+    if (!window.supabase) { try { await loadScript(SB_LIB, SB_LIB_SRI); } catch (e) { throw new Error("Sign-in couldn't load. Check your connection and try again."); } }
     sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { storageKey: SB_STORE, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } });
     const { data } = await sb.auth.getSession();
     sbUser = data && data.session ? data.session.user : null;

@@ -50,6 +50,21 @@ When `RESEND_API_KEY` and `ALERT_EMAIL` are set, a server failure sends an email
 
 Free Supabase projects pause after 7 days without use. Vercel runs `/api/app?action=keepalive` every day at 09:17 UTC. It reads one row from the accounts table, which counts as use, and saves the time. The usage page shows when it last ran; if it fails, it's logged as an error and sends an alert. When `CRON_SECRET` is set in Vercel, only Vercel can run it.
 
+## Security rules
+
+`vercel.json` sends security headers with every page:
+
+- **Content-Security-Policy:** the browser only runs scripts from the site itself, plus two fingerprinted libraries from jsDelivr (sign-in) and cdnjs (Word reader), and only connects to the site and Trazerr's Supabase project.
+- **HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, COOP:** HTTPS only, no embedding in other sites, no camera, microphone or location access.
+
+If you change an inline `<script>` in an HTML page, its fingerprint changes. The tests fail and print the new value; add it to `script-src` in `vercel.json` (or run `node tests/inline-hashes.mjs`). Anything the rules block on the live site is reported to the error log as "Blocked by security rules".
+
+If the Supabase project ever changes, update its address in `connect-src`.
+
+## Uptime monitoring
+
+`https://www.trazerr.com/api/app?action=health` answers 200 when the site, AI key, storage and accounts are working, and 503 naming the failing part when not. An outside monitor (UptimeRobot, free) checks it every 5 minutes and emails you if the site is down, even if Vercel itself is down.
+
 ## Settings in Vercel
 
 | Name | Needed for |

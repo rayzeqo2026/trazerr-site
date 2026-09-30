@@ -26,7 +26,7 @@ test("the usage page asks for the key, then shows counts, errors and health", as
   await expect(page.locator("#health")).toContainText("Last ran");
   await expect(page.locator("#health")).toContainText("Off (add RESEND_API_KEY");
   expect(await overflowX(page)).toBeLessThanOrEqual(0);
-  await page.addScriptTag({ content: AXE });
+  await page.evaluate(AXE);
   const found = await page.evaluate(async () => (await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] })).violations.filter(v => v.impact === "serious" || v.impact === "critical").map(v => v.id));
   expect(found).toEqual([]);
   // The key is remembered for this tab only.
