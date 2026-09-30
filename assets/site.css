@@ -1173,3 +1173,15 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 @media (max-width:480px){ .acct-tabs{grid-template-columns:1fr 1.4fr 1fr 1fr} .acct-tabs [role=tab]{flex-wrap:nowrap} .acct-tabs .tab-badge{min-width:18px; height:18px; padding:0 5px; font-size:.7rem} }
 @media (max-width:360px){ .acct-tabs [role=tab]{font-size:.8125rem; padding:6px 2px} }
 .posting-upload{margin-top:10px}
+
+/* Easy wins: animations & micro-interactions */
+@keyframes fadeIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:translateY(0)}}
+@keyframes countUp{from{--count:0}to{--count:1}}
+.btn{transition:transform .12s ease, background-color .2s ease}
+.btn:active{transform:scale(.98)}
+a:not(.btn):not(.linkish){text-decoration:underline; text-decoration-color:transparent; text-underline-offset:3px; transition:text-decoration-color .25s ease}
+a:not(.btn):not(.linkish):hover{text-decoration-color:currentColor}
+.block, .seq, .sample{animation:fadeIn .6s ease-out both; animation-timeline:view(); animation-range:entry 0% cover 30%}
+.block:nth-of-type(1){animation-delay:.1s}
+.block:nth-of-type(2){animation-delay:.15s}
+.block:nth-of-type(3){animation-delay:.2s}

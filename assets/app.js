@@ -1861,3 +1861,29 @@ track("visit");
   runJobSearch(true);
   $("jobs").scrollIntoView();
 })();
+
+/* Count-up animation for numbers in Career DNA results */
+function animateNumbers(){
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || entry.target.dataset.animated) return;
+      entry.target.dataset.animated = "1";
+      const final = parseInt(entry.target.textContent, 10);
+      if (isNaN(final)) return;
+      let current = 0;
+      const duration = 600;
+      const start = performance.now();
+      const animate = (now) => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        current = Math.floor(final * progress);
+        entry.target.textContent = current;
+        if (progress < 1) requestAnimationFrame(animate);
+        else entry.target.textContent = final;
+      };
+      requestAnimationFrame(animate);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll(".dm-ring b, .emp-score b, .ba-row b").forEach(el => observer.observe(el));
+}
+animateNumbers();
