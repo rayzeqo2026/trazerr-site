@@ -837,6 +837,13 @@ async function dbstatus(req, res) {
     } catch (e) { detail = "could not reach Supabase"; }
   }
   const out = { configured: !!cfg, hasServiceKey: !!(cfg && cfg.key), reachable, detail };
+  // Health of the other services, as yes/no only.
+  if (getQuery(req).all === "1") {
+    const rc = redisConfig();
+    let redis = "not configured";
+    if (rc) { try { const r = await redisPipeline(rc, [["PING"]]); redis = r[0] && r[0].result === "PONG" ? "ok" : "unexpected reply"; } catch (e) { redis = "error"; } }
+    out.services = { upstashRedis: redis, anthropicKey: !!process.env.ANTHROPIC_API_KEY, adzunaKeys: !!(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY), statsKey: !!process.env.STATS_KEY };
+  }
   // Setup check for accounts: is the table there, and which sign-in return addresses does Supabase accept?
   // Uses a throwaway user that is deleted straight away; no email is sent.
   if (getQuery(req).setup === "1" && cfg && cfg.key) {
