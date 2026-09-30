@@ -37,6 +37,28 @@ function track(e){
   } catch (err) {}
 }
 
+// Errors in this page's own code are reported (message and line only, at most 5 per visit), so problems
+// visitors hit show up on the usage page. Errors from browser extensions and other sites are ignored.
+(function reportErrors(){
+  let sent = 0; const seen = new Set();
+  function report(message, source){
+    message = String(message || "").slice(0, 300);
+    if (!message || sent >= 5 || seen.has(message)) return;
+    seen.add(message); sent++;
+    try { fetch(API + "?action=clienterror", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, source, where: "page" }), keepalive: true }).catch(() => {}); } catch (e) {}
+  }
+  const ours = (file) => !file || file.startsWith(location.origin + "/");
+  window.addEventListener("error", e => {
+    if (!e.message || !ours(e.filename)) return;
+    report(e.message, (e.filename || "").replace(location.origin, "") + ":" + e.lineno + ":" + e.colno);
+  });
+  window.addEventListener("unhandledrejection", e => {
+    const r = e.reason, stack = String(r && r.stack || "");
+    if (stack && !stack.includes(location.origin + "/")) return;
+    report("Unhandled: " + (r && r.message || r), (stack.match(/\/assets\/[^\s)]+/) || [""])[0]);
+  });
+})();
+
 async function api(action, opts){
   opts = opts || {};
   const ctrl = new AbortController();

@@ -1,0 +1,5 @@
+# Not part of the website: tests, CI settings and project notes.
+tests
+.github
+docs
+supabase

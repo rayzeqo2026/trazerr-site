@@ -1,5 +1,5 @@
 // Trazerr server: one Vercel function for every feature.
-// Route: /api/app?action=analyze | jobs | match | jobdna | path | tailor | waitlist
+// Route: /api/app?action=analyze | jobs | match | jobdna | path | tailor | waitlist | ... (see ACTIONS at the end)
 //
 // Environment variables (Vercel > Project > Settings > Environment Variables):
 //   ANTHROPIC_API_KEY   required: Career DNA, fit checks, Job DNA, career paths
@@ -10,8 +10,11 @@
 //   KV_REST_API_TOKEN   waitlist storage, added automatically with the line above
 //   ANTHROPIC_FALLBACK_MODEL optional: backup model if the main one keeps failing (default claude-sonnet-5-5)
 //   AI_DAILY_LIMIT      optional: most AI requests per day across all visitors (default 500; needs storage)
-//   STATS_KEY           optional: a long random password for viewing usage counts at
-//                       /api/app?action=stats&key=YOUR_STATS_KEY
+//   STATS_KEY           optional: a long random password for the usage page at /stats.html
+//   RESEND_API_KEY      optional: sends an email alert when the server fails (at most one an hour)
+//   ALERT_EMAIL         optional: where alerts go (comma-separate several addresses)
+//   ALERT_FROM          optional: alert sender (default "Trazerr alerts <alerts@trazerr.com>")
+//   CRON_SECRET         optional: set by Vercel for the daily keepalive; when set, only Vercel can run it
 
 import { createHash } from "node:crypto";
 
@@ -62,8 +65,8 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20 };
-const MEMORY_ONLY = new Set(["track", "jobs", "authconfig"]); // cheap requests; not worth a storage round trip
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6 };
+const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -104,8 +107,9 @@ async function withinDailyBudget() {
   } catch (e) { console.error("Daily budget storage error", e.message); return true; }
 }
 
+// A problem to show the visitor. `detail` is the technical reason, kept for the error log only.
 class UserError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, detail) { super(message); this.status = status; this.detail = detail; }
 }
 
 // Current Claude models think before answering, and that thinking counts toward max_tokens.
@@ -126,7 +130,7 @@ function withToday(system) {
 // Retries stop after about 20 seconds so the whole request fits in the server's time limit.
 async function askClaude(system, content) {
   if (!process.env.ANTHROPIC_API_KEY) throw new UserError(503, "This feature isn't switched on yet. Try again later.");
-  if (!(await withinDailyBudget())) throw new UserError(503, "Trazerr has reached its limit for today. Please try again tomorrow.");
+  if (!(await withinDailyBudget())) throw new UserError(503, "Trazerr has reached its limit for today. Please try again tomorrow.", "Daily AI limit of " + AI_DAILY_LIMIT + " requests reached");
   const plan = FALLBACK_MODEL && FALLBACK_MODEL !== MODEL ? [MODEL, MODEL, FALLBACK_MODEL] : [MODEL, MODEL];
   const started = Date.now();
   let lastErr = null;
@@ -145,16 +149,17 @@ async function askClaude(system, content) {
       });
     } catch (e) {
       console.error("Anthropic network error", model, e.message);
-      lastErr = new UserError(503, "Trazerr couldn't reach its AI service. Try again in a moment.");
+      lastErr = new UserError(503, "Trazerr couldn't reach its AI service. Try again in a moment.", "Anthropic network error (" + model + "): " + e.message);
       continue;
     }
     if (!r.ok) {
       const detail = await r.text().catch(() => "");
       console.error("Anthropic API error", model, r.status, detail.slice(0, 500));
-      if (r.status === 401 || r.status === 403) throw new UserError(503, "This feature isn't working right now. Please try again later.");
+      const why = "Anthropic " + r.status + " (" + model + "): " + detail.slice(0, 160);
+      if (r.status === 401 || r.status === 403) throw new UserError(503, "This feature isn't working right now. Please try again later.", why);
       lastErr = r.status === 429 || r.status === 529
-        ? new UserError(503, "Trazerr is busy right now. Try again in a minute.")
-        : new UserError(502, "The analysis didn't finish. Try again in a moment.");
+        ? new UserError(503, "Trazerr is busy right now. Try again in a minute.", why)
+        : new UserError(502, "The analysis didn't finish. Try again in a moment.", why);
       // A request the main model rejects outright won't pass on a retry, so go straight to the backup.
       if ((r.status === 400 || r.status === 404) && model === MODEL) i = Math.max(i, plan.length - 2);
       continue;
@@ -169,8 +174,8 @@ async function askClaude(system, content) {
     }
     console.error("Unreadable model reply", model, data.stop_reason, JSON.stringify(data.usage || {}), text.slice(0, 200));
     lastErr = data.stop_reason === "max_tokens"
-      ? new UserError(502, "The analysis ran too long and didn't finish. Try again, or paste a shorter version.")
-      : new UserError(502, "The analysis came back in an unexpected format. Try again.");
+      ? new UserError(502, "The analysis ran too long and didn't finish. Try again, or paste a shorter version.", "Model reply hit max_tokens (" + model + ")")
+      : new UserError(502, "The analysis came back in an unexpected format. Try again.", "Unreadable model reply (" + model + ")");
   }
   throw lastErr || new UserError(502, "The analysis didn't finish. Try again in a moment.");
 }
@@ -366,7 +371,7 @@ async function jobs(req, res) {
         if (broader.jobs.length) result = { ...broader, hasMore: false, broadened: "title", searchedFor: simpler };
       }
     }
-    catch (e) { console.error("Adzuna unavailable, falling back to Remotive:", e.message); result = await searchRemotive(query); fellBack = true; }
+    catch (e) { console.error("Adzuna unavailable, falling back to Remotive:", e.message); await recordError("server", "jobs", "Adzuna unavailable, used Remotive: " + e.message, false); result = await searchRemotive(query); fellBack = true; }
   } else result = await searchRemotive(query);
   result.localSearch = hasAdzuna;
 
@@ -739,8 +744,10 @@ async function stats(req, res) {
   if (!cfg) throw new UserError(503, "Storage isn't connected yet.");
   const days = Math.max(1, Math.min(90, parseInt(getQuery(req).days, 10) || 30));
   const dates = Array.from({ length: days }, (_, i) => day(new Date(Date.now() - i * 86400000)));
-  const out = await redisPipeline(cfg, [...dates.map(d => ["HGETALL", "trazerr:events:" + d]), ["LRANGE", "trazerr:feedback", 0, 49]]);
-  const recentFeedback = (out[dates.length]?.result || []).map(x => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
+  const out = await redisPipeline(cfg, [...dates.map(d => ["HGETALL", "trazerr:events:" + d]), ["LRANGE", "trazerr:feedback", 0, 49], ["LRANGE", "trazerr:errors", 0, 49], ["GET", "trazerr:keepalive:last"]]);
+  const parsed = (r) => (r?.result || []).map(x => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
+  const recentFeedback = parsed(out[dates.length]), recentErrors = parsed(out[dates.length + 1]);
+  const lastKeepalive = out[dates.length + 2]?.result || null;
   const byDay = {}, totals = {};
   dates.forEach((d, i) => {
     const flat = out[i]?.result || [];
@@ -765,6 +772,8 @@ async function stats(req, res) {
       "feedback that was positive": rate("feedback_up", "feedback_total")
     },
     recentFeedback,
+    recentErrors,
+    lastKeepalive,
     byDay
   });
 }
@@ -842,7 +851,9 @@ async function dbstatus(req, res) {
     const rc = redisConfig();
     let redis = "not configured";
     if (rc) { try { const r = await redisPipeline(rc, [["PING"]]); redis = r[0] && r[0].result === "PONG" ? "ok" : "unexpected reply"; } catch (e) { redis = "error"; } }
-    out.services = { upstashRedis: redis, anthropicKey: !!process.env.ANTHROPIC_API_KEY, adzunaKeys: !!(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY), statsKey: !!process.env.STATS_KEY };
+    let lastKeepalive = null;
+    if (redis === "ok") { try { lastKeepalive = (await redisPipeline(rc, [["GET", "trazerr:keepalive:last"]]))[0]?.result || null; } catch (e) {} }
+    out.services = { upstashRedis: redis, anthropicKey: !!process.env.ANTHROPIC_API_KEY, adzunaKeys: !!(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY), statsKey: !!process.env.STATS_KEY, errorAlerts: !!(process.env.RESEND_API_KEY && process.env.ALERT_EMAIL), lastKeepalive };
   }
   if (cfg && cfg.key) {
     const t = await fetch(cfg.url + "/rest/v1/career_records?select=user_id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } }).catch(() => null);
@@ -885,15 +896,82 @@ async function deleteaccount(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+/* ---------------- Error log and alerts ---------------- */
+// Keeps the newest 200 errors, from the server and from visitors' browsers, for the usage page, and emails
+// an alert when the server fails (at most one an hour). Messages are cut short and email addresses are
+// removed; no resume content is stored.
+
+const cleanMessage = (s) => str(s, 300).replace(/[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}/gi, "[email]");
+
+async function recordError(where, action, message, alert = true) {
+  const entry = { at: new Date().toISOString(), where, action: str(action, 30), message: cleanMessage(message) };
+  const cfg = redisConfig();
+  if (!cfg) return;
+  const wantsAlert = alert && where === "server";
+  try {
+    const out = await redisPipeline(cfg, [
+      ["LPUSH", "trazerr:errors", JSON.stringify(entry)], ["LTRIM", "trazerr:errors", 0, 199],
+      ["HINCRBY", "trazerr:events:" + day(new Date()), "error_" + where, 1],
+      ...(wantsAlert ? [["SET", "trazerr:alert:sent", entry.at, "NX", "EX", 3600]] : [])
+    ]);
+    if (wantsAlert && out[3]?.result === "OK") await sendAlert(entry);
+  } catch (e) { console.error("Error log storage error", e.message); }
+}
+
+async function sendAlert(entry) {
+  const key = process.env.RESEND_API_KEY, to = str(process.env.ALERT_EMAIL, 500).split(",").map(x => x.trim()).filter(Boolean);
+  if (!key || !to.length) return;
+  const text = "Something failed on trazerr.com.\n\n" +
+    "When: " + entry.at + "\nFeature: " + (entry.action || "unknown") + "\nWhat happened: " + entry.message + "\n\n" +
+    "More alerts are held back for an hour. Recent errors are listed at https://trazerr.com/stats.html";
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: process.env.ALERT_FROM || "Trazerr alerts <alerts@trazerr.com>", to, subject: "Trazerr alert: " + (entry.action || "a request") + " failed", text }),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!r.ok) console.error("Alert email error", r.status, (await r.text().catch(() => "")).slice(0, 200));
+  } catch (e) { console.error("Alert email error", e.message); }
+}
+
+// Errors in visitors' browsers, sent by the page itself.
+async function clienterror(req, res) {
+  const body = getBody(req) || {};
+  const message = str(body.message, 300);
+  if (message) await recordError("browser", str(body.where, 30) || "page", message + (body.source ? " at " + str(body.source, 120) : ""));
+  return res.status(204).end();
+}
+
+/* ---------------- Daily keepalive ---------------- */
+// Free Supabase projects pause after a week without use. Vercel runs this once a day (see vercel.json),
+// and a small database read counts as use. The time of the last run is shown on the usage page.
+async function keepalive(req, res) {
+  const secret = process.env.CRON_SECRET;
+  if (secret && String(req.headers.authorization || "") !== "Bearer " + secret) throw new UserError(401, "Not allowed.");
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Accounts aren't switched on yet.");
+  let ok = false, status = 0;
+  try {
+    const r = await fetch(cfg.url + "/rest/v1/career_records?select=user_id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }, signal: AbortSignal.timeout(15000) });
+    ok = r.ok; status = r.status;
+  } catch (e) { status = 0; }
+  if (!ok) throw new UserError(502, "The database didn't answer.", "Keepalive: Supabase " + (status ? "answered " + status : "could not be reached"));
+  const rc = redisConfig();
+  if (rc) { try { await redisPipeline(rc, [["SET", "trazerr:keepalive:last", new Date().toISOString()]]); } catch (e) { console.error("Keepalive storage error", e.message); } }
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).json({ ok: true });
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = ["jobs", "stats", "dbstatus", "authconfig"].includes(action) ? "GET" : "POST";
+  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive"].includes(action) ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });
@@ -904,8 +982,11 @@ export default async function handler(req, res) {
   try {
     return await run(req, res);
   } catch (err) {
-    if (err instanceof UserError) return res.status(err.status).json({ error: err.message });
-    console.error("Request failed", action, err);
+    const known = err instanceof UserError;
+    if (!known) console.error("Request failed", action, err);
+    // Server-side failures go to the error log (and may send an alert); visitor mistakes don't.
+    if (!known || err.status >= 500) await recordError("server", action, known ? (err.detail || err.message) : String(err && err.stack || err).split("\n").slice(0, 2).join(" "));
+    if (known) return res.status(err.status).json({ error: err.message });
     return res.status(500).json({ error: "Something went wrong on our side. Try again in a moment." });
   }
 }

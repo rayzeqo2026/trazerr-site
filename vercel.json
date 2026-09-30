@@ -1,5 +1,8 @@
 {
   "functions": {
     "api/app.js": { "maxDuration": 60 }
-  }
+  },
+  "crons": [
+    { "path": "/api/app?action=keepalive", "schedule": "17 9 * * *" }
+  ]
 }
