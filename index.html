@@ -20,13 +20,13 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#F4F5F1; --surface:#FFFFFF; --ink:#15203A; --ink-2:#4A5470;
   --line:#DADDE3; --line-soft:#E9EBEF; --blue:#0066E0; --blue-deep:#004FB0; --blue-soft:#E6F0FF;
   --brass:#8F6419; --brass-soft:#F5ECDA; --gold:#E0B070; --gold-deep:#B07A28; --night:#02060F; --navy:#0B1528; --grey:#8A91A3; --err:#A12622;
-  --serif:"Newsreader", Georgia, "Times New Roman", serif;
+  --serif:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --wrap:1240px;
 }
@@ -39,7 +39,7 @@ img{max-width:100%; display:block}
 a{color:var(--blue-deep)}
 :focus-visible{outline:3px solid var(--blue); outline-offset:2px; border-radius:4px}
 .wrap{max-width:var(--wrap); margin:0 auto; padding:0 24px}
-h1,h2,h3{font-family:var(--serif); font-weight:500; line-height:1.12; margin:0; letter-spacing:-.01em}
+h1,h2,h3{font-family:var(--serif); font-weight:600; line-height:1.1; margin:0; letter-spacing:-.025em}
 h2{font-size:clamp(30px,4.2vw,44px); max-width:20ch}
 h3{font-size:22px}
 p{margin:0}
@@ -1408,8 +1408,8 @@ function drawHelix(ctx, p, x0, x1, cy){
 
 async function drawCard(p){
   const W = 1080, H = 1350, M = 72, CW = W - M * 2;
-  const serif = '"Newsreader", Georgia, serif', sans = '"Instrument Sans", system-ui, sans-serif';
-  try { await Promise.all([document.fonts.load("500 80px Newsreader"), document.fonts.load('600 34px "Instrument Sans"'), document.fonts.load('400 28px "Instrument Sans"')]); } catch (e) {}
+  const serif = '"Instrument Sans", system-ui, sans-serif', sans = '"Instrument Sans", system-ui, sans-serif';
+  try { await Promise.all([document.fonts.load('500 80px "Instrument Sans"'), document.fonts.load('600 34px "Instrument Sans"'), document.fonts.load('400 28px "Instrument Sans"')]); } catch (e) {}
   const [bg, logo] = await Promise.all([loadImg("/img/career-dna-1280.jpg").catch(() => null), loadImg("/logo.png").catch(() => null)]);
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const ctx = c.getContext("2d");
@@ -1968,7 +1968,7 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const seg = (p, a, b) => clamp((p - a) / (b - a));
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const lerp = (a, b, t) => a + (b - a) * t;
-const F_SANS = '"Instrument Sans", system-ui, sans-serif', F_SERIF = '"Newsreader", Georgia, serif';
+const F_SANS = '"Instrument Sans", system-ui, sans-serif', F_SERIF = '"Instrument Sans", system-ui, sans-serif';
 const LEVEL_COL = { verified: "#FFFFFF", inferred: "#6FB4FF", potential: "#E0B25A" };
 
 // A double helix along any axis. Returns where the highlighted rungs are, so labels and flying lines can find them.
