@@ -844,25 +844,9 @@ async function dbstatus(req, res) {
     if (rc) { try { const r = await redisPipeline(rc, [["PING"]]); redis = r[0] && r[0].result === "PONG" ? "ok" : "unexpected reply"; } catch (e) { redis = "error"; } }
     out.services = { upstashRedis: redis, anthropicKey: !!process.env.ANTHROPIC_API_KEY, adzunaKeys: !!(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY), statsKey: !!process.env.STATS_KEY };
   }
-  // Setup check for accounts: is the table there, and which sign-in return addresses does Supabase accept?
-  // Uses a throwaway user that is deleted straight away; no email is sent.
-  if (getQuery(req).setup === "1" && cfg && cfg.key) {
-    const admin = { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" };
-    const t = await fetch(cfg.url + "/rest/v1/career_records?select=user_id&limit=1", { headers: admin }).catch(() => null);
+  if (cfg && cfg.key) {
+    const t = await fetch(cfg.url + "/rest/v1/career_records?select=user_id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } }).catch(() => null);
     out.tableExists = !!(t && t.ok);
-    out.redirects = {};
-    const targets = { www: "https://www.trazerr.com/", apex: "https://trazerr.com/", preview: "https://trazerr-site-nuffl7tj6-trazerr.vercel.app/" };
-    const email = "setup-check-" + Date.now() + "@trazerr.com";
-    for (const [name, target] of Object.entries(targets)) {
-      try {
-        const r = await fetch(cfg.url + "/auth/v1/admin/generate_link", { method: "POST", headers: admin, body: JSON.stringify({ type: "signup", email, password: "Chk-" + Math.random().toString(36).slice(2) + "A1!", redirect_to: target }) });
-        const j = await r.json().catch(() => ({}));
-        const got = j.redirect_to || (j.properties && j.properties.redirect_to) || "";
-        out.redirects[name] = got === target ? "accepted" : "falls back to " + (got ? new URL(got).host : "unknown (" + r.status + ")");
-        const id = j.id || (j.user && j.user.id);
-        if (id) await fetch(cfg.url + "/auth/v1/admin/users/" + id, { method: "DELETE", headers: admin });
-      } catch (e) { out.redirects[name] = "check failed"; }
-    }
   }
   return res.status(200).json(out);
 }
