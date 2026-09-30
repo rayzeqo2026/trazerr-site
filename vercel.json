@@ -8,6 +8,10 @@
     {
       "path": "/api/app?action=keepalive",
       "schedule": "17 9 * * *"
+    },
+    {
+      "path": "/api/app?action=sendalerts",
+      "schedule": "7 13 * * *"
     }
   ],
   "headers": [

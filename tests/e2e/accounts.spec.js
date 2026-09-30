@@ -23,6 +23,18 @@ async function setup(page, db) {
     if (u.pathname === "/auth/v1/otp") { db.otp = JSON.parse(route.request().postData()); return reply(200, {}); }
     if (u.pathname === "/auth/v1/user") return auth === "Bearer " + JWT ? reply(200, USER) : reply(401, { msg: "bad" });
     if (u.pathname === "/auth/v1/logout") return reply(204);
+    if (u.pathname === "/rest/v1/job_alerts") {
+      if (auth !== "Bearer " + JWT) return reply(401, { message: "not signed in" });
+      db.alerts ||= [];
+      if (m === "GET") return reply(200, db.alerts);
+      if (m === "POST") {
+        const row = JSON.parse(route.request().postData()); const one = Array.isArray(row) ? row[0] : row;
+        if (db.alerts.some(a => a.query.toLowerCase() === one.query.toLowerCase() && a.location.toLowerCase() === one.location.toLowerCase())) return reply(409, { code: "23505", message: "duplicate" });
+        if (db.alerts.length >= 3) return reply(403, { code: "42501", message: "new row violates row-level security policy" });
+        db.alerts.push({ id: "al" + db.alerts.length, active: true, last_sent: null, ...one }); return reply(201);
+      }
+      if (m === "DELETE") { const id = u.searchParams.get("id").replace("eq.", ""); db.alerts = db.alerts.filter(a => a.id !== id); return reply(204); }
+    }
     if (u.pathname === "/rest/v1/career_records") {
       if (auth !== "Bearer " + JWT) return reply(401, { message: "not signed in" });
       if (m === "GET") return reply(200, db.row ? [db.row] : []);
@@ -84,4 +96,43 @@ test("an expired sign-in link explains what to do", async ({ page }) => {
   await setup(page, { row: null });
   await page.goto("/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired", { waitUntil: "networkidle" });
   await expect(page.locator(".saved-note")).toContainText(/expired|link/i);
+});
+
+test("job alerts: turn one on from a search while signed out, then manage it from the account", async ({ page }) => {
+  const db = { row: null };
+  const seen = await setup(page, db);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.fill("#jq", "supervisor");
+  await page.fill("#jw", "Newark, NJ");
+  await page.click("#jobsBtn");
+  await expect(page.locator("#alertBox")).toBeVisible();
+  await expect(page.locator("#alertTitle")).toHaveText("Get new \u201csupervisor\u201d jobs near Newark, NJ by email");
+  await page.click("#alertBtn");
+  await expect(page.locator("#oBody")).toContainText("your job alert for");
+  await page.fill("#siEmail", "sam@example.com");
+  await page.click("#siBtn");
+  await expect.poll(() => db.otp && db.otp.email).toBe("sam@example.com");
+
+  // Opening the emailed link turns the alert on.
+  await page.goto("about:blank");
+  await page.goto("/" + linkHash(), { waitUntil: "networkidle" });
+  await expect(page.locator(".saved-note")).toContainText("You'll get new");
+  expect(db.alerts).toMatchObject([{ user_id: USER.id, query: "supervisor", location: "Newark, NJ", remote: false }]);
+  expect(seen.events).toContain("alert_created");
+  await expect(page.locator("#acctAlerts li")).toHaveCount(1);
+  await expect(page.locator("#acctAlerts li")).toContainText("Weekly");
+
+  // Turning the same one on again says so; stopping it removes it.
+  await page.keyboard.press("Escape");
+  await page.fill("#jq", "Supervisor");
+  await page.fill("#jw", "newark, nj");
+  await page.click("#jobsBtn");
+  await page.click("#alertBtn");
+  await expect(page.locator("#alertStatus")).toHaveText("You already have this job alert.");
+  await page.click("#acctBtn");
+  await page.locator("#acctAlerts [data-act=stop]").click();
+  await expect(page.locator("#acctAlerts")).toContainText("No job alerts yet");
+  expect(db.alerts).toEqual([]);
+  expect(seen.errors).toEqual([]);
+  expect(seen.reports).toEqual([]);
 });

@@ -16,7 +16,7 @@
 //   ALERT_FROM          optional: alert sender (default "Trazerr alerts <alerts@trazerr.com>")
 //   CRON_SECRET         optional: set by Vercel for the daily keepalive; when set, only Vercel can run it
 
-import { createHash } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 const FALLBACK_MODEL = process.env.ANTHROPIC_FALLBACK_MODEL || "claude-sonnet-5-5";
@@ -65,8 +65,8 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30 };
-const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health"]); // cheap requests; not worth a storage round trip
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20 };
+const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -277,7 +277,7 @@ function money(n) {
   return v >= 1000 ? "$" + Math.round(v / 1000) + "k" : "$" + Math.round(v);
 }
 
-async function searchAdzuna(q, where, page, distanceKm) {
+async function searchAdzuna(q, where, page, distanceKm, maxDays) {
   const country = (process.env.ADZUNA_COUNTRY || "us").toLowerCase();
   const params = new URLSearchParams({
     app_id: process.env.ADZUNA_APP_ID,
@@ -288,6 +288,7 @@ async function searchAdzuna(q, where, page, distanceKm) {
   if (q) params.set("what", q);
   if (where) params.set("where", where);
   if (where && distanceKm) params.set("distance", String(distanceKm));
+  if (maxDays) { params.set("max_days_old", String(maxDays)); params.set("sort_by", "date"); }
   const r = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?${params}`);
   if (!r.ok) {
     console.error("Adzuna error", r.status, (await r.text().catch(() => "")).slice(0, 300));
@@ -753,7 +754,8 @@ async function redisPipeline(cfg, commands) {
 const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
-  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark", "account_signed_in", "account_saved", "account_deleted"
+  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark", "account_signed_in", "account_saved", "account_deleted",
+  "alert_created", "alert_stopped", "alert_opened"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
@@ -800,7 +802,9 @@ async function stats(req, res) {
       "visits that started a Career DNA": rate("dna_started", "visit"),
       "Career DNAs that succeeded": rate("dna_built", "dna_started"),
       "built Career DNAs that saved a card": rate("card_saved", "dna_built"),
-      "feedback that was positive": rate("feedback_up", "feedback_total")
+      "feedback that was positive": rate("feedback_up", "feedback_total"),
+      "job searches that turned on an alert": rate("alert_created", "job_search"),
+      "alert emails that brought someone back": rate("alert_opened", "alert_email_sent")
     },
     recentFeedback,
     recentErrors,
@@ -889,6 +893,8 @@ async function dbstatus(req, res) {
   if (cfg && cfg.key) {
     const t = await fetch(cfg.url + "/rest/v1/career_records?select=user_id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } }).catch(() => null);
     out.tableExists = !!(t && t.ok);
+    const a = await fetch(cfg.url + "/rest/v1/job_alerts?select=id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } }).catch(() => null);
+    out.alertsTableExists = !!(a && a.ok);
   }
   return res.status(200).json(out);
 }
@@ -925,6 +931,144 @@ async function deleteaccount(req, res) {
     throw new UserError(502, "Your saved Career DNA and resume were deleted, but the account itself couldn't be. Email hello@trazerr.com and we'll finish it.");
   }
   return res.status(200).json({ ok: true });
+}
+
+/* ---------------- Job alerts ---------------- */
+// Signed-in people can ask for new jobs like a search they ran. Their alerts live in Supabase
+// (table job_alerts, see supabase/job_alerts.sql); each person manages their own through row level
+// security. Once a day Vercel runs sendalerts (vercel.json). Alerts not checked for about a week get
+// the jobs posted since, minus any already sent, in one email per person.
+
+const ALERT_EVERY_MS = 6.5 * 86400000;
+const SITE = "https://www.trazerr.com";
+
+// One-click unsubscribe links are signed, so nobody can stop someone else's alerts.
+function unsubscribeToken(userId, key) {
+  return createHmac("sha256", "trazerr-unsubscribe:" + key).update(userId).digest("base64url").slice(0, 32);
+}
+function unsubscribeUrl(userId, key) {
+  return SITE + "/api/app?action=unsubscribe&u=" + userId + "&t=" + unsubscribeToken(userId, key);
+}
+
+async function newJobsFor(alert) {
+  const seen = new Set(alert.seen || []);
+  let found = [];
+  const hasAdzuna = !!(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
+  if (hasAdzuna && !alert.remote) {
+    found = (await searchAdzuna(alert.query, alert.location, 1, alert.location ? 25 : undefined, 8)).jobs;
+  } else {
+    const week = Date.now() - 8 * 86400000;
+    found = (await searchRemotive(alert.query)).jobs.filter(j => !j.posted || Date.parse(j.posted) > week);
+  }
+  return found.filter(j => !seen.has(j.id)).slice(0, 6);
+}
+
+const escHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function alertEmail(groups, unsub) {
+  const total = groups.reduce((n, g) => n + g.jobs.length, 0);
+  const label = (a) => a.query + (a.remote ? " (remote)" : a.location ? " near " + a.location : "");
+  const subject = total + " new job" + (total === 1 ? "" : "s") + " for " + label(groups[0].alert) + (groups.length > 1 ? " and more" : "");
+  const searchUrl = (a) => SITE + "/?" + new URLSearchParams({ q: a.query, where: a.location || "", ...(a.remote ? { remote: "1" } : {}), src: "alert" }) + "#jobs";
+  let html = '<div style="font-family:Arial,Helvetica,sans-serif;color:#16233F;max-width:560px;margin:0 auto;padding:8px 4px">' +
+    '<p style="font-size:20px;font-weight:bold;margin:0 0 4px">New jobs for you</p>' +
+    '<p style="color:#4A5163;margin:0 0 18px">Posted in the past week, matching your job alerts on Trazerr.</p>';
+  let text = "New jobs for you, posted in the past week.\n";
+  for (const g of groups) {
+    html += '<p style="font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#A62419;font-weight:bold;margin:22px 0 6px">' + escHtml(label(g.alert)) + "</p>";
+    text += "\n" + label(g.alert).toUpperCase() + "\n";
+    for (const j of g.jobs) {
+      const meta = [j.company, j.location, j.salary].filter(Boolean).join(" · ");
+      html += '<div style="border:1px solid #DCD8D0;border-radius:6px;padding:12px 14px;margin:0 0 10px">' +
+        '<a href="' + escHtml(j.url) + '" style="color:#1F3F82;font-weight:bold;font-size:16px;text-decoration:none">' + escHtml(j.title) + "</a>" +
+        (meta ? '<div style="color:#4A5163;font-size:14px;margin-top:3px">' + escHtml(meta) + "</div>" : "") + "</div>";
+      text += "- " + j.title + (meta ? " (" + meta + ")" : "") + "\n  " + j.url + "\n";
+    }
+    html += '<p style="margin:4px 0 0"><a href="' + escHtml(searchUrl(g.alert)) + '" style="color:#1F3F82">See these on Trazerr and check your fit →</a></p>';
+    text += "See these on Trazerr and check your fit: " + searchUrl(g.alert) + "\n";
+  }
+  html += '<p style="color:#4A5163;font-size:13px;margin-top:28px;border-top:1px solid #DCD8D0;padding-top:12px">You get this because you turned on job alerts at trazerr.com. ' +
+    '<a href="' + escHtml(unsub) + '" style="color:#4A5163">Stop all job alerts</a> or manage them from your account on the site.</p></div>';
+  text += "\nYou get this because you turned on job alerts at trazerr.com.\nStop all job alerts: " + unsub + "\n";
+  return { subject, html, text };
+}
+
+async function sendalerts(req, res) {
+  const secret = process.env.CRON_SECRET;
+  if (secret && String(req.headers.authorization || "") !== "Bearer " + secret) throw new UserError(401, "Not allowed.");
+  const cfg = supabaseConfig(), resendKey = process.env.RESEND_API_KEY;
+  if (!cfg || !cfg.key) throw new UserError(503, "Accounts aren't switched on yet.");
+  if (!resendKey) throw new UserError(503, "Email isn't switched on yet.", "Job alerts: RESEND_API_KEY is missing");
+  const admin = { apikey: cfg.key, Authorization: "Bearer " + cfg.key };
+  const started = Date.now(), due = new Date(Date.now() - ALERT_EVERY_MS).toISOString();
+  const r = await fetch(cfg.url + "/rest/v1/job_alerts?select=id,user_id,query,location,remote,seen,last_sent&active=eq.true&or=(last_sent.is.null,last_sent.lt." + due + ")&order=last_sent.asc.nullsfirst&limit=40", { headers: admin });
+  if (!r.ok) throw new UserError(502, "Job alerts couldn't be loaded.", "Job alerts: Supabase answered " + r.status + (r.status === 404 ? " (run supabase/job_alerts.sql)" : ""));
+  const byUser = new Map();
+  for (const a of await r.json()) { if (!byUser.has(a.user_id)) byUser.set(a.user_id, []); byUser.get(a.user_id).push(a); }
+  const out = { people: 0, emails: 0, jobs: 0, failed: 0 };
+  for (const [userId, alerts] of byUser) {
+    if (Date.now() - started > 45000) break; // the rest go out on the next run
+    out.people++;
+    try {
+      const u = await fetch(cfg.url + "/auth/v1/admin/users/" + userId, { headers: admin });
+      const email = u.ok ? (await u.json()).email : "";
+      const groups = [];
+      for (const a of alerts) { const jobs = await newJobsFor(a); if (jobs.length) groups.push({ alert: a, jobs }); }
+      if (email && groups.length) {
+        const { subject, html, text } = alertEmail(groups, unsubscribeUrl(userId, cfg.key));
+        const unsub = unsubscribeUrl(userId, cfg.key);
+        const sent = await fetch("https://api.resend.com/emails", {
+          method: "POST", headers: { Authorization: "Bearer " + resendKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: process.env.ALERTS_FROM || "Trazerr Jobs <jobs@trazerr.com>", to: [email], reply_to: "hello@trazerr.com", subject, html, text,
+            headers: { "List-Unsubscribe": "<" + unsub + ">", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }),
+          signal: AbortSignal.timeout(10000)
+        });
+        if (!sent.ok) throw new Error("Resend answered " + sent.status + " " + (await sent.text().catch(() => "")).slice(0, 120));
+        out.emails++; out.jobs += groups.reduce((n, g) => n + g.jobs.length, 0);
+      }
+      // Mark every alert as checked, and remember what was sent so it isn't sent again.
+      const now = new Date().toISOString();
+      for (const a of alerts) {
+        const sentIds = (groups.find(g => g.alert.id === a.id)?.jobs || []).map(j => j.id);
+        await fetch(cfg.url + "/rest/v1/job_alerts?id=eq." + a.id, { method: "PATCH", headers: { ...admin, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ last_sent: now, seen: [...sentIds, ...(a.seen || [])].slice(0, 300) }) });
+      }
+    } catch (e) {
+      out.failed++;
+      await recordError("server", "sendalerts", "Job alert for one person failed: " + (e.detail || e.message));
+    }
+  }
+  const rc = redisConfig();
+  if (rc && out.emails) { try { await redisPipeline(rc, [["HINCRBY", "trazerr:events:" + day(new Date()), "alert_email_sent", out.emails]]); } catch (e) {} }
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).json(out);
+}
+
+// The "Stop all job alerts" link. Opening it shows a button (so email scanners that open links
+// don't unsubscribe anyone); pressing it, or a mail app's one-click unsubscribe, stops the alerts.
+function page(res, status, title, body) {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(status).send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>' + escHtml(title) + ' · Trazerr</title>' +
+    '<style>body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fff;color:#16233F;line-height:1.55}main{max-width:520px;margin:0 auto;padding:56px 20px}h1{font-size:28px;margin:0 0 12px}p{color:#4A5163}' +
+    'button{font:inherit;font-weight:600;min-height:44px;padding:0 20px;border:0;border-radius:4px;background:#1F3F82;color:#fff;cursor:pointer}a{color:#1F3F82}@media (prefers-color-scheme:dark){body{background:#0E1628;color:#EEF1F7}p{color:#B4BCCD}a{color:#9DB8F5}button{background:#86A7F2;color:#0B1426}}</style></head><body><main>' +
+    "<h1>" + escHtml(title) + "</h1>" + body + '<p><a href="/">Go to Trazerr</a></p></main></body></html>');
+}
+
+async function unsubscribe(req, res) {
+  const q = getQuery(req), cfg = supabaseConfig();
+  const userId = str(q.u, 40), token = str(q.t, 40);
+  const valid = cfg && cfg.key && /^[0-9a-f-]{36}$/i.test(userId) && token.length === 32 &&
+    timingSafeEqual(Buffer.from(token), Buffer.from(unsubscribeToken(userId, cfg.key)));
+  if (!valid) return page(res, 400, "That link didn't work", "<p>The link may be incomplete. Sign in at trazerr.com and stop your job alerts from your account instead.</p>");
+  if (req.method === "GET") {
+    return page(res, 200, "Stop job alerts?", '<p>You won\'t get any more job alert emails from Trazerr. Your account and saved Career DNA stay as they are.</p><form method="post"><button type="submit">Stop all job alerts</button></form>');
+  }
+  const r = await fetch(cfg.url + "/rest/v1/job_alerts?user_id=eq." + userId, { method: "PATCH", headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ active: false }) });
+  if (!r.ok) throw new UserError(502, "That didn't go through. Try again in a moment.", "Unsubscribe: Supabase answered " + r.status);
+  const rc = redisConfig();
+  if (rc) { try { await redisPipeline(rc, [["HINCRBY", "trazerr:events:" + day(new Date()), "alert_stopped", 1]]); } catch (e) {} }
+  return page(res, 200, "Job alerts stopped", "<p>You won't get any more job alert emails. You can turn alerts back on after any job search on Trazerr.</p>");
 }
 
 /* ---------------- Error log and alerts ---------------- */
@@ -1012,14 +1156,15 @@ async function health(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health"].includes(action) ? "GET" : "POST";
-  if (req.method !== method) {
+  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health", "sendalerts"].includes(action) ? "GET" : "POST";
+  const allowed = action === "unsubscribe" ? ["GET", "POST"] : [method];
+  if (!allowed.includes(req.method)) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });
   }

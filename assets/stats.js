@@ -45,7 +45,7 @@
     $("period").textContent = "Last " + days + " days";
     const tiles = [
       ["Career DNAs built", t.dna_built], ["Fit checks", t.fit_check], ["Tailored resumes", t.tailor_built],
-      ["Saved to an account", t.account_saved], ["Server errors", t.error_server], ["Browser errors", t.error_browser]
+      ["Job alerts turned on", t.alert_created], ["Alert emails sent", t.alert_email_sent], ["Server errors", t.error_server]
     ];
     $("tiles").innerHTML = tiles.map(([l, v]) => '<div class="card tile"><div class="lbl">' + esc(l) + '</div><div class="v">' + fmt(v) + "</div></div>").join("");
 
@@ -53,7 +53,7 @@
     chart($("c1"), ds, ds.map(x => (by[x] || {}).visit || 0), "visits");
     chart($("c2"), ds, ds.map(x => (by[x] || {}).dna_built || 0), "Career DNAs");
 
-    const cols = [["visit", "Visits"], ["dna_started", "DNAs started"], ["dna_built", "DNAs built"], ["fit_check", "Fit checks"], ["tailor_built", "Tailored"], ["error_server", "Server errors"], ["error_browser", "Browser errors"]];
+    const cols = [["visit", "Visits"], ["dna_started", "DNAs started"], ["dna_built", "DNAs built"], ["fit_check", "Fit checks"], ["tailor_built", "Tailored"], ["alert_email_sent", "Alert emails"], ["alert_opened", "Back from alerts"], ["error_server", "Server errors"], ["error_browser", "Browser errors"]];
     $("daily").innerHTML = '<div style="overflow-x:auto"><table><thead><tr><th scope="col">Day</th>' + cols.map(c => '<th scope="col" class="n">' + c[1] + "</th>").join("") + "</tr></thead><tbody>" +
       ds.slice().reverse().map(x => "<tr><th scope=\"row\">" + x + "</th>" + cols.map(c => '<td class="n">' + fmt((by[x] || {})[c[0]]) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
 
@@ -102,6 +102,7 @@
       row("Job search (Adzuna)", sv.adzunaKeys, sv.adzunaKeys ? "Keys set" : "Using Remotive only", true) +
       row("Counts and limits (Upstash)", sv.upstashRedis === "ok", sv.upstashRedis === "ok" ? "Working" : String(sv.upstashRedis || "unknown")) +
       row("Accounts (Supabase)", s.reachable && s.tableExists, s.reachable ? (s.tableExists ? "Working" : "Table missing") : "Not reachable") +
+      row("Job alerts", s.alertsTableExists, s.alertsTableExists ? "Ready" : "Run supabase/job_alerts.sql") +
       row("Daily keepalive", age !== null && age < 2, last ? "Last ran " + when(last) : "Hasn't run yet", age === null) +
       row("Error alert emails", sv.errorAlerts, sv.errorAlerts ? "On" : "Off (add RESEND_API_KEY and ALERT_EMAIL)", true);
   }

@@ -3,7 +3,7 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 
 const SB = "https://mock.supabase.test", REDIS = "https://mock.redis.test";
-let calls, redisLog, adminFails, supabaseDown, emails, stored, aiReply;
+let calls, redisLog, adminFails, supabaseDown, emails, stored, aiReply, alerts, patches, adzunaJobs;
 
 globalThis.fetch = async (url, opts = {}) => {
   url = String(url);
@@ -24,32 +24,38 @@ globalThis.fetch = async (url, opts = {}) => {
       return { result: 1 };
     }));
   }
-  if (url === "https://api.resend.com/emails") { emails.push(JSON.parse(opts.body)); return res(200, { id: "e1" }); }
+  if (url === "https://api.resend.com/emails") { emails.push({ ...JSON.parse(opts.body), headersSent: h }); return res(200, { id: "e1" }); }
+  if (url.startsWith("https://api.adzuna.com")) return res(200, { count: adzunaJobs.length, results: adzunaJobs });
   if (url.startsWith(SB)) {
     if (supabaseDown) return res(503, {});
     if (url.endsWith("/auth/v1/health")) return res(200, {});
     if (url.endsWith("/auth/v1/user")) return h.Authorization === "Bearer good-token" ? res(200, { id: "11111111-2222-3333-4444-555555555555" }) : res(401, {});
     if (url.includes("/rest/v1/career_records")) return res(opts.method === "DELETE" ? 204 : 200, []);
+    if (url.includes("/rest/v1/job_alerts")) {
+      if ((opts.method || "GET") === "GET") return res(200, alerts);
+      if (opts.method === "PATCH") { patches.push({ url, body: JSON.parse(opts.body) }); return res(204, null); }
+    }
+    if (url.includes("/auth/v1/admin/users/") && (opts.method || "GET") === "GET") return res(200, { id: url.split("/").pop(), email: "user-" + url.split("/").pop().slice(0, 4) + "@example.com" });
     if (url.includes("/auth/v1/admin/users/")) return adminFails ? res(500, {}) : res(200, {});
   }
   if (url.startsWith("https://api.anthropic.com")) return aiReply ? res(200, { stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(aiReply) }] }) : res(529, { error: "overloaded" });
   return res(404, {});
 };
 
-Object.assign(process.env, { SUPABASE_URL: SB, SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "service", KV_REST_API_URL: REDIS, KV_REST_API_TOKEN: "t", STATS_KEY: "s3cret-key", ANTHROPIC_API_KEY: "k" });
+Object.assign(process.env, { SUPABASE_URL: SB, SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "service", KV_REST_API_URL: REDIS, KV_REST_API_TOKEN: "t", STATS_KEY: "s3cret-key", ANTHROPIC_API_KEY: "k", ADZUNA_APP_ID: "a", ADZUNA_APP_KEY: "b" });
 const { default: handler } = await import("../api/app.js");
 
 let ip = 0;
 async function call(action, { method = "POST", auth, body = {}, query = {} } = {}) {
   const req = { method, query: { action, ...query }, headers: { authorization: auth, "x-forwarded-for": "203.0.113." + (ip++ % 250) }, body };
   let out = { status: 200 };
-  const res = { statusCode: 200, headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(o) { out = { status: this.statusCode, body: o }; return this; }, end() { out = { status: this.statusCode }; return this; } };
+  const res = { statusCode: 200, headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(o) { out = { status: this.statusCode, body: o }; return this; }, end() { out = { status: this.statusCode }; return this; }, send(b) { out = { status: this.statusCode, html: String(b), headers: this.headers }; return this; } };
   await handler(req, res);
   return out;
 }
 
 beforeEach(() => {
-  calls = []; redisLog = []; emails = []; stored = {}; adminFails = false; supabaseDown = false; aiReply = null;
+  calls = []; redisLog = []; emails = []; stored = {}; adminFails = false; supabaseDown = false; aiReply = null; alerts = []; patches = []; adzunaJobs = [];
   delete process.env.RESEND_API_KEY; delete process.env.ALERT_EMAIL; delete process.env.CRON_SECRET;
 });
 
@@ -197,4 +203,62 @@ test("a tailored resume is sorted newest first, keeps extra sections whole, and 
   assert.ok(item.length <= 401 && item.endsWith("…"), "long item shortened with an ellipsis");
   const lastWord = item.slice(0, -1).split(/[ ,]+/).pop();
   assert.ok(long.split(/[ ,]+/).includes(lastWord), "ends on a whole word, not '" + lastWord + "'");
+});
+
+const U1 = "aaaaaaaa-1111-2222-3333-444444444444", U2 = "bbbbbbbb-1111-2222-3333-444444444444";
+const az = (id, title) => ({ id, title, company: { display_name: "Acme" }, location: { display_name: "Newark, NJ" }, redirect_url: "https://example.com/" + id, created: new Date().toISOString(), description: "Lead a team." });
+
+test("job alerts: one email per person with only new jobs, and every alert marked as checked", async () => {
+  process.env.RESEND_API_KEY = "re_test";
+  adzunaJobs = [az(1, "Shift Supervisor"), az(2, "Warehouse Lead"), az(3, "Operations Supervisor")];
+  alerts = [
+    { id: "a1", user_id: U1, query: "supervisor", location: "Newark, NJ", remote: false, seen: ["az-1"], last_sent: null },
+    { id: "a2", user_id: U1, query: "warehouse lead", location: "", remote: false, seen: ["az-1", "az-2", "az-3"], last_sent: null },
+    { id: "a3", user_id: U2, query: "lead", location: "Trenton", remote: false, seen: ["az-1", "az-2", "az-3"], last_sent: null }
+  ];
+  const r = await call("sendalerts", { method: "GET" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body, { people: 2, emails: 1, jobs: 2, failed: 0 });
+  assert.equal(emails.length, 1, "no email for someone with nothing new");
+  const e = emails[0];
+  assert.deepEqual(e.to, ["user-aaaa@example.com"]);
+  assert.match(e.subject, /^2 new jobs for supervisor near Newark, NJ/);
+  assert.ok(!e.html.includes("Shift Supervisor"), "a job already sent isn't sent again");
+  assert.ok(e.html.includes("Warehouse Lead") && e.html.includes("Operations Supervisor"));
+  assert.match(e.headers["List-Unsubscribe"], /action=unsubscribe&u=aaaaaaaa-1111-2222-3333-444444444444&t=/);
+  assert.equal(e.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
+  assert.match(e.text, /q=supervisor&where=Newark%2C\+NJ&src=alert#jobs/);
+  assert.equal(patches.length, 3, "all three alerts are marked as checked");
+  const a1 = patches.find(p => p.url.includes("id=eq.a1")).body;
+  assert.deepEqual(a1.seen.slice(0, 2), ["az-2", "az-3"]);
+  assert.ok(a1.seen.includes("az-1") && a1.last_sent);
+});
+
+test("job alerts need email switched on, and only Vercel can run them when CRON_SECRET is set", async () => {
+  assert.equal((await call("sendalerts", { method: "GET" })).status, 503);
+  process.env.RESEND_API_KEY = "re_test"; process.env.CRON_SECRET = "cron";
+  assert.equal((await call("sendalerts", { method: "GET" })).status, 401);
+  assert.equal((await call("sendalerts", { method: "GET", auth: "Bearer cron" })).status, 200);
+});
+
+test("unsubscribe links are signed; opening one asks first, pressing the button stops the alerts", async () => {
+  process.env.RESEND_API_KEY = "re_test";
+  adzunaJobs = [az(9, "Lead")];
+  alerts = [{ id: "a1", user_id: U1, query: "lead", location: "", remote: false, seen: [], last_sent: null }];
+  await call("sendalerts", { method: "GET" });
+  const link = new URL(emails[0].headers["List-Unsubscribe"].slice(1, -1));
+  const q = { u: link.searchParams.get("u"), t: link.searchParams.get("t") };
+  patches = [];
+  const look = await call("unsubscribe", { method: "GET", query: q });
+  assert.equal(look.status, 200);
+  assert.match(look.html, /<form method="post">/);
+  assert.equal(patches.length, 0, "just opening the link changes nothing");
+  const stop = await call("unsubscribe", { method: "POST", query: q });
+  assert.match(stop.html, /Job alerts stopped/);
+  assert.equal(patches.length, 1);
+  assert.match(patches[0].url, /job_alerts\?user_id=eq\.aaaaaaaa/);
+  assert.deepEqual(patches[0].body, { active: false });
+  const forged = await call("unsubscribe", { method: "POST", query: { u: U2, t: q.t } });
+  assert.equal(forged.status, 400);
+  assert.equal(patches.length, 1, "someone else's link can't be forged");
 });

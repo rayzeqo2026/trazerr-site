@@ -55,3 +55,13 @@ test("job search lists openings, and Check my fit works while a new search loads
   release();
   expect(seen.errors).toEqual([]);
 });
+
+test("a link from a job alert email runs that search", async ({ page }) => {
+  let asked = null;
+  const seen = await mockSite(page, { jobs: (r, url) => { asked = Object.fromEntries(url.searchParams); return json(r, 200, { jobs: [job(1), job(2)], source: "adzuna", hasMore: false }); } });
+  await page.goto("/?q=supervisor&where=Newark%2C+NJ&src=alert#jobs", { waitUntil: "networkidle" });
+  await expect(page.locator("#jobList .job")).toHaveCount(2);
+  expect(asked).toMatchObject({ q: "supervisor", where: "Newark, NJ" });
+  expect(seen.events).toContain("alert_opened");
+  expect(seen.errors).toEqual([]);
+});

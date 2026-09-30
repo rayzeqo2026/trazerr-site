@@ -12,7 +12,7 @@ const STATS = {
 test("the usage page asks for the key, then shows counts, errors and health", async ({ page }) => {
   const seen = await mockSite(page, {
     stats: (r, url) => url.searchParams.get("key") === "right-key" ? json(r, 200, STATS) : json(r, 404, { error: "Unknown request." }),
-    dbstatus: r => json(r, 200, { configured: true, reachable: true, tableExists: true, services: { upstashRedis: "ok", anthropicKey: true, adzunaKeys: true, statsKey: true, errorAlerts: false } })
+    dbstatus: r => json(r, 200, { configured: true, reachable: true, tableExists: true, services: { upstashRedis: "ok", anthropicKey: true, adzunaKeys: true, statsKey: true, errorAlerts: false }, alertsTableExists: true })
   });
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/stats.html", { waitUntil: "networkidle" });

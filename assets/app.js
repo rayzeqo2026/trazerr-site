@@ -964,6 +964,7 @@ async function runJobSearch(fresh){
     if (count && data.broadened === "title") msg = "No \u201c" + jobState.q + "\u201d openings " + (jobState.where ? "near " + jobState.where : "right now") + ", so here are \u201c" + data.searchedFor + "\u201d roles instead.";
     if (count && data.source === "remotive" && jobState.where && !jobState.remote) msg = "Showing remote openings. Local results for this location aren't available right now.";
     setStatus(st, msg);
+    showAlertBox(count > 0);
   } catch (e) {
     if (!fresh) jobState.page -= 1;
     setStatus(st, e.message, true);
@@ -990,6 +991,37 @@ function renderJobs(data){
     : 'Remote jobs from <a href="https://remotive.com" target="_blank" rel="noopener">Remotive</a>';
   $("moreBtn").hidden = !data.hasMore;
 }
+
+/* ---------- job alerts ---------- */
+// "Email me new jobs": saves the current search as a weekly alert in the person's account.
+const ALERT_PENDING = "trazerr.pendingAlert";
+function currentAlert(){ return { query: jobState.q, location: jobState.remote ? "" : jobState.where, remote: !!jobState.remote }; }
+function alertLabel(a){ return "\u201c" + a.query + "\u201d" + (a.remote ? " remote" : "") + " jobs" + (a.location ? " near " + a.location : ""); }
+function showAlertBox(on){
+  $("alertBox").hidden = !ACCOUNTS_ON || !on || !jobState.q;
+  if (on && jobState.q) { $("alertTitle").textContent = "Get new " + alertLabel(currentAlert()) + " by email"; setStatus($("alertStatus"), ""); }
+}
+async function addAlert(a){
+  const { error } = await sb.from("job_alerts").insert({ user_id: sbUser.id, query: a.query.slice(0, 100), location: (a.location || "").slice(0, 100), remote: !!a.remote });
+  if (!error) { track("alert_created"); return { ok: true, text: "Done. You'll get new " + alertLabel(a) + " by email once a week. Manage your alerts from your account." }; }
+  if (error.code === "23505") return { ok: true, text: "You already have this job alert." };
+  if (error.code === "42501") return { ok: false, text: "You can have up to 3 job alerts. Stop one from your account to add another." };
+  return { ok: false, text: "The job alert didn't save. Try again in a moment." };
+}
+$("alertBtn").addEventListener("click", async () => {
+  const st = $("alertStatus"), btn = $("alertBtn"), a = currentAlert();
+  btn.disabled = true; setStatus(st, "Saving…");
+  try {
+    await acct();
+    if (!sbUser) {
+      try { localStorage.setItem(ALERT_PENDING, JSON.stringify(a)); } catch (e) {}
+      setStatus(st, "");
+      return openAccount({ intro: "Enter your email and we'll send you a sign-in link. When you open it, your job alert for " + alertLabel(a) + " is turned on. There's no password." });
+    }
+    const r = await addAlert(a); setStatus(st, r.text, !r.ok);
+  } catch (e) { setStatus(st, e.message || "That didn't go through. Try again in a moment.", true); }
+  finally { btn.disabled = false; }
+});
 
 /* ---------- fit check ---------- */
 function needProfileHTML(){
@@ -1561,14 +1593,17 @@ async function saveToAccount(p, resume){
 async function afterSignIn(){
   if (signinHandled) return; signinHandled = true;
   track("account_signed_in");
+  let alertNote = "", pa = null;
+  try { pa = JSON.parse(localStorage.getItem(ALERT_PENDING) || "null"); localStorage.removeItem(ALERT_PENDING); } catch (e) {}
+  if (pa && pa.query) alertNote = " " + (await addAlert(pa)).text;
   let pending = false; try { pending = localStorage.getItem(PENDING_KEY) === "1"; localStorage.removeItem(PENDING_KEY); } catch (e) {}
   const local = loadSaved();
-  if (pending && local) return openAccount({ note: (await saveToAccount(local, loadResume())) ? "You're signed in, and your Career DNA is saved to your account." : "You're signed in, but the save didn't go through. Try Save again below." });
+  if (pending && local) return openAccount({ note: ((await saveToAccount(local, loadResume())) ? "You're signed in, and your Career DNA is saved to your account." : "You're signed in, but the save didn't go through. Try Save again below.") + alertNote });
   try {
     const rec = await fetchRecord(true);
     if (rec && !local) { saveProfile(normalize(rec.career_dna)); if (rec.resume) saveResume(rec.resume); resumeSrc = loadResume(); setProfile(loadSaved()); }
   } catch (e) {}
-  openAccount({ note: "You're signed in." });
+  openAccount({ note: "You're signed in." + alertNote });
 }
 function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return ""; } }
 async function openAccount(o){
@@ -1611,12 +1646,14 @@ async function openAccount(o){
     if (local) h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="acctSaveLocal">Save the Career DNA on this device to my account</button></div>';
   }
   h += "</div>";
+  h += '<div class="o-sec"><h3>Job alerts</h3><div id="acctAlerts"><p class="hint">Loading…</p></div></div>';
   h += '<div class="o-sec"><h3>Delete everything</h3><p class="hint">Permanently deletes your saved Career DNA, your resume and your account, and removes them from this device too. This can\'t be undone.</p>';
   h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-quiet btn-danger" type="button" id="delAsk">Delete everything</button></div>';
   h += '<div class="acct-confirm" id="delConfirm" hidden><p><b>Delete your account and everything saved in it?</b></p><div class="o-foot" style="margin-top:12px"><button class="btn btn-danger-solid" type="button" id="delYes">Yes, delete everything</button><button class="btn btn-quiet" type="button" id="delNo">Keep my account</button></div></div></div>';
   h += '<div class="o-foot"><button class="btn btn-quiet" type="button" id="signOutBtn">Sign out</button></div><p class="o-note" id="acctNote" role="status" aria-live="polite"></p>';
   openOverlay("Your account", h);
   const note = $("acctNote");
+  loadAlerts();
   const op = $("acctOpen"); if (op) op.onclick = () => showProfile(normalize(rec.career_dna));
   const dl = $("acctDownload"); if (dl) dl.onclick = async () => {
     try { const full = await fetchRecord(true); const blob = new Blob([JSON.stringify({ email: sbUser.email, savedAt: full.updated_at, careerDNA: full.career_dna, resume: full.resume }, null, 2)], { type: "application/json" });
@@ -1640,6 +1677,22 @@ async function openAccount(o){
   };
   $("signOutBtn").onclick = async () => { await sb.auth.signOut().catch(() => {}); sbUser = null; acctRecord = undefined; paintAcctBtn(); openAccount({ note: "You're signed out. Anything saved on this device stays here until you remove it." }); };
 }
+async function loadAlerts(){
+  const box = $("acctAlerts"); if (!box) return;
+  const { data, error } = await sb.from("job_alerts").select("id, query, location, remote, active, last_sent").order("created_at");
+  if (!$("acctAlerts")) return;
+  if (error) { box.innerHTML = '<p class="hint">Your job alerts couldn\'t be loaded. Try again in a moment.</p>'; return; }
+  if (!data.length) { box.innerHTML = '<p class="hint">No job alerts yet. Search for jobs, then choose "Email me new jobs" under the results.</p>'; return; }
+  box.innerHTML = '<ul class="acct-alerts">' + data.map(a => '<li><div><b>' + esc(alertLabel(a)) + "</b><small>" + (a.active ? "Weekly" + (a.last_sent ? " · last checked " + esc(fmtDate(a.last_sent)) : " · first email within a day") : "Stopped") + '</small></div><button class="btn btn-quiet btn-sm" type="button" data-alert="' + esc(a.id) + '" data-act="' + (a.active ? "stop" : "resume") + '">' + (a.active ? "Stop" : "Turn back on") + "</button></li>").join("") + "</ul>";
+  box.querySelectorAll("[data-alert]").forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    const q = b.dataset.act === "stop" ? sb.from("job_alerts").delete().eq("id", b.dataset.alert) : sb.from("job_alerts").update({ active: true }).eq("id", b.dataset.alert);
+    const { error } = await q;
+    if (error) { b.disabled = false; $("acctNote").textContent = "That didn't go through. Try again in a moment."; return; }
+    if (b.dataset.act === "stop") track("alert_stopped");
+    loadAlerts();
+  });
+}
 $("acctBtn").addEventListener("click", async () => {
   try { await acct(); openAccount(); }
   catch (e) { openOverlay("Your account", errorHTML(e.message || "Sign-in isn't available right now. Try again in a moment.")); }
@@ -1660,3 +1713,14 @@ if (ACCOUNTS_ON && (linkHash || hadSession())) {
 setProfile(loadSaved());
 resumeSrc = loadResume();
 track("visit");
+// A link from a job alert email (/?q=…&where=…#jobs) runs that search straight away.
+(function searchFromLink(){
+  const u = new URLSearchParams(location.search), q = (u.get("q") || "").trim();
+  if (!q) return;
+  $("jq").value = q.slice(0, 100);
+  const jw = $("jw"); jw.value = (u.get("where") || "").slice(0, 80); delete jw.dataset.auto; $("jwNote").hidden = true;
+  $("jr").checked = u.get("remote") === "1";
+  if (u.get("src") === "alert") track("alert_opened");
+  runJobSearch(true);
+  $("jobs").scrollIntoView();
+})();

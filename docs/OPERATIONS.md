@@ -9,6 +9,7 @@
 | `stats.html` | Private usage page (needs the stats key). |
 | `privacy.html`, `terms.html` | Legal pages. |
 | `supabase/setup.sql` | The accounts table and its access rules (already run). |
+| `supabase/job_alerts.sql` | The job alerts table and its access rules. |
 | `tests/` | Automatic tests. Not deployed. |
 | `vercel.json` | Server time limit and the daily keepalive. |
 
@@ -45,6 +46,14 @@ Errors are collected two ways:
 The newest 200 are kept in Upstash Redis (`trazerr:errors`). Email addresses are removed and messages are cut to 300 characters.
 
 When `RESEND_API_KEY` and `ALERT_EMAIL` are set, a server failure sends an email, at most one an hour. The email lists what failed and links to the usage page.
+
+## Job alerts
+
+After a job search, people can choose "Email me new jobs". Signing in is required (the same emailed link), so every address is confirmed. Each person can have up to 3 alerts, stored in the Supabase table `job_alerts` (`supabase/job_alerts.sql`), protected by row level security.
+
+Every day at 13:07 UTC (9:07 am New York time), Vercel runs `/api/app?action=sendalerts`. Alerts not checked for 6½ days are searched for jobs posted in the past 8 days. Jobs already sent are skipped, and each person gets at most one email, with up to 6 jobs per alert. The email comes from `jobs@trazerr.com` through Resend. It links back to the search on Trazerr and has a signed "Stop all job alerts" link, plus one-click unsubscribe for mail apps.
+
+Limits to know: Resend's free plan sends 100 emails a day, and each run handles up to 40 alerts; any left over go out the next day. The usage page shows alerts turned on, emails sent and how many people came back from them.
 
 ## Keeping Supabase awake
 
