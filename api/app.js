@@ -573,7 +573,11 @@ How to tailor:
 - Improve the wording, but only with facts the original line states. Do: use a stronger, specific verb, put the result or scale first, tighten wordy phrasing, and merge two lines about the same work. Don't: add details, purposes, results, qualifiers or context the original doesn't state. For example, don't turn "room adjustments" into "room rate adjustments", and don't add phrases like "to keep guests satisfied".
 - Where a bullet has no number but one would clearly make it stronger (how many, how often, how much, how big), add a [placeholder] for it. When the resume is short on numbers, aim for 2 to 5 placeholders across the resume, each on the most relevant bullets.
 - In the summary, work out years of experience from the resume's dates up to today; don't copy a number the resume states, and don't count only the most recent job.
+- List experience with the most recent first (latest end date first, then latest start date).
+- Skills are specific things from the resume: tools, techniques, methods and subject areas, like "Immunohistochemistry (IHC)", "SAS", "Inventory management" or "Customer service". Never vague filler like "Sales experience", "Leadership" or "Data analysis skills".
+- Keep every other section of the resume (awards, coursework, leadership, activities, volunteering, languages, certifications) in "extras", with the resume's own wording. An entry with its own title and dates (a team, club, role or project) goes in "entries" with its title, dates and bullets. A simple list (awards, courses, tools, languages) goes in "items", one award, course or skill per item. Never shorten or cut off an item.
 - ${PLAIN}
+- The headline, summary, skills and bullets are resume text. Write them in normal resume style with no pronouns: never "you", "your", "I", "my", "she" or "they". Write "Pharmacology graduate with lab research and sales experience", not "Combines a Master's…, giving you…". Only "changes" and the blank questions speak to the person as "you".
 
 ${JSON_ONLY} Use exactly this shape:
 {
@@ -584,7 +588,7 @@ ${JSON_ONLY} Use exactly this shape:
   "skills": [ "skill" ],
   "experience": [ { "title": "", "company": "", "location": "", "dates": "", "bullets": [ { "text": "", "from": "" } ] } ],
   "education": [ "one line per entry, as written" ],
-  "extras": [ { "heading": "e.g. Certifications", "items": [ "as written" ] } ],
+  "extras": [ { "heading": "e.g. Leadership", "entries": [ { "title": "", "dates": "", "bullets": [ "" ] } ], "items": [ "as written" ] } ],
   "blanks": [ { "placeholder": "text inside the brackets, exactly as used", "question": "one short question" } ],
   "changes": [ "one sentence each on what changed and why it helps for this role" ],
   "fitBefore": 58,
@@ -592,6 +596,29 @@ ${JSON_ONLY} Use exactly this shape:
 }
 fitBefore is the fit of the original resume for this role; fitAfter is the honest estimate for the tailored version with blanks still unfilled. Don't inflate fitAfter: tailoring changes presentation, not experience.
 Give 3-6 changes and at most 8 blanks. Skills must come from the resume or the confirmed list.`;
+
+// Resume text is never cut mid-word: a line that is too long ends at the last whole word.
+function clip(v, max) {
+  const s = String(v ?? "").replace(/\s+/g, " ").trim();
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max), sp = cut.lastIndexOf(" ");
+  return (sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,;:·–-]+$/, "") + "…";
+}
+
+// Most recent first: latest end year (Present counts as now), then latest start year. Entries without
+// years keep their place relative to each other, after the dated ones.
+function byRecency(jobs) {
+  const now = new Date().getFullYear() + 0.5;
+  const span = (d) => {
+    const years = (String(d).match(/\b(19|20)\d{2}\b/g) || []).map(Number);
+    if (!years.length && !/present|current|now/i.test(d)) return null;
+    const end = /present|current|now/i.test(d) ? now : Math.max(...years);
+    return { end, start: years.length ? Math.min(...years) : end };
+  };
+  return jobs.map((j, i) => ({ j, i, s: span(j.dates) }))
+    .sort((a, b) => (!a.s || !b.s) ? (a.s ? -1 : b.s ? 1 : a.i - b.i) : (b.s.end - a.s.end) || (b.s.start - a.s.start) || (a.i - b.i))
+    .map(x => x.j);
+}
 
 // Guard for text resumes: a title or employer in the tailored resume must appear in the original.
 // Small differences (a fixed typo) are allowed; anything else is removed rather than shown.
@@ -670,14 +697,18 @@ async function tailor(req, res) {
   content.push({ type: "text", text: target + "\n\nSkills the person confirmed they have: " + (confirmed.join("; ") || "(none beyond the resume)") + "\n\nRewrite the resume and return the JSON object." });
   const p = await askClaude(TAILOR_BUILD_SYSTEM, content);
   const resume = {
-    name: str(p.name, 100), contact: str(p.contact, 300), headline: str(p.headline, 160), summary: str(p.summary, 700),
-    skills: list(p.skills, 24).map(k => str(k, 60)).filter(Boolean),
-    experience: list(p.experience, 15).map(j => ({
-      title: str(j?.title, 120), company: str(j?.company, 120), location: str(j?.location, 100), dates: str(j?.dates, 60),
-      bullets: list(j?.bullets, 8).map(b => ({ text: str(b?.text, 400), from: str(b?.from, 300) })).filter(b => b.text)
-    })).filter(j => j.title || j.company),
-    education: list(p.education, 8).map(e => str(e, 240)).filter(Boolean),
-    extras: list(p.extras, 5).map(x => ({ heading: str(x?.heading, 60), items: list(x?.items, 12).map(i => str(i, 200)).filter(Boolean) })).filter(x => x.heading && x.items.length),
+    name: str(p.name, 100), contact: str(p.contact, 300), headline: clip(p.headline, 200), summary: clip(p.summary, 900),
+    skills: list(p.skills, 24).map(k => clip(k, 80)).filter(Boolean),
+    experience: byRecency(list(p.experience, 15).map(j => ({
+      title: str(j?.title, 150), company: str(j?.company, 150), location: str(j?.location, 100), dates: str(j?.dates, 60),
+      bullets: list(j?.bullets, 8).map(b => ({ text: clip(b?.text, 500), from: str(b?.from, 300) })).filter(b => b.text)
+    })).filter(j => j.title || j.company)),
+    education: list(p.education, 8).map(e => clip(e, 300)).filter(Boolean),
+    extras: list(p.extras, 8).map(x => ({
+      heading: str(x?.heading, 60),
+      entries: byRecency(list(x?.entries, 10).map(e => ({ title: clip(e?.title, 200), dates: str(e?.dates, 60), bullets: list(e?.bullets, 5).map(b => clip(typeof b === "string" ? b : b?.text, 400)).filter(Boolean) })).filter(e => e.title)),
+      items: list(x?.items, 30).map(i => clip(i, 400)).filter(Boolean)
+    })).filter(x => x.heading && (x.items.length || x.entries.length)),
     blanks: list(p.blanks, 8).map(b => ({ placeholder: str(b?.placeholder, 60), question: str(b?.question, 200) })).filter(b => b.placeholder),
     changes: list(p.changes, 6).map(c => str(c, 300)).filter(Boolean),
     fitBefore: toScore(p.fitBefore), fitAfter: toScore(p.fitAfter)

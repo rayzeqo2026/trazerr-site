@@ -3,7 +3,7 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 
 const SB = "https://mock.supabase.test", REDIS = "https://mock.redis.test";
-let calls, redisLog, adminFails, supabaseDown, emails, stored;
+let calls, redisLog, adminFails, supabaseDown, emails, stored, aiReply;
 
 globalThis.fetch = async (url, opts = {}) => {
   url = String(url);
@@ -32,7 +32,7 @@ globalThis.fetch = async (url, opts = {}) => {
     if (url.includes("/rest/v1/career_records")) return res(opts.method === "DELETE" ? 204 : 200, []);
     if (url.includes("/auth/v1/admin/users/")) return adminFails ? res(500, {}) : res(200, {});
   }
-  if (url.startsWith("https://api.anthropic.com")) return res(529, { error: "overloaded" });
+  if (url.startsWith("https://api.anthropic.com")) return aiReply ? res(200, { stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(aiReply) }] }) : res(529, { error: "overloaded" });
   return res(404, {});
 };
 
@@ -49,7 +49,7 @@ async function call(action, { method = "POST", auth, body = {}, query = {} } = {
 }
 
 beforeEach(() => {
-  calls = []; redisLog = []; emails = []; stored = {}; adminFails = false; supabaseDown = false;
+  calls = []; redisLog = []; emails = []; stored = {}; adminFails = false; supabaseDown = false; aiReply = null;
   delete process.env.RESEND_API_KEY; delete process.env.ALERT_EMAIL; delete process.env.CRON_SECRET;
 });
 
@@ -167,4 +167,34 @@ test("the security rules allow every inline script and the services the site use
   for (const host of ["https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://fonts.gstatic.com", ".supabase.co"]) assert.ok(csp.includes(host), host);
   assert.match(csp, /frame-ancestors 'none'/);
   for (const k of ["Strict-Transport-Security", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) assert.ok(headers[k], k);
+});
+
+test("a tailored resume is sorted newest first, keeps extra sections whole, and never cuts a word", async () => {
+  const long = "Biochemistry, Biostatistics, Cellular Biology, Chemistry, Ecology, Endocrinology, Genetics, Human Anatomy and Physiology, Oceanography, Plant Biology, Toxicology, Pharmacology";
+  aiReply = {
+    name: "Alex Doe", contact: "alex@example.com", headline: "Lab research · Sales", summary: "Scientist with sales experience.",
+    skills: ["Immunohistochemistry (IHC)", "Inventory management"],
+    experience: [
+      { title: "Sales Associate", company: "Shop", dates: "2024 – 2026", bullets: [{ text: "Sold products.", from: "sold" }] },
+      { title: "Intern", company: "Farm", dates: "2023 – 2024", bullets: [{ text: "Maintained equipment.", from: "maintained" }] },
+      { title: "Research Assistant", company: "University", dates: "2025 – Present", bullets: [{ text: "Ran experiments.", from: "ran" }] },
+      { title: "Volunteer", company: "Library", dates: "", bullets: [{ text: "Helped readers.", from: "helped" }] }
+    ],
+    education: ["M.S. Pharmacology, 2026"],
+    extras: [
+      { heading: "Leadership", entries: [{ title: "Team Captain, Basketball", dates: "2020 – 2024", bullets: ["Named team MVP."] }, { title: "Club Member", dates: "2025 – 2026", bullets: ["Planned events."] }] },
+      { heading: "Coursework", items: [long + ", " + long + ", " + long] }
+    ],
+    blanks: [], changes: ["Put research first."], fitBefore: 50, fitAfter: 60
+  };
+  const r = await call("tailor", { body: { stage: "build", role: "Medical device sales", resume: { kind: "text", text: "Alex Doe Sales Associate Shop Intern Farm Research Assistant University Volunteer Library " + "x".repeat(100) } } });
+  assert.equal(r.status, 200);
+  const x = r.body.resume;
+  assert.deepEqual(x.experience.map(j => j.title), ["Research Assistant", "Sales Associate", "Intern", "Volunteer"]);
+  assert.deepEqual(x.extras[0].entries.map(e => e.title), ["Club Member", "Team Captain, Basketball"]);
+  assert.deepEqual(x.extras[0].entries[1].bullets, ["Named team MVP."]);
+  const item = x.extras[1].items[0];
+  assert.ok(item.length <= 401 && item.endsWith("…"), "long item shortened with an ellipsis");
+  const lastWord = item.slice(0, -1).split(/[ ,]+/).pop();
+  assert.ok(long.split(/[ ,]+/).includes(lastWord), "ends on a whole word, not '" + lastWord + "'");
 });

@@ -729,6 +729,9 @@ function fillBlanks(text, mode){
     return mode === "html" ? '<span class="ph">[' + ph + "]</span>" : "[" + ph + "]";
   });
 }
+// Extra sections (leadership, awards, coursework…): dated entries show like jobs; a list of short items
+// shows on one line, and longer items as bullets. Older saved resumes have items only.
+const shortList = (items) => items.length > 1 && items.every(i => i.length <= 40);
 function resumeBody(r, mode){
   const f = (t) => fillBlanks(t, mode);
   let h = "<h4>" + esc(r.name) + "</h4>" + (r.contact ? '<div class="contact">' + esc(r.contact) + "</div>" : "") + (r.headline ? '<div class="headline">' + f(r.headline) + "</div>" : "");
@@ -743,7 +746,15 @@ function resumeBody(r, mode){
     });
   }
   if (r.education.length) h += "<h5>Education</h5>" + r.education.map(e => "<p>" + esc(e) + "</p>").join("");
-  r.extras.forEach(x => { h += "<h5>" + esc(x.heading) + "</h5><p>" + x.items.map(esc).join(" · ") + "</p>"; });
+  r.extras.forEach(x => {
+    h += "<h5>" + esc(x.heading) + "</h5>";
+    (x.entries || []).forEach(e => {
+      h += '<div class="rjob"><div class="rjob-h"><b>' + esc(e.title) + "</b>" + (e.dates ? "<span>" + esc(e.dates) + "</span>" : "") + "</div>";
+      if (e.bullets.length) h += "<ul>" + e.bullets.map(b => "<li>" + esc(b) + "</li>").join("") + "</ul>";
+      h += "</div>";
+    });
+    if (x.items.length) h += shortList(x.items) ? "<p>" + x.items.map(esc).join(" · ") + "</p>" : "<ul>" + x.items.map(i => "<li>" + esc(i) + "</li>").join("") + "</ul>";
+  });
   return h;
 }
 function resumeText(r){
@@ -753,7 +764,11 @@ function resumeText(r){
   if (r.skills.length) L.push("", "SKILLS", r.skills.join(" · "));
   if (r.experience.length) { L.push("", "EXPERIENCE"); r.experience.forEach(j => { L.push("", [j.title, j.company].filter(Boolean).join(", ") + (j.location || j.dates ? " | " + [j.location, j.dates].filter(Boolean).join(" · ") : "")); j.bullets.forEach(b => L.push("• " + f(b.text))); }); }
   if (r.education.length) L.push("", "EDUCATION", ...r.education);
-  r.extras.forEach(x => L.push("", x.heading.toUpperCase(), x.items.join(" · ")));
+  r.extras.forEach(x => {
+    L.push("", x.heading.toUpperCase());
+    (x.entries || []).forEach(e => { L.push([e.title, e.dates].filter(Boolean).join(" | ")); e.bullets.forEach(b => L.push("• " + b)); });
+    if (x.items.length) { if (shortList(x.items)) L.push(x.items.join(" · ")); else x.items.forEach(i => L.push("• " + i)); }
+  });
   return L.join("\n");
 }
 function resumeDocHTML(r){
@@ -809,7 +824,14 @@ function resumeDocx(r){
     });
   }
   if (r.education.length) { b += heading("Education"); r.education.forEach(e => { b += para(run(e)); }); }
-  r.extras.forEach(e => { b += heading(e.heading) + para(run(e.items.join(" · "))); });
+  r.extras.forEach(x => {
+    b += heading(x.heading);
+    (x.entries || []).forEach(e => {
+      b += para(run(e.title, { b: true }) + (e.dates ? run("   " + e.dates, { size: 19, color: "56607A" }) : ""), { before: 120, after: 40 });
+      e.bullets.forEach(bl => { b += para(run("•  " + bl), { bullet: true, after: 30 }); });
+    });
+    if (x.items.length) { if (shortList(x.items)) b += para(run(x.items.join(" · "))); else x.items.forEach(i => { b += para(run("•  " + i), { bullet: true, after: 30 }); }); }
+  });
   const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + b +
     '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1008" w:right="1080" w:bottom="1008" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>';
   return zipStore([
