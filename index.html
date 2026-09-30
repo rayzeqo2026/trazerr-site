@@ -6,7 +6,26 @@
 <title>Trazerr · What could your career become?</title>
 <meta name="description" content="Upload your resume and Trazerr builds your Career DNA: the strengths your experience shows, the talent you may be under-selling, and the jobs where you'd fit.">
 <meta name="theme-color" content="#FFFFFF">
-<script>(function(){var t="light";try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}document.documentElement.dataset.theme=t;if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#070B14"})()</script>
+<script>(function(){
+  var root=document.documentElement, t="light";
+  try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}
+  root.dataset.theme=t;
+  if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#070B14";
+  /* Design preview: themes 1-6 next to the original (0). One flag controls it, see docs/DESIGN_PREVIEW.md.
+     "auto" = on for localhost and Vercel preview links, off on the public site. "on" or "off" force it. */
+  var FLAG="auto", h=location.hostname;
+  var on=FLAG==="on"||(FLAG==="auto"&&(h==="localhost"||h==="127.0.0.1"||/\.vercel\.app$/.test(h)));
+  var d=0, ok=function(v){return typeof v==="string"&&/^[0-6]$/.test(v)};
+  if(on){
+    var q=null; try{q=new URLSearchParams(location.search).get("design")}catch(e){}
+    if(ok(q)){d=+q;try{localStorage.setItem("trazerr.designPreview",q)}catch(e){}}
+    else{try{var sv=localStorage.getItem("trazerr.designPreview");if(ok(sv))d=+sv}catch(e){}}
+  }
+  root.dataset.preview=on?"on":"off"; root.dataset.design=String(d);
+  window.TRAZERR_FONTS={1:"Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600",2:"Figtree:ital,wght@0,400;0,600;0,700;1,400;1,600",3:"Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700",4:"Lexend:wght@400;500;600",5:"Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600",6:"Figtree:ital,wght@0,400;0,600;0,700;1,400;1,600"};
+  window.trazerrLoadFont=function(n){var f=window.TRAZERR_FONTS[n];if(!f||document.querySelector('link[data-font="'+f+'"]'))return;var l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f+"&display=swap";l.setAttribute("data-font",f);document.head.appendChild(l)};
+  if(d>0){root.dataset.theme="light";document.querySelector('meta[name="theme-color"]').content="#FFFFFF";window.trazerrLoadFont(d)}
+})()</script>
 <link rel="canonical" href="https://www.trazerr.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Trazerr">
@@ -771,6 +790,313 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 :root[data-theme="light"] .seqlay-bar i{background:linear-gradient(90deg, #0B5CFF, #4F46E5)}
 :root[data-theme="light"] .seqlay-hide{color:var(--ink-2)}
 :root[data-theme="light"] .seqlay-count{color:var(--ink-2)}
+/* ================= Design preview: themes 1-6 =================
+   Scoped to :root[data-design="1".."6"]. Original 0 has no data-design styles, so it renders exactly as before.
+   See docs/DESIGN_PREVIEW.md for palettes, measured contrast and how to use the preview. */
+:root[data-design="1"]{ /* Brick & Ink */
+  --d-font:"Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --d-hw:700; --d-ht:-.02em; --d-r-card:6px; --d-r-ctl:4px; --d-r-field:4px; --d-bw:1px; --d-shadow:0 1px 0 rgba(22,35,63,.06);
+  --d-bg:#FFFFFF; --d-surface:#FFFFFF; --d-alt:#F6F4F0; --d-inverse:#16233F; --d-text:#16233F; --d-text2:#4A5163;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#C9D0E0; --d-link:#1F3F82; --d-action:#1F3F82; --d-action-hover:#152E61; --d-action-fg:#FFFFFF; --d-action-soft:#E8EDF7;
+  --d-accent:#B42A1F; --d-accent-text:#A62419; --d-accent-inv:#FF9E90; --d-accent-soft:#FBE9E6; --d-border:#DCD8D0; --d-border-strong:#7B7F8C; --d-focus:#B42A1F;
+  --d-ev-ver:#16233F; --d-ev-inf:#1F5FBF; --d-ev-pot:#8A5A00; --d-ev-miss:#6A6F7C; --d-err:#B42318;
+  --d-head-bg:rgba(255,255,255,.94); --d-chapnum:rgba(31,63,130,.07);
+  --cv-a:31,63,130; --cv-b:180,42,31; --cv-rung:22,35,63; --cv-text:#16233F; --cv-text2:#4A5163; --cv-ver:#16233F; --cv-inf:#1F5FBF; --cv-pot:#8A5A00;
+  --cv-dir:166,36,25; --cv-dir-solid:#A62419; --cv-cur:74,81,99; --cv-cur-solid:#4A5163;
+}
+:root[data-design="2"]{ /* Oxblood & Ochre */
+  --d-font:"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --d-hw:700; --d-ht:-.015em; --d-r-card:16px; --d-r-ctl:10px; --d-r-field:10px; --d-bw:1px; --d-shadow:0 18px 40px -28px rgba(94,22,33,.35);
+  --d-bg:#FBF6EE; --d-surface:#FFFFFF; --d-alt:#F3EADB; --d-inverse:#5E1621; --d-text:#2A1717; --d-text2:#5A4643;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#F1DCD8; --d-link:#7A1F2B; --d-action:#7A1F2B; --d-action-hover:#5E1621; --d-action-fg:#FFFFFF; --d-action-soft:#F6E6E3;
+  --d-accent:#C8961E; --d-accent-text:#765110; --d-accent-inv:#F2C45A; --d-accent-soft:#F8EBCB; --d-border:#E4D5BF; --d-border-strong:#8C7B6B; --d-focus:#7A1F2B;
+  --d-ev-ver:#2A1717; --d-ev-inf:#765110; --d-ev-pot:#5A4E47; --d-ev-miss:#6F6560; --d-err:#B42318;
+  --d-head-bg:rgba(251,246,238,.94); --d-chapnum:rgba(122,31,43,.07);
+  --cv-a:122,31,43; --cv-b:200,150,30; --cv-rung:42,23,23; --cv-text:#2A1717; --cv-text2:#5A4643; --cv-ver:#2A1717; --cv-inf:#765110; --cv-pot:#5A4E47;
+  --cv-dir:118,81,16; --cv-dir-solid:#765110; --cv-cur:90,70,67; --cv-cur-solid:#5A4643;
+}
+:root[data-design="3"]{ /* Cobalt & Saffron */
+  --d-font:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --d-hw:700; --d-ht:0; --d-r-card:8px; --d-r-ctl:6px; --d-r-field:6px; --d-bw:1px; --d-shadow:none;
+  --d-bg:#FFFFFF; --d-surface:#FFFFFF; --d-alt:#F2F5FC; --d-inverse:#0F2A6B; --d-text:#0E1A33; --d-text2:#43506B;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#D3DDF5; --d-link:#1846C8; --d-action:#1846C8; --d-action-hover:#0F35A0; --d-action-fg:#FFFFFF; --d-action-soft:#E7EDFC;
+  --d-accent:#F5B400; --d-accent-text:#7A5A00; --d-accent-inv:#FFC83D; --d-accent-soft:#FFF1C7; --d-border:#D3DBEA; --d-border-strong:#6B7894; --d-focus:#1846C8;
+  --d-ev-ver:#0E1A33; --d-ev-inf:#1846C8; --d-ev-pot:#7A5A00; --d-ev-miss:#667085; --d-err:#B42318;
+  --d-head-bg:rgba(255,255,255,.94); --d-chapnum:rgba(24,70,200,.07);
+  --cv-a:24,70,200; --cv-b:245,180,0; --cv-rung:14,26,51; --cv-text:#0E1A33; --cv-text2:#43506B; --cv-ver:#0E1A33; --cv-inf:#1846C8; --cv-pot:#7A5A00;
+  --cv-dir:122,90,0; --cv-dir-solid:#7A5A00; --cv-cur:67,80,107; --cv-cur-solid:#43506B;
+}
+:root[data-design="4"]{ /* Aubergine & Copper */
+  --d-font:"Lexend", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --d-hw:600; --d-ht:-.01em; --d-r-card:20px; --d-r-ctl:12px; --d-r-field:12px; --d-bw:1px; --d-shadow:0 20px 44px -32px rgba(61,24,80,.35);
+  --d-bg:#FBF8F3; --d-surface:#FFFFFF; --d-alt:#F3ECE2; --d-inverse:#3D1850; --d-text:#251A2C; --d-text2:#574C5E;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#E3D5EC; --d-link:#5B2A76; --d-action:#4E1F66; --d-action-hover:#3D1850; --d-action-fg:#FFFFFF; --d-action-soft:#F1E8F6;
+  --d-accent:#C0621F; --d-accent-text:#963F10; --d-accent-inv:#F4A26B; --d-accent-soft:#FBEADD; --d-border:#E5DACB; --d-border-strong:#857A8C; --d-focus:#963F10;
+  --d-ev-ver:#251A2C; --d-ev-inf:#5B2A76; --d-ev-pot:#963F10; --d-ev-miss:#6E6474; --d-err:#B42318;
+  --d-head-bg:rgba(251,248,243,.94); --d-chapnum:rgba(78,31,102,.07);
+  --cv-a:78,31,102; --cv-b:192,98,31; --cv-rung:37,26,44; --cv-text:#251A2C; --cv-text2:#574C5E; --cv-ver:#251A2C; --cv-inf:#5B2A76; --cv-pot:#963F10;
+  --cv-dir:150,63,16; --cv-dir-solid:#963F10; --cv-cur:87,76,94; --cv-cur-solid:#574C5E;
+}
+:root[data-design="5"]{ /* Forest & Terracotta */
+  --d-font:"Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --d-hw:800; --d-ht:-.01em; --d-r-card:3px; --d-r-ctl:3px; --d-r-field:3px; --d-bw:2px; --d-shadow:none;
+  --d-bg:#F6F4EE; --d-surface:#FFFFFF; --d-alt:#ECE8DD; --d-inverse:#1E3F31; --d-text:#1B2A22; --d-text2:#4A5650;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#D4E4DA; --d-link:#1F5A42; --d-action:#1F5A42; --d-action-hover:#174634; --d-action-fg:#FFFFFF; --d-action-soft:#E4EFE8;
+  --d-accent:#B55233; --d-accent-text:#983F24; --d-accent-inv:#F2A98F; --d-accent-soft:#F7E3DA; --d-border:#D6D0C1; --d-border-strong:#7C7F72; --d-focus:#983F24;
+  --d-ev-ver:#1B2A22; --d-ev-inf:#1F5A42; --d-ev-pot:#983F24; --d-ev-miss:#687069; --d-err:#B42318;
+  --d-head-bg:rgba(246,244,238,.94); --d-chapnum:rgba(31,90,66,.07);
+  --cv-a:31,90,66; --cv-b:181,82,51; --cv-rung:27,42,34; --cv-text:#1B2A22; --cv-text2:#4A5650; --cv-ver:#1B2A22; --cv-inf:#1F5A42; --cv-pot:#983F24;
+  --cv-dir:152,63,36; --cv-dir-solid:#983F24; --cv-cur:74,86,80; --cv-cur-solid:#4A5650;
+}
+:root[data-design="6"]{ /* Plum & Sage */
+  --d-font:"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --d-hw:600; --d-ht:-.01em; --d-r-card:14px; --d-r-ctl:999px; --d-r-field:12px; --d-bw:1px; --d-shadow:0 16px 36px -28px rgba(62,31,78,.3);
+  --d-bg:#F8F7FA; --d-surface:#FFFFFF; --d-alt:#EEEBF2; --d-inverse:#3E1F4E; --d-text:#221A2B; --d-text2:#54495F;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#E4D8EC; --d-link:#5B2A6E; --d-action:#5B2A6E; --d-action-hover:#461F56; --d-action-fg:#FFFFFF; --d-action-soft:#F1E8F5;
+  --d-accent:#7FA88E; --d-accent-text:#2B6A4F; --d-accent-inv:#A9D4B8; --d-accent-soft:#E3F0E8; --d-border:#E0DAE6; --d-border-strong:#80778A; --d-focus:#5B2A6E;
+  --d-ev-ver:#221A2B; --d-ev-inf:#5B2A6E; --d-ev-pot:#2B6A4F; --d-ev-miss:#6C6574; --d-err:#B42318;
+  --d-head-bg:rgba(248,247,250,.94); --d-chapnum:rgba(91,42,110,.07);
+  --cv-a:91,42,110; --cv-b:127,168,142; --cv-rung:34,26,43; --cv-text:#221A2B; --cv-text2:#54495F; --cv-ver:#221A2B; --cv-inf:#5B2A6E; --cv-pot:#2B6A4F;
+  --cv-dir:43,106,79; --cv-dir-solid:#2B6A4F; --cv-cur:84,73,95; --cv-cur-solid:#54495F;
+}
+
+:root[data-design]:not([data-design="0"]){ /* map the site's existing tokens onto the design tokens */
+  --paper:var(--d-bg); --surface:var(--d-surface); --alt:var(--d-alt); --ink:var(--d-text); --ink-2:var(--d-text2); --line:var(--d-border); --line-soft:var(--d-alt);
+  --blue:var(--d-action); --blue-deep:var(--d-link); --blue-soft:var(--d-action-soft); --brass:var(--d-accent-text); --brass-soft:var(--d-accent-soft);
+  --gold:var(--d-accent-text); --gold-deep:var(--d-accent-text); --grey:var(--d-ev-miss); --err:var(--d-err); --field:var(--d-surface); --head-bg:var(--d-head-bg); --link:var(--d-link);
+  --navy:var(--d-inverse); --night:var(--d-inverse); --cta-grad:var(--d-inverse); --deep-grad:var(--d-inverse); --serif:var(--d-font); --sans:var(--d-font); color-scheme:light;
+}
+:root[data-design]:not([data-design="0"]) body{font-family:var(--d-font); font-size:1.0625rem; line-height:1.6; background:var(--d-bg)}
+:root[data-design]:not([data-design="0"]) h1, :root[data-design]:not([data-design="0"]) h2, :root[data-design]:not([data-design="0"]) h3{font-family:var(--d-font); font-weight:var(--d-hw); letter-spacing:var(--d-ht)}
+:root[data-design]:not([data-design="0"]) :focus-visible{outline:3px solid var(--d-focus); outline-offset:3px}
+:root[data-design]:not([data-design="0"]) a, :root[data-design]:not([data-design="0"]) .linkish{color:var(--d-link)}
+:root[data-design]:not([data-design="0"]) .lede{color:var(--d-text2)}
+/* controls */
+:root[data-design]:not([data-design="0"]) .btn{border-radius:var(--d-r-ctl); font-family:var(--d-font); font-weight:600; font-size:1rem}
+:root[data-design]:not([data-design="0"]) .btn-sm{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .btn-primary{background:var(--d-action); color:var(--d-action-fg)}
+:root[data-design]:not([data-design="0"]) .btn-primary:hover{background:var(--d-action-hover)}
+:root[data-design]:not([data-design="0"]) .btn-quiet, :root[data-design]:not([data-design="0"]) .btn-ghost{background:var(--d-surface); color:var(--d-text); border-color:var(--d-border-strong)}
+:root[data-design]:not([data-design="0"]) .btn-quiet:hover, :root[data-design]:not([data-design="0"]) .btn-ghost:hover{border-color:var(--d-action); color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .input, :root[data-design]:not([data-design="0"]) textarea{border-color:var(--d-border-strong); border-radius:var(--d-r-field); font-family:var(--d-font); color:var(--d-text); background:var(--d-surface)}
+:root[data-design]:not([data-design="0"]) .input::placeholder, :root[data-design]:not([data-design="0"]) textarea::placeholder{color:var(--d-text2); opacity:1}
+:root[data-design]:not([data-design="0"]) .input:focus, :root[data-design]:not([data-design="0"]) textarea:focus{border-color:var(--d-action); box-shadow:0 0 0 3px var(--d-action-soft)}
+:root[data-design]:not([data-design="0"]) .field label, :root[data-design]:not([data-design="0"]) .t-field label{font-size:1rem; color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .check{font-size:1rem; color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .check input, :root[data-design]:not([data-design="0"]) .skills input{accent-color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .jw-note, :root[data-design]:not([data-design="0"]) .jw-note .linkish{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .status{font-size:1rem}
+:root[data-design]:not([data-design="0"]) .status.err{color:var(--d-err)}
+:root[data-design]:not([data-design="0"]) .chip{min-height:44px; border-color:var(--d-border-strong); border-radius:var(--d-r-ctl); font-family:var(--d-font); font-size:1rem; background:var(--d-surface); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .chip:hover{border-color:var(--d-action); color:var(--d-action)}
+/* evidence markers keep their shapes; the colors come from evidence tokens, not brand colors */
+:root[data-design]:not([data-design="0"]) .mark.verified, :root[data-design]:not([data-design="0"]) .sample .mark.verified, :root[data-design]:not([data-design="0"]) .dna-mock .mark.verified{background:var(--d-ev-ver)}
+:root[data-design]:not([data-design="0"]) .mark.inferred, :root[data-design]:not([data-design="0"]) .sample .legend .mark.inferred{border-color:var(--d-ev-inf)}
+:root[data-design]:not([data-design="0"]) .mark.potential, :root[data-design]:not([data-design="0"]) .sample .legend .mark.potential{border-color:var(--d-ev-pot)}
+:root[data-design]:not([data-design="0"]) .mark.unknown{border-color:var(--d-ev-miss)}
+:root[data-design]:not([data-design="0"]) .tally .mark.verified{background:var(--d-inv-text)}
+:root[data-design]:not([data-design="0"]) .tally .mark.inferred{border-color:var(--d-inv-text)}
+:root[data-design]:not([data-design="0"]) .tally .mark.potential{border-color:var(--d-accent-inv); background:var(--d-accent-inv)}
+:root[data-design]:not([data-design="0"]) .tally{color:var(--d-inv-text)}
+/* cards */
+:root[data-design]:not([data-design="0"]) .sheet, :root[data-design]:not([data-design="0"]) .score, :root[data-design]:not([data-design="0"]) .fit, :root[data-design]:not([data-design="0"]) .trio li, :root[data-design]:not([data-design="0"]) .hero-card, :root[data-design]:not([data-design="0"]) .ba, :root[data-design]:not([data-design="0"]) #jobsEmpty, :root[data-design]:not([data-design="0"]) .next-grid button, :root[data-design]:not([data-design="0"]) .fb, :root[data-design]:not([data-design="0"]) .dna-mock, :root[data-design]:not([data-design="0"]) .join, :root[data-design]:not([data-design="0"]) .steps-cta, :root[data-design]:not([data-design="0"]) .o-hero{border-radius:var(--d-r-card)}
+:root[data-design]:not([data-design="0"]) .sheet, :root[data-design]:not([data-design="0"]) .score, :root[data-design]:not([data-design="0"]) .fit, :root[data-design]:not([data-design="0"]) .hero-card, :root[data-design]:not([data-design="0"]) .ba, :root[data-design]:not([data-design="0"]) #jobsEmpty, :root[data-design]:not([data-design="0"]) .next-grid button, :root[data-design]:not([data-design="0"]) .fb, :root[data-design]:not([data-design="0"]) section#tailor .trio li, :root[data-design]:not([data-design="0"]) section#employers .fit, :root[data-design]:not([data-design="0"]) section#employers .sheet{border:var(--d-bw) solid var(--d-border); box-shadow:var(--d-shadow)}
+:root[data-design]:not([data-design="0"]) .dna-mock{box-shadow:var(--d-shadow), 0 0 0 var(--d-bw) var(--d-border); border-top:4px solid var(--d-accent)}
+/* header */
+:root[data-design]:not([data-design="0"]) .site-head{background:var(--d-head-bg); border-bottom:1px solid var(--d-border)}
+:root[data-design]:not([data-design="0"]) .brand{color:var(--d-text); font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) .site-nav a{color:var(--d-text); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .site-nav a:hover{color:var(--d-action); text-decoration:underline; text-underline-offset:4px}
+:root[data-design]:not([data-design="0"]) .theme-toggle{display:none}
+/* hero */
+:root[data-design]:not([data-design="0"]) .hero{background:var(--d-bg); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .hero h1{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .hero .lede{color:var(--d-text2); font-size:1.1875rem}
+:root[data-design]:not([data-design="0"]) .hero-link{color:var(--d-link); border-bottom-color:currentColor}
+:root[data-design]:not([data-design="0"]) .hero-link:hover{color:var(--d-action-hover)}
+:root[data-design]:not([data-design="0"]) .hero-card{background:var(--d-surface)}
+:root[data-design]:not([data-design="0"]) .hero-card h2{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .hero-card textarea{background:var(--d-surface); border-color:var(--d-border-strong); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .hero-card textarea::placeholder{color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .upload{border-color:var(--d-border-strong); color:var(--d-text); border-radius:var(--d-r-field); font-size:.9375rem !important}
+:root[data-design]:not([data-design="0"]) .upload:hover, :root[data-design]:not([data-design="0"]) .upload.over{border-color:var(--d-action); background:var(--d-action-soft)}
+:root[data-design]:not([data-design="0"]) .upload .file-name{color:var(--d-link)}
+:root[data-design]:not([data-design="0"]) .hero-card .mini{white-space:normal; flex-wrap:wrap; font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .hero-card .mini a, :root[data-design]:not([data-design="0"]) .hero-card .mini .linkish{color:var(--d-link); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .hero-card .status{color:var(--d-text2); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .hero-card .status.err{color:var(--d-err)}
+:root[data-design]:not([data-design="0"]) .hero-card .saved-note, :root[data-design]:not([data-design="0"]) .welcome{background:var(--d-action-soft); color:var(--d-text); border-color:transparent}
+:root[data-design]:not([data-design="0"]) .hero-card .saved-note .linkish{color:var(--d-link)}
+:root[data-design]:not([data-design="0"]) .hero-progress{background:var(--d-alt)}
+:root[data-design]:not([data-design="0"]) .hero-progress i{background:var(--d-action)}
+/* the demo */
+:root[data-design]:not([data-design="0"]) .seq{background:var(--d-bg)}
+:root[data-design]:not([data-design="0"]) .seq-stage{color:var(--d-text); background:var(--d-alt)}
+:root[data-design]:not([data-design="0"]) .seq-kicker, :root[data-design]:not([data-design="0"]) .sample .eyebrow{color:var(--d-accent-text); font-size:.875rem; letter-spacing:.08em}
+:root[data-design]:not([data-design="0"]) .seq-h{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .seq-h em{color:var(--d-accent-text)}
+:root[data-design]:not([data-design="0"]) .seq-steps li{background:var(--d-surface); border-color:var(--d-border-strong); color:var(--d-text2); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .seq-steps b{background:var(--d-alt); color:var(--d-text); font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) .seq-steps li.on{color:var(--d-text); border-color:var(--d-action); background:var(--d-action-soft); box-shadow:inset 0 -3px 0 var(--d-action)}
+:root[data-design]:not([data-design="0"]) .seq-steps li.on b{background:var(--d-action); color:var(--d-action-fg)}
+:root[data-design]:not([data-design="0"]) .seq-steps li.done{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .seq-steps li.done b{background:var(--d-action-soft); color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .seq-note{color:var(--d-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .seq-replay{background:var(--d-surface); color:var(--d-text); border-color:var(--d-border-strong); box-shadow:none; font-size:.9375rem}
+@media (max-width:700px){ :root[data-design]:not([data-design="0"]) .seq-steps li{font-size:.875rem} :root[data-design]:not([data-design="0"]) .seq-note{font-size:.9375rem} }
+/* what you get */
+:root[data-design]:not([data-design="0"]) .sample{background:var(--d-alt); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .sample h2, :root[data-design]:not([data-design="0"]) .sample .legend b{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .sample .lede, :root[data-design]:not([data-design="0"]) .sample .legend li{color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .sample .legend li{font-size:1rem}
+:root[data-design]:not([data-design="0"]) .dm-top small, :root[data-design]:not([data-design="0"]) .dm-next small{color:var(--d-accent-text)}
+:root[data-design]:not([data-design="0"]) .dm-list q, :root[data-design]:not([data-design="0"]) .dm-next span{font-size:.9375rem; color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .dm-list em{background:var(--d-alt); color:var(--d-text); font-size:.8125rem}
+:root[data-design]:not([data-design="0"]) .dm-list em.inf{background:var(--d-action-soft); color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .dm-next{background:var(--d-accent-soft)}
+:root[data-design]:not([data-design="0"]) .dm-ring{background:conic-gradient(var(--d-action) 0 78%, var(--d-alt) 0)}
+:root[data-design]:not([data-design="0"]) .dm-score small{font-size:.8125rem; color:var(--d-text2)}
+/* steps */
+:root[data-design]:not([data-design="0"]) .steps::before{background:var(--d-border-strong)}
+:root[data-design]:not([data-design="0"]) .steps li::before{background:var(--d-bg); border-color:var(--d-action); color:var(--d-action); box-shadow:0 0 0 6px var(--d-bg); font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) .steps li:first-child::before{background:var(--d-action); border-color:var(--d-action); color:var(--d-action-fg)}
+:root[data-design]:not([data-design="0"]) .steps span{font-size:1rem; color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .steps-cta{background:var(--d-inverse); color:var(--d-inv-text); border-top:0; box-shadow:none}
+:root[data-design]:not([data-design="0"]) .steps-cta p span{color:var(--d-inv-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .steps-cta .btn-primary, :root[data-design]:not([data-design="0"]) .join .btn-primary{background:var(--d-surface); color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .steps-cta .btn-primary:hover, :root[data-design]:not([data-design="0"]) .join .btn-primary:hover{background:var(--d-action-soft)}
+/* chapters and tools */
+:root[data-design]:not([data-design="0"]) .chapter, :root[data-design]:not([data-design="0"]) section#tailor .chapter, :root[data-design]:not([data-design="0"]) section#employers .chapter{color:var(--d-accent-text); font-size:.875rem; letter-spacing:.08em}
+:root[data-design]:not([data-design="0"]) .chapter b{font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) .chap-num, :root[data-design]:not([data-design="0"]) section#tailor .chap-num, :root[data-design]:not([data-design="0"]) section#employers .chap-num{color:var(--d-chapnum); font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) section#tailor, :root[data-design]:not([data-design="0"]) section#employers{background:var(--d-alt); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) section#tailor h2, :root[data-design]:not([data-design="0"]) section#employers h2, :root[data-design]:not([data-design="0"]) section#employers .sheet h2{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) section#tailor .lede, :root[data-design]:not([data-design="0"]) section#employers .lede{color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) section#tailor .trio li{background:var(--d-surface)}
+:root[data-design]:not([data-design="0"]) section#tailor .trio li::before{color:var(--d-action); font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) section#tailor .trio span, :root[data-design]:not([data-design="0"]) section#tailor .hint-sm, :root[data-design]:not([data-design="0"]) .trio span, :root[data-design]:not([data-design="0"]) .hint-sm{color:var(--d-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) section#employers .fit, :root[data-design]:not([data-design="0"]) section#employers .sheet{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .ba{background:var(--d-surface)}
+:root[data-design]:not([data-design="0"]) .ba small{color:var(--d-accent-text); font-size:.875rem}
+:root[data-design]:not([data-design="0"]) .ba-row{color:var(--d-text2); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .ba-row b{color:var(--d-text); font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) .ba-bar{background:var(--d-alt)}
+:root[data-design]:not([data-design="0"]) .ba-bar i{background:var(--d-border-strong)}
+:root[data-design]:not([data-design="0"]) .ba-bar.gold i{background:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .ba p{color:var(--d-text2); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) #jobsEmpty p{color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) #jobsEmpty p b{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .path small, :root[data-design]:not([data-design="0"]) .vpath small{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .path li.next, :root[data-design]:not([data-design="0"]) .vpath li.next{border-color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .path b, :root[data-design]:not([data-design="0"]) .vpath b, :root[data-design]:not([data-design="0"]) .fit-head b, :root[data-design]:not([data-design="0"]) .ring output, :root[data-design]:not([data-design="0"]) .shift b{font-family:var(--d-font)}
+:root[data-design]:not([data-design="0"]) .fit-row small{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .fit-row .basis{font-size:.875rem}
+:root[data-design]:not([data-design="0"]) .bar.soft i{background:var(--d-ev-inf)}
+:root[data-design]:not([data-design="0"]) .manifesto{color:var(--d-text); font-family:var(--d-font); font-weight:var(--d-hw)}
+:root[data-design]:not([data-design="0"]) .manifesto em{color:var(--d-accent-text)}
+:root[data-design]:not([data-design="0"]) .principles div{border-top-color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .principles b{font-family:var(--d-font); font-weight:600}
+:root[data-design]:not([data-design="0"]) .principles p{color:var(--d-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .roadmap h3{color:var(--d-text2); font-size:.875rem; letter-spacing:.08em}
+:root[data-design]:not([data-design="0"]) .pills li{background:var(--d-action-soft); color:var(--d-action); border-radius:var(--d-r-ctl); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .pills.soon li{background:transparent; color:var(--d-text); border:1px dashed var(--d-border-strong)}
+:root[data-design]:not([data-design="0"]) .pills.soon li::before{background:var(--d-accent)}
+:root[data-design]:not([data-design="0"]) .join{background:var(--d-inverse); border-top:0; box-shadow:none}
+:root[data-design]:not([data-design="0"]) .join h2{color:var(--d-inv-text)}
+:root[data-design]:not([data-design="0"]) .join p, :root[data-design]:not([data-design="0"]) .join label{color:var(--d-inv-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .join .input{background:rgba(255,255,255,.08); border-color:var(--d-inv-text2); color:var(--d-inv-text)}
+:root[data-design]:not([data-design="0"]) .join .input::placeholder{color:var(--d-inv-text2)}
+:root[data-design]:not([data-design="0"]) .join .input:focus{border-color:var(--d-inv-text); box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+:root[data-design]:not([data-design="0"]) .join .status{color:var(--d-inv-text)}
+:root[data-design]:not([data-design="0"]) .join :focus-visible{outline-color:var(--d-inv-text)}
+:root[data-design]:not([data-design="0"]) .privacy-line svg{color:var(--d-accent-text)}
+:root[data-design]:not([data-design="0"]) .privacy-line p{color:var(--d-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) footer{font-size:.9375rem}
+/* results and dialogs */
+:root[data-design]:not([data-design="0"]) .overlay{background:var(--d-bg)}
+:root[data-design]:not([data-design="0"]) .o-bar{background:var(--d-head-bg); border-bottom-color:var(--d-border)}
+:root[data-design]:not([data-design="0"]) .o-hero{background:var(--d-inverse); border-top:0; box-shadow:none}
+:root[data-design]:not([data-design="0"]) .o-hero .greet{color:var(--d-inv-text2)}
+:root[data-design]:not([data-design="0"]) .o-headline{font-family:var(--d-font); font-weight:var(--d-hw)}
+:root[data-design]:not([data-design="0"]) .flag{background:var(--d-accent-soft); color:var(--d-accent-text); font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .greet{color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .o-sec > h3{border-bottom-color:var(--d-border)}
+:root[data-design]:not([data-design="0"]) .o-sec .hint, :root[data-design]:not([data-design="0"]) .items .how{color:var(--d-text2); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .legend{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .items .lvl{font-size:.9375rem; color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .items .ev, :root[data-design]:not([data-design="0"]) .skills .ev{font-family:var(--d-font); color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .items .gap, :root[data-design]:not([data-design="0"]) .vpath .build{color:var(--d-accent-text)}
+:root[data-design]:not([data-design="0"]) .items .ex-line{background:var(--d-alt); border-left-color:var(--d-accent)}
+:root[data-design]:not([data-design="0"]) .items .ex-line small{color:var(--d-accent-text); font-size:.8125rem}
+:root[data-design]:not([data-design="0"]) mark.blank{background:var(--d-accent-soft); color:var(--d-accent-text)}
+:root[data-design]:not([data-design="0"]) .score p{font-size:1rem}
+:root[data-design]:not([data-design="0"]) .ring .track{stroke:var(--d-alt)}
+:root[data-design]:not([data-design="0"]) .ring .val{stroke:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .next-grid button.primary{background:var(--d-action); border-color:var(--d-action); color:var(--d-action-fg)}
+:root[data-design]:not([data-design="0"]) .next-grid button.primary span{color:var(--d-action-fg)}
+:root[data-design]:not([data-design="0"]) .next-grid span{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .fb-btn{background:var(--d-surface); border-color:var(--d-border-strong)}
+:root[data-design]:not([data-design="0"]) .fb-btn[aria-pressed="true"]{background:var(--d-action-soft); border-color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .skills .q{color:var(--d-link)}
+:root[data-design]:not([data-design="0"]) .shift .after b{color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .progress i{background:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .spinner{border-top-color:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .facts small{font-size:.9375rem}
+:root[data-design]:not([data-design="0"]) .fine{font-size:.9375rem}
+/* the tailored resume preview matches the downloaded file, so it keeps its original look in every design */
+:root[data-design]:not([data-design="0"]) .paper{--blue-deep:#004FB0; --line:#DADDE3; --brass-soft:#F5ECDA; --brass:#8F6419; --serif:"Instrument Sans", system-ui, sans-serif; --sans:"Instrument Sans", system-ui, sans-serif; font-family:"Instrument Sans", system-ui, sans-serif}
+/* the sequencing screen */
+:root[data-design]:not([data-design="0"]) .seqlay{background:var(--d-bg); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .seqlay-top h2{color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .seqlay-bar{background:var(--d-alt)}
+:root[data-design]:not([data-design="0"]) .seqlay-bar i{background:var(--d-action)}
+:root[data-design]:not([data-design="0"]) .seqlay-hide{color:var(--d-link); font-size:1rem}
+:root[data-design]:not([data-design="0"]) .seqlay-count{color:var(--d-text2); font-size:.875rem; letter-spacing:.08em}
+:root[data-design]:not([data-design="0"]) .grain::after{display:none}
+/* Windows high contrast: keep the evidence markers visible */
+@media (forced-colors:active){
+  :root[data-design]:not([data-design="0"]) .mark{forced-color-adjust:none; border-color:CanvasText}
+  :root[data-design]:not([data-design="0"]) .mark.verified{background:CanvasText}
+}
+
+
+/* ---- what makes each design its own ---- */
+/* 1 Brick & Ink: editorial, crisp corners, a brick rule before every label */
+:root[data-design="1"] .chapter::before, :root[data-design="1"] .seq-kicker::before, :root[data-design="1"] .sample .eyebrow::before{content:""; display:inline-block; width:28px; height:3px; background:var(--d-accent); vertical-align:middle; margin-right:10px}
+:root[data-design="1"] .o-hero, :root[data-design="1"] .join, :root[data-design="1"] .steps-cta{border-left:6px solid var(--d-accent)}
+/* 2 Oxblood & Ochre: warm surfaces, rounded cards, an ochre edge on the dark bands */
+:root[data-design="2"] .o-hero, :root[data-design="2"] .join, :root[data-design="2"] .steps-cta{border-top:5px solid var(--d-accent)}
+:root[data-design="2"] .hero h1 em, :root[data-design="2"] .seq-h em{font-style:normal; text-decoration:underline; text-decoration-color:var(--d-accent); text-decoration-thickness:4px; text-underline-offset:6px}
+/* 3 Cobalt & Saffron: flat and precise, saffron underlines as the one bright accent */
+:root[data-design="3"] .chapter, :root[data-design="3"] .seq-kicker, :root[data-design="3"] .sample .eyebrow, :root[data-design="3"] .roadmap h3{text-decoration:underline; text-decoration-color:var(--d-accent); text-decoration-thickness:4px; text-underline-offset:7px}
+:root[data-design="3"] .o-hero, :root[data-design="3"] .join{border-top:6px solid var(--d-accent)}
+:root[data-design="3"] section.block{border-top:1px solid var(--d-border)}
+/* 4 Aubergine & Copper: soft and roomy, a copper bar under section headings */
+:root[data-design="4"] .sec-head h2::after, :root[data-design="4"] .sample h2::after{content:""; display:block; width:56px; height:4px; border-radius:2px; background:var(--d-accent); margin-top:18px}
+:root[data-design="4"] .o-hero{border-bottom:5px solid var(--d-accent)}
+/* 5 Forest & Terracotta: structural, square corners and strong rules */
+:root[data-design="5"] section.block{border-top:2px solid var(--d-border-strong)}
+:root[data-design="5"] .o-sec > h3{border-bottom-width:2px; border-bottom-color:var(--d-text)}
+:root[data-design="5"] .join, :root[data-design="5"] .steps-cta, :root[data-design="5"] .o-hero{box-shadow:8px 8px 0 var(--d-accent)}
+:root[data-design="5"] .btn-primary{box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+/* 6 Plum & Sage: calm, pill buttons, a sage dot marking each label */
+:root[data-design="6"] .chapter::before, :root[data-design="6"] .seq-kicker::before, :root[data-design="6"] .sample .eyebrow::before{content:""; display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--d-accent); vertical-align:1px; margin-right:10px}
+:root[data-design="6"] .o-hero, :root[data-design="6"] .join{box-shadow:inset 0 -6px 0 var(--d-accent)}
+
+/* ---- design preview selector (preview builds only) ---- */
+.dp-bar, .o-dp{display:none}
+:root[data-preview="on"] .dp-bar{display:block; background:#111827; color:#F9FAFB; border-bottom:1px solid #374151; font:500 15px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif}
+:root[data-preview="on"] .o-dp{display:block}
+.dp-inner{max-width:var(--wrap); margin:0 auto; padding:6px 24px; display:flex; align-items:center; gap:10px 16px; min-height:56px; min-width:0}
+.dp-label{margin:0; white-space:nowrap}
+.dp-label b{font-weight:700}
+.dp-radios{border:0; margin:0 0 0 auto; padding:0; display:flex; gap:6px; min-width:0}
+.dp-radios label{position:relative; display:grid; place-items:center; width:44px; height:44px; border:1.5px solid #9CA3AF; border-radius:8px; cursor:pointer; font-weight:700; font-size:16px; color:#F9FAFB}
+.dp-radios input{position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer}
+.dp-radios label.on{background:#F9FAFB; color:#111827; border-color:#F9FAFB; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:4px}
+.dp-radios label:has(input:focus-visible){outline:3px solid #FCD34D; outline-offset:2px}
+.o-dp select{max-width:42vw}
+.dp-select, .o-dp select{min-height:44px; font:600 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:#111827; background:#F9FAFB; border:1.5px solid #6B7280; border-radius:8px; padding:4px 8px}
+.dp-select{display:none; margin-left:auto; min-width:0; max-width:58%; flex:0 1 auto}
+.dp-select:focus-visible, .o-dp select:focus-visible{outline:3px solid #FCD34D; outline-offset:2px}
+.vh{position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+@media (max-width:860px){ .dp-radios{display:none} .dp-select{display:block} .dp-label .dp-name{display:none} .dp-inner{padding:6px 16px} }
+:root[data-preview="on"]{scroll-padding-top:136px}
+:root[data-preview="on"] .hero{--head:calc(125px + env(safe-area-inset-top,0px))}
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none !important; animation:none !important} }
 </style>
 </head>
@@ -788,6 +1114,23 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
   <button class="seqlay-hide" id="seqlayHide" type="button">Hide</button>
 </div>
 <header class="site-head on-dark">
+  <nav class="dp-bar" id="dpBar" aria-label="Design preview">
+    <div class="dp-inner">
+      <p class="dp-label" id="dpLabel" aria-live="polite">Design preview: <b id="dpState">0/6<span class="dp-name"> · Original</span></b></p>
+      <fieldset class="dp-radios">
+        <legend class="vh">Choose a design</legend>
+        <label><input type="radio" name="dp" value="0"><span aria-hidden="true">0</span><span class="vh">0: Original</span></label>
+        <label><input type="radio" name="dp" value="1"><span aria-hidden="true">1</span><span class="vh">1: Brick &amp; Ink</span></label>
+        <label><input type="radio" name="dp" value="2"><span aria-hidden="true">2</span><span class="vh">2: Oxblood &amp; Ochre</span></label>
+        <label><input type="radio" name="dp" value="3"><span aria-hidden="true">3</span><span class="vh">3: Cobalt &amp; Saffron</span></label>
+        <label><input type="radio" name="dp" value="4"><span aria-hidden="true">4</span><span class="vh">4: Aubergine &amp; Copper</span></label>
+        <label><input type="radio" name="dp" value="5"><span aria-hidden="true">5</span><span class="vh">5: Forest &amp; Terracotta</span></label>
+        <label><input type="radio" name="dp" value="6"><span aria-hidden="true">6</span><span class="vh">6: Plum &amp; Sage</span></label>
+      </fieldset>
+      <label class="vh" for="dpSelect">Choose a design</label>
+      <select class="dp-select" id="dpSelect"><option value="0">0: Original</option><option value="1">1: Brick &amp; Ink</option><option value="2">2: Oxblood &amp; Ochre</option><option value="3">3: Cobalt &amp; Saffron</option><option value="4">4: Aubergine &amp; Copper</option><option value="5">5: Forest &amp; Terracotta</option><option value="6">6: Plum &amp; Sage</option></select>
+    </div>
+  </nav>
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
     <nav class="site-nav" aria-label="Main">
@@ -1067,6 +1410,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
   <div class="o-bar"><div class="inner">
     <img src="/logo.png" alt="">
     <span class="who" id="oTitle">Trazerr</span>
+    <label class="o-dp"><span class="vh">Design preview</span><select id="oDpSelect"><option value="0">0: Original</option><option value="1">1: Brick &amp; Ink</option><option value="2">2: Oxblood &amp; Ochre</option><option value="3">3: Cobalt &amp; Saffron</option><option value="4">4: Aubergine &amp; Copper</option><option value="5">5: Forest &amp; Terracotta</option><option value="6">6: Plum &amp; Sage</option></select></label>
     <button class="btn btn-quiet btn-sm" id="closeBtn" type="button">Close</button>
   </div></div>
   <div class="o-body" id="oBody"></div>
@@ -2135,6 +2479,46 @@ function applyTheme(t){
   syncHead(); readPalette(); window.dispatchEvent(new Event("themechange"));
   setTimeout(() => root.classList.remove("theme-anim"), 420);
 }
+/* ---------- design preview (themes 1-6; 0 is the original) ---------- */
+const DESIGN_NAMES = ["Original", "Brick & Ink", "Oxblood & Ochre", "Cobalt & Saffron", "Aubergine & Copper", "Forest & Terracotta", "Plum & Sage"];
+function showDesign(n){
+  $("dpState").innerHTML = n + "/6<span class=\"dp-name\"> · " + esc(DESIGN_NAMES[n]) + "</span>";
+  document.querySelectorAll('#dpBar input[name="dp"]').forEach(r => { r.checked = +r.value === n; r.parentElement.classList.toggle("on", r.checked); });
+  $("dpSelect").value = String(n); $("oDpSelect").value = String(n);
+}
+// Only the look changes: no reload, no requests, nothing typed or open is reset.
+// Keep whatever is at the top of the window in place while fonts and spacing change around it.
+function readingAnchor(){
+  if ($("overlay").classList.contains("open")) return null;
+  const y = document.querySelector(".site-head").getBoundingClientRect().bottom + 12;
+  let el = document.elementFromPoint(innerWidth / 2, Math.min(innerHeight - 1, y));
+  while (el && el !== document.body && el.getBoundingClientRect().height < 24) el = el.parentElement;
+  return el && el !== document.body ? { el, top: el.getBoundingClientRect().top } : null;
+}
+function keepAnchor(a){
+  if (!a) return;
+  const fix = () => { const d = a.el.getBoundingClientRect().top - a.top; if (Math.abs(d) > 1) window.scrollTo({ top: scrollY + d, behavior: "instant" }); };
+  fix(); requestAnimationFrame(fix); if (document.fonts) document.fonts.ready.then(() => requestAnimationFrame(fix));
+}
+function setDesign(n){
+  if (!Number.isInteger(n) || n < 0 || n > 6 || document.documentElement.dataset.preview !== "on") return;
+  const root = document.documentElement, anchor = readingAnchor();
+  root.dataset.design = String(n);
+  if (n > 0) { window.trazerrLoadFont(n); root.dataset.theme = "light"; }
+  else { let t = "light"; try { t = localStorage.getItem("trazerr.theme") === "dark" ? "dark" : "light"; } catch (e) {} root.dataset.theme = t; }
+  try { localStorage.setItem("trazerr.designPreview", String(n)); } catch (e) {}
+  const url = new URL(location.href);
+  if (url.searchParams.has("design")) { url.searchParams.set("design", String(n)); history.replaceState(history.state, "", url); }
+  document.querySelector('meta[name="theme-color"]').content = root.dataset.theme === "dark" ? "#070B14" : "#FFFFFF";
+  showDesign(n); syncHead(); readPalette(); window.dispatchEvent(new Event("themechange")); keepAnchor(anchor);
+}
+if (document.documentElement.dataset.preview === "on") {
+  showDesign(+document.documentElement.dataset.design);
+  document.querySelectorAll('#dpBar input[name="dp"]').forEach(r => r.addEventListener("change", () => setDesign(+r.value)));
+  $("dpSelect").addEventListener("change", e => setDesign(+e.target.value));
+  $("oDpSelect").addEventListener("change", e => setDesign(+e.target.value));
+}
+
 $("themeToggle").addEventListener("click", () => { const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; applyTheme(t); track("theme_" + t); });
 if (document.documentElement.dataset.theme === "dark") { $("themeToggle").setAttribute("aria-label", "Switch to light theme"); $("themeToggle").setAttribute("aria-pressed", "true"); }
 
@@ -2148,7 +2532,16 @@ const F_SANS = '"Instrument Sans", system-ui, sans-serif', F_SERIF = '"Instrumen
 // Canvas colors for each theme. "r,g,b" strings are used where the alpha changes per frame.
 let P;
 function readPalette(){
-  const light = document.documentElement.dataset.theme === "light";
+  const root = document.documentElement, design = root.dataset.design;
+  if (design && design !== "0") {
+    const c = getComputedStyle(root), v = k => c.getPropertyValue(k).trim();
+    P = { light: true, a: v("--cv-a"), b: v("--cv-b"), rung: v("--cv-rung"), text: v("--cv-text"), text2: v("--cv-text2"),
+      lvl: { verified: v("--cv-ver"), inferred: v("--cv-inf"), potential: v("--cv-pot") }, glowV: v("--cv-a"), glowI: v("--cv-a"), mode: "source-over", glowK: .4,
+      dust: v("--cv-a"), dustK: .45, trail: v("--cv-a"), dot: v("--cv-inf"), dir: v("--cv-dir"), dirSolid: v("--cv-dir-solid"), cur: v("--cv-cur"), curSolid: v("--cv-cur-solid"),
+      shadow: "rgba(0,0,0,.16)", edge: "rgba(0,0,0,.12)", scan: v("--cv-cur"), hot: v("--cv-a"), flash: v("--cv-a"), flashK: .1 };
+    return;
+  }
+  const light = root.dataset.theme === "light";
   P = light ? {
     light, a: "11,92,255", b: "99,102,241", rung: "11,22,51", text: "#0B1633", text2: "#5A6682",
     lvl: { verified: "#0B1633", inferred: "#0B5CFF", potential: "#C27C0E" }, glowV: "11,92,255", glowI: "11,92,255", mode: "source-over", glowK: .5,
