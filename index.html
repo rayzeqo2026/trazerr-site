@@ -2994,7 +2994,7 @@ window.Seqlay = (() => {
    Sign-in is an emailed link, no password. Nothing is stored in an account until the person chooses
    "Save to my account". The database only lets each signed-in person read and change their own row. */
 // Accounts stay hidden until Supabase setup is finished (return addresses, table, email sender). Then set to true.
-const ACCOUNTS_ON = false;
+const ACCOUNTS_ON = document.documentElement.dataset.preview === "on"; // on for preview links only, for now
 const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js";
 const SB_STORE = "trazerr.auth", PENDING_KEY = "trazerr.pendingAccountSave";
 const linkHash = /access_token=|error_description=/.test(location.hash) ? new URLSearchParams(location.hash.slice(1)) : null;
