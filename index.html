@@ -3070,7 +3070,11 @@ async function openAccount(o){
       btn.disabled = true; setStatus(st, "Sending…");
       const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true } });
       btn.disabled = false;
-      if (error) setStatus(st, error.status === 429 ? "A lot of sign-in emails were sent just now. Wait a few minutes, then try again." : "That didn't go through. Check the address and try again.", true);
+      const why = String(error && error.message || "").toLowerCase();
+      if (error) setStatus(st, error.status === 429 || /security purposes|rate limit|seconds/.test(why) ? "A sign-in link was sent just now. Wait a minute, then try again."
+        : !error.status ? "Couldn't connect. Check your internet connection and try again."
+        : /invalid|email/.test(why) && error.status === 400 ? "That email address doesn't look right. Check it and try again."
+        : "That didn't go through. Try again in a moment.", true);
       else setStatus(st, "Check your email. We sent a sign-in link to " + email + ". Open it on this device. It works once and expires after an hour.");
     };
     return;
