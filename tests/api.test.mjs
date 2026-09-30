@@ -29,18 +29,47 @@ globalThis.fetch = async (url, opts = {}) => {
   if (url.startsWith(SB)) {
     if (supabaseDown) return res(503, {});
     if (url.endsWith("/auth/v1/health")) return res(200, {});
-    if (url.endsWith("/auth/v1/user")) return h.Authorization === "Bearer good-token" ? res(200, { id: "11111111-2222-3333-4444-555555555555" }) : res(401, {});
+    if (url.endsWith("/auth/v1/user")) { const who = TOKENS[String(h.Authorization || "").slice(7)]; return who ? res(200, who) : res(401, {}); }
+    if (url.includes("/rest/v1/career_records?select=career_dna")) { const id = url.match(/user_id=eq\.([^&]+)/)[1]; return res(200, tables.career_records.filter(r => r.user_id === id)); }
     if (url.includes("/rest/v1/career_records")) return res(opts.method === "DELETE" ? 204 : 200, []);
+    const tm = url.match(/\/rest\/v1\/(talent_profiles|employers|contact_requests)(\?.*)?$/);
+    if (tm) return tableCall(tm[1], new URLSearchParams((tm[2] || "").slice(1)), opts.method || "GET", opts.body ? JSON.parse(opts.body) : null, res);
     if (url.includes("/rest/v1/job_alerts")) {
       if ((opts.method || "GET") === "GET") return res(200, alerts);
       if (opts.method === "PATCH") { patches.push({ url, body: JSON.parse(opts.body) }); return res(204, null); }
     }
-    if (url.includes("/auth/v1/admin/users/") && (opts.method || "GET") === "GET") return res(200, { id: url.split("/").pop(), email: "user-" + url.split("/").pop().slice(0, 4) + "@example.com" });
+    if (url.includes("/auth/v1/admin/users/") && (opts.method || "GET") === "GET") { const id = url.split("/").pop(); const known = Object.values(TOKENS).find(u => u.id === id); return res(200, { id, email: known ? known.email : "user-" + id.slice(0, 4) + "@example.com" }); }
     if (url.includes("/auth/v1/admin/users/")) return adminFails ? res(500, {}) : res(200, {});
   }
   if (url.startsWith("https://api.anthropic.com")) return aiReply ? res(200, { stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(aiReply) }] }) : res(529, { error: "overloaded" });
   return res(404, {});
 };
+
+// A tiny stand-in for Supabase's database API, enough for the talent pool tables.
+const TOKENS = {
+  "good-token": { id: "11111111-2222-3333-4444-555555555555", email: "sam@example.com" },
+  "cand2-token": { id: "22222222-2222-3333-4444-555555555555", email: "alex@example.com" },
+  "emp-token": { id: "eeeeeeee-2222-3333-4444-555555555555", email: "hire@acme.com" }
+};
+let tables;
+function tableCall(name, q, method, body, res) {
+  const rows = tables[name];
+  const match = (r) => [...q.entries()].every(([k, v]) => {
+    if (["select", "order", "limit"].includes(k)) return true;
+    const [op, ...rest] = v.split("."); const val = rest.join(".");
+    if (op === "eq") return String(r[k]) === val;
+    if (op === "in") return val.slice(1, -1).split(",").includes(String(r[k]));
+    if (op === "gt") return String(r[k]) > val;
+    return true;
+  });
+  if (method === "GET") return res(200, rows.filter(match));
+  if (method === "POST") {
+    const row = { id: crypto.randomUUID(), status: name === "contact_requests" || name === "employers" ? "pending" : undefined, created_at: new Date().toISOString(), ...body };
+    if (name === "contact_requests" && rows.some(r => r.employer_id === row.employer_id && r.candidate_id === row.candidate_id)) return res(409, { code: "23505" });
+    rows.push(row); return res(201, null);
+  }
+  if (method === "PATCH") { rows.filter(match).forEach(r => Object.assign(r, body)); return res(204, null); }
+}
 
 Object.assign(process.env, { SUPABASE_URL: SB, SUPABASE_ANON_KEY: "anon", SUPABASE_SERVICE_ROLE_KEY: "service", KV_REST_API_URL: REDIS, KV_REST_API_TOKEN: "t", STATS_KEY: "s3cret-key", ANTHROPIC_API_KEY: "k", ADZUNA_APP_ID: "a", ADZUNA_APP_KEY: "b" });
 const { default: handler } = await import("../api/app.js");
@@ -55,7 +84,7 @@ async function call(action, { method = "POST", auth, body = {}, query = {} } = {
 }
 
 beforeEach(() => {
-  calls = []; redisLog = []; emails = []; stored = {}; adminFails = false; supabaseDown = false; aiReply = null; alerts = []; patches = []; adzunaJobs = [];
+  calls = []; redisLog = []; emails = []; stored = {}; adminFails = false; supabaseDown = false; aiReply = null; alerts = []; patches = []; adzunaJobs = []; tables = { talent_profiles: [], employers: [], contact_requests: [], career_records: [] };
   delete process.env.RESEND_API_KEY; delete process.env.ALERT_EMAIL; delete process.env.CRON_SECRET;
 });
 
@@ -261,4 +290,76 @@ test("unsubscribe links are signed; opening one asks first, pressing the button 
   const forged = await call("unsubscribe", { method: "POST", query: { u: U2, t: q.t } });
   assert.equal(forged.status, 400);
   assert.equal(patches.length, 1, "someone else's link can't be forged");
+});
+
+const CAND = TOKENS["good-token"], CAND2 = TOKENS["cand2-token"], EMP = TOKENS["emp-token"];
+const talentRow = (u, headline, extra = {}) => ({ user_id: u.id, public_id: crypto.randomUUID(), visible: true, location: "Newark, NJ", remote_ok: false, updated_at: new Date().toISOString(),
+  profile: { headline, summary: "", experience: "About 5 years", education: "", strengths: [{ name: "Team leadership", evidence: "Led a team of 9" }], roles: ["Operations supervisor"], skills: ["Scheduling"] }, ...extra });
+
+test("the anonymous profile removes the person's name, email, phone and links", async () => {
+  assert.equal((await call("talentdraft", { body: { profile: { headline: "x" } } })).status, 401);
+  aiReply = { headline: "Sam Rivera: warehouse lead who trains teams", summary: "Reach Sam at sam@example.com or (802) 373-1573, www.sam.dev. Led teams 2019 - 2024.", experience: "About 6 years", education: "",
+    strengths: [{ name: "Team leadership", evidence: "Rivera led a team of 9" }], roles: ["Operations supervisor"], skills: ["Scheduling"] };
+  const r = await call("talentdraft", { auth: "Bearer good-token", body: { profile: { fullName: "Sam Rivera", firstName: "Sam", headline: "A warehouse lead." } } });
+  assert.equal(r.status, 200);
+  const text = JSON.stringify(r.body.profile);
+  for (const bad of ["Sam", "Rivera", "sam@example.com", "373-1573", "www.sam.dev"]) assert.ok(!text.includes(bad), "removed: " + bad);
+  assert.match(r.body.profile.summary, /2019 - 2024/, "dates are kept");
+});
+
+test("employers must be approved before they can search; approval emails them", async () => {
+  process.env.RESEND_API_KEY = "re_test"; process.env.ALERT_EMAIL = "owner@example.com";
+  const join = await call("employerjoin", { auth: "Bearer emp-token", body: { company: "Acme Logistics", contactName: "Pat Lee", website: "acme.com" } });
+  assert.deepEqual(join.body, { status: "pending" });
+  assert.equal(emails.length, 1); assert.deepEqual(emails[0].to, ["owner@example.com"]); assert.match(emails[0].subject, /Acme Logistics/);
+  assert.equal((await call("searchtalent", { auth: "Bearer emp-token", body: { title: "Supervisor" } })).status, 403);
+  assert.equal((await call("adminemployers", { method: "GET", query: { key: "wrong" } })).status, 404);
+  const list = await call("adminemployers", { method: "GET", query: { key: "s3cret-key" } });
+  assert.equal(list.body.employers[0].email, "hire@acme.com");
+  const ok = await call("adminemployers", { method: "POST", query: { key: "s3cret-key" }, body: { userId: EMP.id, decision: "approved" } });
+  assert.equal(ok.status, 200);
+  assert.equal(tables.employers[0].status, "approved");
+  assert.deepEqual(emails[1].to, ["hire@acme.com"]); assert.match(emails[1].subject, /now find candidates/);
+});
+
+test("search ranks visible candidates only, and never reveals who they are", async () => {
+  tables.employers.push({ user_id: EMP.id, company: "Acme", contact_name: "Pat Lee", website: "", job_title: "", status: "approved" });
+  tables.talent_profiles.push(talentRow(CAND, "Warehouse lead who trains teams"), talentRow(CAND2, "Retail supervisor"), talentRow({ id: "33333333-2222-3333-4444-555555555555" }, "Hidden person", { visible: false }));
+  aiReply = { results: [{ n: 1, score: 64, why: ["Leads a team"], gap: "No budget shown" }, { n: 2, score: 88, why: ["Led a team of 9"], gap: "" }] };
+  const r = await call("searchtalent", { auth: "Bearer emp-token", body: { title: "Operations supervisor", location: "Newark, NJ" } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.poolSize, 2);
+  assert.deepEqual(r.body.candidates.map(c => c.score), [88, 64]);
+  const text = JSON.stringify(r.body);
+  for (const id of [CAND.id, CAND2.id, "33333333"]) assert.ok(!text.includes(id), "account ids stay private");
+  assert.ok(!text.includes("Hidden person"));
+  assert.ok(!text.includes("@example.com"));
+});
+
+test("contact requests: anonymous until the candidate accepts, then both get each other's details", async () => {
+  process.env.RESEND_API_KEY = "re_test";
+  tables.employers.push({ user_id: EMP.id, company: "Acme", contact_name: "Pat Lee", website: "acme.com", job_title: "", status: "approved" });
+  const tp = talentRow(CAND, "Warehouse lead"); tables.talent_profiles.push(tp);
+  tables.career_records.push({ user_id: CAND.id, career_dna: { fullName: "Sam Rivera" } });
+  const sent = await call("contactrequest", { auth: "Bearer emp-token", body: { candidate: tp.public_id, jobTitle: "Shift supervisor", message: "We'd love to talk." } });
+  assert.equal(sent.status, 200);
+  assert.deepEqual(emails[0].to, ["sam@example.com"]); assert.match(emails[0].subject, /Acme would like to talk to you/);
+  assert.ok(!emails[0].text.includes("hire@acme.com"), "the employer's email isn't shared before accepting");
+  assert.equal((await call("contactrequest", { auth: "Bearer emp-token", body: { candidate: tp.public_id, jobTitle: "Shift supervisor" } })).status, 409);
+
+  const before = await call("employerme", { auth: "Bearer emp-token" });
+  assert.equal(before.body.requests[0].status, "pending");
+  assert.equal(before.body.requests[0].email, undefined); assert.equal(before.body.requests[0].name, undefined);
+  const mine = await call("myrequests", { auth: "Bearer good-token" });
+  assert.equal(mine.body.requests[0].company, "Acme"); assert.equal(mine.body.requests[0].email, undefined);
+
+  const id = mine.body.requests[0].id;
+  assert.equal((await call("respondrequest", { auth: "Bearer cand2-token", body: { id, accept: true } })).status, 404, "only the candidate can answer");
+  const yes = await call("respondrequest", { auth: "Bearer good-token", body: { id, accept: true } });
+  assert.deepEqual(yes.body, { status: "accepted" });
+  const toEmp = emails.find(e => e.to[0] === "hire@acme.com"), toCand = emails.filter(e => e.to[0] === "sam@example.com")[1];
+  assert.match(toEmp.text, /Sam Rivera accepted/); assert.match(toEmp.text, /sam@example\.com/);
+  assert.match(toCand.text, /Pat Lee, hire@acme\.com/);
+  const after = await call("employerme", { auth: "Bearer emp-token" });
+  assert.equal(after.body.requests[0].email, "sam@example.com"); assert.equal(after.body.requests[0].name, "Sam Rivera");
 });

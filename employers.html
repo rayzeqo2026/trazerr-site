@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Find candidates · Trazerr for employers</title>
+<meta name="description" content="Describe a job and Trazerr shows the candidates whose real experience fits it, including career changers keyword search misses. Candidates stay anonymous until they say yes.">
+<meta name="theme-color" content="#FFFFFF">
+<script>(function(){
+  var root=document.documentElement, t="light";
+  try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}
+  root.dataset.theme=t;
+  if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#0E1628";
+  root.dataset.design="1"; /* Brick & Ink */
+})()</script>
+<link rel="canonical" href="https://www.trazerr.com/employers.html">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="emp-page">
+<a class="skip" href="#main">Skip to content</a>
+<header class="emp-head">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/logo.png" alt="" width="36" height="36">Trazerr</a>
+    <span class="emp-tag">For employers</span>
+    <button class="btn btn-quiet btn-sm" id="empSignOut" type="button" hidden>Sign out</button>
+  </div>
+</header>
+<main id="main" class="wrap emp-main">
+  <section class="emp-intro">
+    <h1>Find people who can do the job, not just people with the right title.</h1>
+    <p class="lede">Describe the role and Trazerr ranks candidates by the evidence in their experience, with the reasons. Career changers and under-sold talent show up too. Candidates stay anonymous until they agree to talk.</p>
+  </section>
+  <div id="empApp" aria-live="polite"><p class="hint">Loading…</p></div>
+</main>
+<footer class="emp-foot"><div class="wrap"><a href="/">Trazerr for job seekers</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:hello@trazerr.com">hello@trazerr.com</a></div></footer>
+<script src="/assets/employers.js"></script>
+</body>
+</html>

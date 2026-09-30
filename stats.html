@@ -79,6 +79,10 @@ ul.list li:last-child{border-bottom:0}
 .st{display:inline-flex; align-items:center; gap:6px; font-weight:600}
 .st.ok{color:var(--good)} .st.bad{color:var(--err)} .st.warn{color:var(--warn)}
 .health li{display:flex; justify-content:space-between; gap:12px}
+#employers li{display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; align-items:center}
+#employers .acts{display:flex; gap:8px}
+.pill{display:inline-block; font-size:13px; font-weight:600; padding:2px 8px; border-radius:99px; border:1px solid var(--border-strong)}
+.pill.pending{color:var(--warn); border-color:var(--warn)} .pill.approved{color:var(--good); border-color:var(--good)} .pill.rejected{color:var(--err); border-color:var(--err)}
 @media (max-width:760px){ .hero, .charts, .two{grid-template-columns:1fr} .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media (max-width:360px){ .tiles{grid-template-columns:1fr} }
 </style>
@@ -129,6 +133,7 @@ ul.list li:last-child{border-bottom:0}
       <section class="card" aria-labelledby="et"><h2 id="et">Recent errors</h2><ul class="list" id="errors"></ul></section>
       <section class="card" aria-labelledby="fbt"><h2 id="fbt">Recent feedback</h2><ul class="list" id="feedback"></ul></section>
     </div>
+    <section class="card" style="margin-top:16px" aria-labelledby="empt"><h2 id="empt">Employers</h2><p class="lbl" id="poolSize"></p><ul class="list" id="employers"><li class="empty">Loading…</li></ul><p class="status" id="empStatus" role="status"></p></section>
   </div>
 </main>
 <script src="/assets/stats.js"></script>

@@ -10,6 +10,8 @@
 | `privacy.html`, `terms.html` | Legal pages. |
 | `supabase/setup.sql` | The accounts table and its access rules (already run). |
 | `supabase/job_alerts.sql` | The job alerts table and its access rules. |
+| `supabase/talent.sql` | Talent pool tables: candidate profiles, employers, contact requests. |
+| `employers.html` | The employer area: sign up, search candidates, contact requests. |
 | `tests/` | Automatic tests. Not deployed. |
 | `vercel.json` | Server time limit and the daily keepalive. |
 
@@ -46,6 +48,14 @@ Errors are collected two ways:
 The newest 200 are kept in Upstash Redis (`trazerr:errors`). Email addresses are removed and messages are cut to 300 characters.
 
 When `RESEND_API_KEY` and `ALERT_EMAIL` are set, a server failure sends an email, at most one an hour. The email lists what failed and links to the usage page.
+
+## Talent pool: employers finding candidates
+
+- **Candidates** choose "Let employers find me" on a Career DNA result or in their account. Trazerr writes an anonymous profile (AI, then a filter that removes names, emails, phone numbers and links). They see it before it's shared, set a location and remote preference, and can hide or remove it any time.
+- **Employers** sign up at `/employers.html` with their work email and company details. You get an email, then approve or reject them in **Employers** on the usage page (`/stats.html`). They're emailed when approved.
+- **Search:** an approved employer describes a job. Trazerr picks the 20 closest profiles by word overlap, then the AI scores each one with reasons and the biggest gap, and shows the best 12. Employers never see account IDs, names, emails or resumes.
+- **Contact:** an employer's request emails the candidate, who accepts or declines in their account. Only on acceptance do both get each other's name and email. Employers can send up to 25 requests a day and can contact each candidate once.
+- Tables: `talent_profiles`, `employers`, `contact_requests` (`supabase/talent.sql`). Deleting an account deletes its profile and requests.
 
 ## Job alerts
 

@@ -67,6 +67,7 @@
     $("feedback").innerHTML = fb.length ? fb.slice(0, 20).map(x => '<li><div class="when">' + esc(when(x.at)) + " · " + esc({ dna: "Career DNA", tailor: "Tailor", fit: "Fit check" }[x.on] || x.on) + (x.role ? " · " + esc(x.role) : "") + "</div><b>" + (x.rating === "up" ? "Accurate" : "Not accurate") + "</b>" + (x.comment ? ": " + esc(x.comment) : "") + "</li>").join("") : '<li class="empty">No feedback yet.</li>';
 
     health(d.lastKeepalive);
+    employers();
   }
 
   // One series per chart: columns grow from the baseline, with a hover and keyboard tooltip.
@@ -102,9 +103,34 @@
       row("Job search (Adzuna)", sv.adzunaKeys, sv.adzunaKeys ? "Keys set" : "Using Remotive only", true) +
       row("Counts and limits (Upstash)", sv.upstashRedis === "ok", sv.upstashRedis === "ok" ? "Working" : String(sv.upstashRedis || "unknown")) +
       row("Accounts (Supabase)", s.reachable && s.tableExists, s.reachable ? (s.tableExists ? "Working" : "Table missing") : "Not reachable") +
+      row("Talent pool", s.talentTablesExist, s.talentTablesExist ? "Ready" : "Run supabase/talent.sql") +
       row("Job alerts", s.alertsTableExists, s.alertsTableExists ? "Ready" : "Run supabase/job_alerts.sql") +
       row("Daily keepalive", age !== null && age < 2, last ? "Last ran " + when(last) : "Hasn't run yet", age === null) +
       row("Error alert emails", sv.errorAlerts, sv.errorAlerts ? "On" : "Off (add RESEND_API_KEY and ALERT_EMAIL)", true);
+  }
+
+  // Employers who asked to search candidates. New ones wait here for approval.
+  async function employers(){
+    const box = $("employers"), st = $("empStatus");
+    let d;
+    try { const r = await fetch("/api/app?action=adminemployers&key=" + encodeURIComponent(key), { cache: "no-store" }); d = await r.json(); if (!r.ok) throw new Error(d.error || "Employers couldn't be loaded."); }
+    catch (e) { box.innerHTML = '<li class="empty">' + esc(e.message) + "</li>"; return; }
+    $("poolSize").textContent = fmt(d.visibleCandidates) + " candidate" + (d.visibleCandidates === 1 ? "" : "s") + " can be found by employers.";
+    const label = { pending: "Waiting for you", approved: "Approved", rejected: "Rejected" };
+    box.innerHTML = d.employers.length ? d.employers.map(e => '<li><div><b>' + esc(e.company) + '</b> <span class="pill ' + esc(e.status) + '">' + label[e.status] + '</span><div class="when">' +
+      esc([e.contactName, e.jobTitle, e.email, e.website].filter(Boolean).join(" · ")) + " · asked " + esc(when(e.createdAt)) + '</div></div><div class="acts">' +
+      (e.status !== "approved" ? '<button class="btn btn-primary" type="button" data-emp="' + esc(e.userId) + '" data-d="approved">Approve</button>' : "") +
+      (e.status !== "rejected" ? '<button class="btn btn-quiet" type="button" data-emp="' + esc(e.userId) + '" data-d="rejected">' + (e.status === "approved" ? "Remove access" : "Reject") + "</button>" : "") + "</div></li>").join("")
+      : '<li class="empty">No employers yet. They sign up at trazerr.com/employers.html.</li>';
+    box.querySelectorAll("[data-emp]").forEach(b => b.onclick = async () => {
+      box.querySelectorAll("[data-emp]").forEach(x => x.disabled = true);
+      try {
+        const r = await fetch("/api/app?action=adminemployers&key=" + encodeURIComponent(key), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: b.dataset.emp, decision: b.dataset.d }) });
+        const out = await r.json().catch(() => ({})); if (!r.ok) throw new Error(out.error || "That didn't go through.");
+        setStatus(st, b.dataset.d === "approved" ? "Approved. They've been emailed." : "Done.");
+      } catch (e) { setStatus(st, e.message, true); }
+      employers();
+    });
   }
 
   if (key) load(true);

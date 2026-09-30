@@ -1028,3 +1028,64 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 .acct-alerts li{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; padding:10px 0; border-bottom:1px solid var(--d-border)}
 .acct-alerts li:last-child{border-bottom:0}
 .acct-alerts small{display:block; color:var(--d-text2)}
+
+/* Talent pool: the anonymous profile card and its status */
+.talent-card{margin-top:10px; padding:16px 18px; border:1px solid var(--d-border); border-radius:var(--d-r-card); background:var(--d-surface)}
+.talent-card > b{display:block; color:var(--d-text); font-size:1.05rem}
+.talent-card small{display:block; color:var(--d-text2); margin-top:2px}
+.talent-card p{margin:8px 0 0; color:var(--d-text2)}
+.talent-card ul{margin:10px 0 0}
+.talent-card li{display:flex; gap:10px; align-items:flex-start; margin-top:6px}
+.talent-card li .mark{margin-top:7px; flex-shrink:0}
+.talent-roles b{color:var(--d-text)}
+.talent-status{margin:0 0 6px; color:var(--d-text2)}
+.talent-status b{color:var(--d-text)}
+.talent-status.on b{color:var(--d-action)}
+
+/* Employer page (employers.html) */
+.emp-page{background:var(--d-bg); color:var(--d-text)}
+.emp-head{border-bottom:1px solid var(--d-border); background:var(--d-bg)}
+.emp-head .wrap{display:flex; align-items:center; gap:14px; min-height:64px}
+.emp-head .brand{display:flex; align-items:center; gap:10px; color:var(--d-text); text-decoration:none; font-weight:700; font-size:21px; letter-spacing:-.02em}
+.emp-tag{color:var(--d-accent-text); font-weight:600; font-size:.95rem; white-space:nowrap}
+.emp-head .brand, .emp-head .btn{white-space:nowrap; flex-shrink:0}
+.emp-head .btn{margin-left:auto}
+.emp-main{padding-top:40px; padding-bottom:64px; max-width:860px}
+.emp-intro h1{font-size:clamp(30px,5vw,46px); line-height:1.1; margin:0}
+.emp-intro .lede{margin:14px 0 28px; max-width:680px}
+.emp-card{background:var(--d-surface); border:1px solid var(--d-border); border-radius:var(--d-r-card); padding:22px; margin-top:20px}
+.emp-card h2, .emp-how h2, .emp-results h2{font-size:1.35rem; margin:0 0 8px}
+.emp-form .t-field{margin-top:14px}
+.emp-form textarea{width:100%}
+.emp-form .check{margin-top:14px}
+.emp-row{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 16px}
+.emp-how{margin-top:28px}
+.emp-how ol{padding-left:22px; margin:8px 0 0}
+.emp-how li{margin-top:8px; color:var(--d-text2)}
+.emp-how li b{color:var(--d-text)}
+.emp-results{margin-top:28px}
+.emp-results h2 small{font-weight:400; font-size:1rem}
+.emp-cand{background:var(--d-surface); border:1px solid var(--d-border); border-radius:var(--d-r-card); padding:18px 20px; margin-top:14px}
+.emp-cand-top{display:flex; gap:16px; align-items:flex-start}
+.emp-cand h3{margin:2px 0 0; font-size:1.1rem; line-height:1.35}
+.emp-cand .hint{margin:4px 0 0}
+.emp-score{flex-shrink:0; width:64px; height:64px; border-radius:50%; border:3px solid var(--d-action); display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1}
+.emp-score b{font-size:1.35rem}
+.emp-score small{font-size:.75rem; color:var(--d-text2)}
+.emp-cand ul{margin:12px 0 0}
+.emp-cand li{display:flex; gap:10px; align-items:flex-start; margin-top:6px}
+.emp-cand li .mark{margin-top:7px; flex-shrink:0}
+.emp-gap{display:flex; gap:10px; align-items:flex-start; color:var(--d-text2); margin:8px 0 0}
+.emp-gap .mark{margin-top:7px; flex-shrink:0}
+.emp-cand details{margin-top:12px}
+.emp-cand summary{cursor:pointer; color:var(--d-link); font-weight:600}
+.emp-ask{margin-top:14px}
+.emp-state{font-weight:600; color:var(--d-text2)}
+.emp-state.accepted{color:var(--d-action)}
+.emp-foot{border-top:1px solid var(--d-border); padding:28px 0 40px}
+.emp-foot .wrap{display:flex; flex-wrap:wrap; gap:10px 22px}
+.emp-foot a{color:var(--d-text2)}
+@media (max-width:640px){ .emp-row{grid-template-columns:1fr} .emp-card{padding:18px} }
+@media (max-width:439px){ .emp-tag{display:none} }
+.emp-link{margin:18px 0 0; padding-top:16px; border-top:1px solid var(--d-border); color:var(--d-text2)}
+.emp-link b{color:var(--d-text)}

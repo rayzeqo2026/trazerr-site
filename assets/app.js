@@ -410,7 +410,7 @@ function showProfile(p){
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
   else {
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
-    if (ACCOUNTS_ON) h += '<button class="btn btn-quiet" type="button" id="acctSaveBtn">Save to my account</button>';
+    if (ACCOUNTS_ON) h += '<button class="btn btn-quiet" type="button" id="acctSaveBtn">Save to my account</button><button class="btn btn-quiet" type="button" id="talentBtn">Let employers find me</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
   h += '<button class="btn btn-quiet" type="button" id="cardBtn">' + (ex ? "Save this example card" : "Save my Career DNA card") + "</button>";
@@ -443,6 +443,19 @@ function showProfile(p){
   const rb = $("rebuildBtn"); if (rb) rb.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
+  const tlb = $("talentBtn"); if (tlb) tlb.onclick = async () => {
+    tlb.disabled = true;
+    try {
+      await acct();
+      saveProfile(p); if (resumeSrc) saveResume(resumeSrc);
+      if (!sbUser) {
+        try { localStorage.setItem(PENDING_KEY, "1"); localStorage.setItem(TALENT_PENDING, "1"); } catch (e) {}
+        return openAccount({ intro: "Sign in to let employers find you. We'll email you a link. When you open it, you'll see your anonymous profile before anything is shared. There's no password." });
+      }
+      openAccount({ startTalent: true });
+    } catch (e) { $("oNote").textContent = e.message || "Sign-in isn't available right now."; }
+    finally { tlb.disabled = false; }
+  };
   const as = $("acctSaveBtn"); if (as) as.onclick = async () => {
     const note = $("oNote"); as.disabled = true;
     try {
@@ -1548,7 +1561,7 @@ window.Seqlay = (() => {
 // Accounts stay hidden until Supabase setup is finished (return addresses, table, email sender). Then set to true.
 const ACCOUNTS_ON = true;
 const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js", SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
-const SB_STORE = "trazerr.auth", PENDING_KEY = "trazerr.pendingAccountSave";
+const SB_STORE = "trazerr.auth", PENDING_KEY = "trazerr.pendingAccountSave", TALENT_PENDING = "trazerr.pendingTalent";
 const linkHash = /access_token=|error_description=/.test(location.hash) ? new URLSearchParams(location.hash.slice(1)) : null;
 let sb = null, sbUser = null, sbLoading = null, acctRecord, signinHandled = false;
 function hadSession(){ try { return !!localStorage.getItem(SB_STORE); } catch (e) { return false; } }
@@ -1592,13 +1605,16 @@ async function saveToAccount(p, resume){
 // Back from the emailed link: finish a save that was waiting, or bring saved work to this device.
 async function afterSignIn(){
   if (signinHandled) return; signinHandled = true;
+  let back = ""; try { back = localStorage.getItem("trazerr.signinReturn") || ""; localStorage.removeItem("trazerr.signinReturn"); } catch (e) {}
+  if (back === "/employers.html") return location.replace(back);
   track("account_signed_in");
   let alertNote = "", pa = null;
   try { pa = JSON.parse(localStorage.getItem(ALERT_PENDING) || "null"); localStorage.removeItem(ALERT_PENDING); } catch (e) {}
   if (pa && pa.query) alertNote = " " + (await addAlert(pa)).text;
   let pending = false; try { pending = localStorage.getItem(PENDING_KEY) === "1"; localStorage.removeItem(PENDING_KEY); } catch (e) {}
   const local = loadSaved();
-  if (pending && local) return openAccount({ note: ((await saveToAccount(local, loadResume())) ? "You're signed in, and your Career DNA is saved to your account." : "You're signed in, but the save didn't go through. Try Save again below.") + alertNote });
+  let talent = false; try { talent = localStorage.getItem(TALENT_PENDING) === "1"; localStorage.removeItem(TALENT_PENDING); } catch (e) {}
+  if (pending && local) return openAccount({ startTalent: talent, note: ((await saveToAccount(local, loadResume())) ? "You're signed in, and your Career DNA is saved to your account." : "You're signed in, but the save didn't go through. Try Save again below.") + alertNote });
   try {
     const rec = await fetchRecord(true);
     if (rec && !local) { saveProfile(normalize(rec.career_dna)); if (rec.resume) saveResume(rec.resume); resumeSrc = loadResume(); setProfile(loadSaved()); }
@@ -1646,6 +1662,8 @@ async function openAccount(o){
     if (local) h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="acctSaveLocal">Save the Career DNA on this device to my account</button></div>';
   }
   h += "</div>";
+  h += '<div class="o-sec" id="talentSec"><h3>Let employers find you</h3><div id="acctTalent"><p class="hint">Loading…</p></div></div>';
+  h += '<div class="o-sec" id="requestsSec"><h3>Contact requests</h3><div id="acctRequests"><p class="hint">Loading…</p></div></div>';
   h += '<div class="o-sec"><h3>Job alerts</h3><div id="acctAlerts"><p class="hint">Loading…</p></div></div>';
   h += '<div class="o-sec"><h3>Delete everything</h3><p class="hint">Permanently deletes your saved Career DNA, your resume and your account, and removes them from this device too. This can\'t be undone.</p>';
   h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-quiet btn-danger" type="button" id="delAsk">Delete everything</button></div>';
@@ -1653,7 +1671,9 @@ async function openAccount(o){
   h += '<div class="o-foot"><button class="btn btn-quiet" type="button" id="signOutBtn">Sign out</button></div><p class="o-note" id="acctNote" role="status" aria-live="polite"></p>';
   openOverlay("Your account", h);
   const note = $("acctNote");
-  loadAlerts();
+  loadAlerts(); loadRequests();
+  loadTalent(o.startTalent ? (rec && rec.career_dna ? normalize(rec.career_dna) : local) : null);
+  if (o.startTalent || o.focus === "requests") setTimeout(() => { const el = $(o.startTalent ? "talentSec" : "requestsSec"); if (el) el.scrollIntoView({ block: "start" }); }, 50);
   const op = $("acctOpen"); if (op) op.onclick = () => showProfile(normalize(rec.career_dna));
   const dl = $("acctDownload"); if (dl) dl.onclick = async () => {
     try { const full = await fetchRecord(true); const blob = new Blob([JSON.stringify({ email: sbUser.email, savedAt: full.updated_at, careerDNA: full.career_dna, resume: full.resume }, null, 2)], { type: "application/json" });
@@ -1677,6 +1697,87 @@ async function openAccount(o){
   };
   $("signOutBtn").onclick = async () => { await sb.auth.signOut().catch(() => {}); sbUser = null; acctRecord = undefined; paintAcctBtn(); openAccount({ note: "You're signed out. Anything saved on this device stays here until you remove it." }); };
 }
+/* ---------- talent pool (candidate side) ---------- */
+// Signed-in requests to the server that need to know who is asking.
+async function authed(action, body){
+  const { data } = await sb.auth.getSession();
+  const token = data && data.session ? data.session.access_token : "";
+  let r;
+  try { r = await fetch(API + "?action=" + action, { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); }
+  catch (e) { throw new Error("Couldn't connect. Check your internet connection and try again."); }
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(out.error || "That didn't go through. Try again in a moment.");
+  return out;
+}
+function talentCardHTML(t){
+  let h = '<div class="talent-card"><b>' + esc(t.headline) + "</b>";
+  const meta = [t.experience, t.education].filter(Boolean).join(" · ");
+  if (meta) h += '<small>' + esc(meta) + "</small>";
+  if (t.summary) h += "<p>" + esc(t.summary) + "</p>";
+  if (arr(t.strengths).length) h += '<ul class="plain">' + t.strengths.map(x => '<li><i class="mark verified" aria-hidden="true"></i><span><b>' + esc(x.name) + "</b>" + (x.evidence ? " " + esc(x.evidence) : "") + "</span></li>").join("") + "</ul>";
+  if (arr(t.roles).length) h += '<p class="talent-roles"><b>Good fit for:</b> ' + t.roles.map(esc).join(", ") + "</p>";
+  if (arr(t.skills).length) h += '<p class="talent-roles"><b>Skills:</b> ' + t.skills.map(esc).join(" · ") + "</p>";
+  return h + "</div>";
+}
+async function loadTalent(startWith){
+  const box = $("acctTalent"); if (!box) return;
+  const { data, error } = await sb.from("talent_profiles").select("public_id, visible, profile, location, remote_ok, updated_at").maybeSingle();
+  if (!$("acctTalent")) return;
+  if (error) { $("talentSec").hidden = true; $("requestsSec").hidden = true; return; }
+  const dna = () => { const l = loadSaved(); return l && !l.isExample ? l : acctRecord && acctRecord.career_dna ? normalize(acctRecord.career_dna) : null; };
+  if (startWith && !data) return draftTalent(startWith);
+  if (!data) {
+    box.innerHTML = '<p class="hint">Employers on Trazerr describe a job and see the candidates who fit it best. They see an anonymous profile: your strengths and experience, but not your name, contact details or where you worked. If one wants to talk, you get an email and choose whether to share your details. Only employers Trazerr has approved can search.</p><div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="talentStart">Create my anonymous profile</button></div>';
+    $("talentStart").onclick = () => { const d = dna(); if (!d) { $("acctNote").textContent = "Build your Career DNA first, then come back here."; return; } draftTalent(d); };
+    return;
+  }
+  box.innerHTML = '<p class="talent-status ' + (data.visible ? "on" : "") + '"><b>' + (data.visible ? "Employers can find you" : "Your profile is hidden") + "</b>" + (data.location ? " · " + esc(data.location) : "") + (data.remote_ok ? " · open to remote" : "") + "</p>" +
+    '<p class="hint">This is what approved employers see:</p>' + talentCardHTML(data.profile) +
+    '<div class="o-foot" style="margin-top:14px"><button class="btn btn-quiet btn-sm" type="button" id="talentToggle">' + (data.visible ? "Hide my profile" : "Show my profile again") + '</button><button class="btn btn-quiet btn-sm" type="button" id="talentRefresh">Update from my latest Career DNA</button><button class="btn btn-quiet btn-sm" type="button" id="talentRemove">Remove my profile</button></div>';
+  $("talentToggle").onclick = async () => { const { error } = await sb.from("talent_profiles").update({ visible: !data.visible, updated_at: new Date().toISOString() }).eq("user_id", sbUser.id); if (error) $("acctNote").textContent = "That didn't go through. Try again in a moment."; else { track(data.visible ? "talent_opt_out" : "talent_opt_in"); loadTalent(); } };
+  $("talentRefresh").onclick = () => { const d = dna(); if (!d) { $("acctNote").textContent = "Build your Career DNA first."; return; } draftTalent(d, data); };
+  $("talentRemove").onclick = async () => { const { error } = await sb.from("talent_profiles").delete().eq("user_id", sbUser.id); if (error) $("acctNote").textContent = "That didn't go through. Try again in a moment."; else { track("talent_opt_out"); loadTalent(); } };
+}
+async function draftTalent(dna, existing){
+  const box = $("acctTalent"); if (!box) return;
+  box.innerHTML = '<p class="hint">Writing your anonymous profile… This takes about 15 seconds.</p>';
+  try {
+    const { profile: t } = await authed("talentdraft", { profile: dna });
+    if (!$("acctTalent")) return;
+    const loc = existing ? existing.location : cleanLocation(dna.location);
+    box.innerHTML = '<p class="hint">Here\'s what approved employers would see. Your name, contact details and employer names are left out.</p>' + talentCardHTML(t) +
+      '<div class="t-field" style="margin-top:14px"><label for="talentLoc">Where you want to work</label><input class="input" id="talentLoc" type="text" maxlength="100" value="' + esc(loc) + '" placeholder="City, State"></div>' +
+      '<label class="check" style="margin-top:10px"><input type="checkbox" id="talentRemote"' + (existing && existing.remote_ok ? " checked" : "") + '> Open to remote work</label>' +
+      '<div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="talentSave">Let employers find me</button><button class="btn btn-quiet" type="button" id="talentCancel">Not now</button></div>';
+    $("talentCancel").onclick = () => loadTalent();
+    $("talentSave").onclick = async () => {
+      const btn = $("talentSave"); btn.disabled = true;
+      if (!acctRecord) await saveToAccount(dna, loadResume()); // so your name can be shared if you accept a request
+      const row = { user_id: sbUser.id, visible: true, profile: t, location: $("talentLoc").value.trim().slice(0, 100), remote_ok: $("talentRemote").checked, updated_at: new Date().toISOString() };
+      const { error } = await sb.from("talent_profiles").upsert(row, { onConflict: "user_id" });
+      if (error) { btn.disabled = false; $("acctNote").textContent = "That didn't save. Try again in a moment."; return; }
+      track("talent_opt_in"); loadTalent();
+      $("acctNote").textContent = "Done. Approved employers can now find your anonymous profile. You'll get an email if one wants to talk.";
+    };
+  } catch (e) { if ($("acctTalent")) box.innerHTML = '<p class="hint">' + esc(e.message) + '</p><div class="o-foot" style="margin-top:12px"><button class="btn btn-quiet btn-sm" type="button" id="talentRetry">Try again</button></div>'; const rt = $("talentRetry"); if (rt) rt.onclick = () => draftTalent(dna, existing); }
+}
+async function loadRequests(){
+  const box = $("acctRequests"); if (!box) return;
+  let out; try { out = await authed("myrequests"); } catch (e) { if ($("acctRequests")) box.innerHTML = '<p class="hint">' + esc(e.message) + "</p>"; return; }
+  if (!$("acctRequests")) return;
+  if (!out.requests.length) { box.innerHTML = '<p class="hint">No contact requests yet. When an approved employer wants to talk to you, it shows here and you get an email.</p>'; return; }
+  box.innerHTML = '<ul class="acct-alerts">' + out.requests.map(r => '<li><div><b>' + esc(r.company) + " · " + esc(r.jobTitle) + "</b>" +
+    (r.message ? "<p class=\"hint\" style=\"margin:4px 0\">" + esc(r.message) + "</p>" : "") +
+    "<small>" + (r.status === "accepted" ? "Accepted. Contact: " + esc([r.contactName, r.email].filter(Boolean).join(", ")) : r.status === "declined" ? "Declined" : "Sent " + esc(fmtDate(r.createdAt))) + (r.website ? ' · <a href="' + esc(safeUrl(/^https?:/.test(r.website) ? r.website : "https://" + r.website)) + '" target="_blank" rel="noopener noreferrer">Their website</a>' : "") + "</small></div>" +
+    (r.status === "pending" ? '<div class="acct-actions"><button class="btn btn-primary btn-sm" type="button" data-req="' + esc(r.id) + '" data-accept="1">Accept and share my details</button><button class="btn btn-quiet btn-sm" type="button" data-req="' + esc(r.id) + '" data-accept="0">Decline</button></div>' : "") + "</li>").join("") + "</ul>";
+  box.querySelectorAll("[data-req]").forEach(b => b.onclick = async () => {
+    box.querySelectorAll("[data-req]").forEach(x => x.disabled = true);
+    try { await authed("respondrequest", { id: b.dataset.req, accept: b.dataset.accept === "1" }); $("acctNote").textContent = b.dataset.accept === "1" ? "Accepted. We've emailed you both each other's details." : "Declined. They won't see your details."; }
+    catch (e) { $("acctNote").textContent = e.message; }
+    loadRequests();
+  });
+}
+
 async function loadAlerts(){
   const box = $("acctAlerts"); if (!box) return;
   const { data, error } = await sb.from("job_alerts").select("id, query, location, remote, active, last_sent").order("created_at");
@@ -1699,7 +1800,10 @@ $("acctBtn").addEventListener("click", async () => {
 });
 // Only load sign-in when it's needed: returning from an emailed link, or someone who signed in before.
 $("acctBtn").hidden = !ACCOUNTS_ON;
-if (ACCOUNTS_ON && (linkHash || hadSession())) {
+// Links in emails to /#account open the account panel (for example to answer a contact request).
+if (ACCOUNTS_ON && location.hash === "#account" && !linkHash) {
+  acct().then(() => { history.replaceState(history.state, "", location.pathname + location.search); openAccount({ focus: "requests" }); }).catch(() => {});
+} else if (ACCOUNTS_ON && (linkHash || hadSession())) {
   acct().then(() => {
     if (!linkHash) return;
     if (sbUser) return afterSignIn();

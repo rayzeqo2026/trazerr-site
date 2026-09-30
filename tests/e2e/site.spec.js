@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { mockSite, overflowX, AXE } from "./helpers.js";
 
-const PAGES = ["/", "/privacy.html", "/terms.html", "/stats.html"];
+const PAGES = ["/", "/privacy.html", "/terms.html", "/stats.html", "/employers.html"];
 const WIDTHS = [320, 390, 820, 1280];
 
 for (const theme of ["light", "dark"]) {

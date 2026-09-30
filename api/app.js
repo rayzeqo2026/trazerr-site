@@ -65,8 +65,8 @@ function getQuery(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20 };
-const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe"]); // cheap requests; not worth a storage round trip
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60 };
+const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe", "employerme", "myrequests", "adminemployers"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -755,7 +755,7 @@ const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
   "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark", "account_signed_in", "account_saved", "account_deleted",
-  "alert_created", "alert_stopped", "alert_opened"
+  "alert_created", "alert_stopped", "alert_opened", "talent_opt_in", "talent_opt_out", "employer_page"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
@@ -769,10 +769,14 @@ async function track(req, res) {
   return res.status(204).end();
 }
 
+// The usage page and admin tools are protected by STATS_KEY. A wrong key looks like a missing page.
+function requireAdmin(req) {
+  const key = str(getQuery(req).key, 200), expected = process.env.STATS_KEY || "";
+  if (!expected || key.length !== expected.length || !timingSafeEqual(Buffer.from(key), Buffer.from(expected))) throw new UserError(404, "Unknown request.");
+}
+
 async function stats(req, res) {
-  const key = str(getQuery(req).key, 200);
-  const expected = process.env.STATS_KEY || "";
-  if (!expected || key.length !== expected.length || key !== expected) throw new UserError(404, "Unknown request.");
+  requireAdmin(req);
   const cfg = redisConfig();
   if (!cfg) throw new UserError(503, "Storage isn't connected yet.");
   const days = Math.max(1, Math.min(90, parseInt(getQuery(req).days, 10) || 30));
@@ -895,6 +899,8 @@ async function dbstatus(req, res) {
     out.tableExists = !!(t && t.ok);
     const a = await fetch(cfg.url + "/rest/v1/job_alerts?select=id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } }).catch(() => null);
     out.alertsTableExists = !!(a && a.ok);
+    const tp = await fetch(cfg.url + "/rest/v1/contact_requests?select=id&limit=1", { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } }).catch(() => null);
+    out.talentTablesExist = !!(tp && tp.ok);
   }
   return res.status(200).json(out);
 }
@@ -931,6 +937,289 @@ async function deleteaccount(req, res) {
     throw new UserError(502, "Your saved Career DNA and resume were deleted, but the account itself couldn't be. Email hello@trazerr.com and we'll finish it.");
   }
   return res.status(200).json({ ok: true });
+}
+
+/* ---------------- Talent pool: candidates employers can find ---------------- */
+// Candidates choose to be found. Employers only see an anonymous profile (no name, contact details or
+// employer names) until the candidate accepts their contact request. Employers must be approved by the
+// Trazerr admin before they can search. Tables: supabase/talent.sql.
+
+// Who is asking, from their sign-in token. Throws if they aren't signed in.
+async function signedInUser(req, cfg) {
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in first.");
+  const who = await fetch(cfg.url + "/auth/v1/user", { headers: { apikey: cfg.anon, Authorization: "Bearer " + token } });
+  const user = who.ok ? await who.json().catch(() => null) : null;
+  if (!user || !/^[0-9a-f-]{36}$/i.test(user.id || "")) throw new UserError(401, "Your sign-in has expired. Sign in again.");
+  return { id: user.id, email: str(user.email, 200) };
+}
+
+function accountsConfig() {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Accounts aren't switched on yet.");
+  return cfg;
+}
+
+// A request to Supabase's database with the server's key. Returns the parsed rows (or null).
+async function db(cfg, path, opts = {}) {
+  const r = await fetch(cfg.url + "/rest/v1/" + path, {
+    method: opts.method || "GET",
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json", ...(opts.prefer ? { Prefer: opts.prefer } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!r.ok) {
+    const detail = (await r.text().catch(() => "")).slice(0, 200);
+    if (opts.conflictOk && r.status === 409) return { conflict: true };
+    throw new UserError(502, "That didn't go through. Try again in a moment.", "Supabase " + r.status + " on " + path.split("?")[0] + ": " + detail + (r.status === 404 ? " (run supabase/talent.sql)" : ""));
+  }
+  const text = await r.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function emailOf(cfg, userId) {
+  const r = await fetch(cfg.url + "/auth/v1/admin/users/" + userId, { headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key } });
+  return r.ok ? str((await r.json().catch(() => ({}))).email, 200) : "";
+}
+
+// Sends one email through Resend. Returns true when accepted; failures are logged, never thrown.
+async function sendEmail({ to, subject, text, html, replyTo, from }) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || !to) return false;
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST", headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: from || "Trazerr <hello@trazerr.com>", to: [to], subject, text, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r.ok) { await recordError("server", "email", "Resend answered " + r.status + " for: " + subject.slice(0, 60), false); return false; }
+    return true;
+  } catch (e) { await recordError("server", "email", "Email failed: " + e.message, false); return false; }
+}
+const simpleHtml = (paras) => '<div style="font-family:Arial,Helvetica,sans-serif;color:#16233F;max-width:560px;margin:0 auto;line-height:1.5">' + paras.map(p => '<p style="margin:0 0 14px">' + p + "</p>").join("") + "</div>";
+
+async function countEvent(name, n = 1) {
+  const rc = redisConfig();
+  if (rc) { try { await redisPipeline(rc, [["HINCRBY", "trazerr:events:" + day(new Date()), name, n]]); } catch (e) {} }
+}
+
+// Removes contact details, links and the person's own name from text an employer will see.
+function scrub(text, names) {
+  let t = String(text || "").replace(/[^\s@<>()]+@[^\s@<>()]+\.[a-z]{2,}/gi, "").replace(/https?:\/\/\S+|www\.\S+/gi, "").replace(/(\+?1[\s.-]?)?\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]\d{4}\b/g, "");
+  for (const n of names) if (n.length > 1) t = t.replace(new RegExp("\\b" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "gi"), "");
+  return t.replace(/\s{2,}/g, " ").replace(/\s+([,.;:])/g, "$1").trim();
+}
+
+const TALENT_SYSTEM = `You write the anonymous profile that employers see for a job seeker on Trazerr, from their Career DNA (JSON).
+
+It must not identify the person. Remove their name, the names of employers, clients and schools, other people's names, street addresses, emails, phone numbers and links. Describe an employer or school by its kind instead ("a national retail chain", "a university pharmacology lab", "a small liberal arts college"). Keep the degree and field ("Master's in Pharmacology"). Keep facts, numbers and results.
+Write in resume style with no pronouns ("Led a team of 9"), never "you", "I", "he", "she" or "they". Use only what the Career DNA says; add nothing.
+${JSON_ONLY} Use exactly this shape:
+{
+  "headline": "one line, what this person brings, max 120 characters",
+  "summary": "2 sentences",
+  "experience": "total experience, like 'About 6 years'",
+  "education": "highest degree and field, or empty string",
+  "strengths": [ { "name": "short", "evidence": "one line of proof" } ],
+  "roles": [ "role this person fits" ],
+  "skills": [ "specific skill or tool" ]
+}
+Give 3-6 strengths, 2-4 roles and up to 10 skills.`;
+
+function cleanTalent(p, names) {
+  const t = (v, n) => scrub(clip(v, n), names);
+  return {
+    headline: t(p.headline, 140), summary: t(p.summary, 500), experience: t(p.experience, 40), education: t(p.education, 120),
+    strengths: list(p.strengths, 6).map(x => ({ name: t(x?.name, 60), evidence: t(x?.evidence, 200) })).filter(x => x.name),
+    roles: list(p.roles, 4).map(x => t(x, 60)).filter(Boolean),
+    skills: list(p.skills, 10).map(x => t(x, 50)).filter(Boolean)
+  };
+}
+
+async function talentdraft(req, res) {
+  const cfg = accountsConfig();
+  await signedInUser(req, cfg);
+  const dna = getBody(req)?.profile;
+  if (!dna || typeof dna !== "object" || !dna.headline) throw new UserError(400, "Build your Career DNA first.");
+  const clean = cleanProfile(dna);
+  const names = [clean.fullName, clean.firstName, ...String(clean.fullName).split(/\s+/)].map(x => str(x, 40)).filter(x => x.length > 2);
+  const parsed = await askClaude(TALENT_SYSTEM, [{ type: "text", text: "Career DNA:\n" + JSON.stringify({ ...clean, fullName: "", firstName: "" }) + "\n\nReturn the JSON object." }]);
+  const profile = cleanTalent(parsed, names);
+  if (!profile.headline || !profile.strengths.length) throw new UserError(502, "Your profile came back incomplete. Try again.");
+  return res.status(200).json({ profile });
+}
+
+async function employerjoin(req, res) {
+  const cfg = accountsConfig(), me = await signedInUser(req, cfg), b = getBody(req) || {};
+  const row = { user_id: me.id, company: str(b.company, 120), contact_name: str(b.contactName, 100), website: str(b.website, 200), job_title: str(b.jobTitle, 100) };
+  if (row.company.length < 2 || row.contact_name.length < 2) throw new UserError(400, "Enter your company and your name.");
+  const existing = (await db(cfg, "employers?select=status&user_id=eq." + me.id))[0];
+  if (existing) {
+    await db(cfg, "employers?user_id=eq." + me.id, { method: "PATCH", body: { company: row.company, contact_name: row.contact_name, website: row.website, job_title: row.job_title }, prefer: "return=minimal" });
+    return res.status(200).json({ status: existing.status });
+  }
+  await db(cfg, "employers", { method: "POST", body: row, prefer: "return=minimal" });
+  await countEvent("employer_joined");
+  const admin = str(process.env.ALERT_EMAIL, 500).split(",")[0].trim();
+  if (admin) await sendEmail({ to: admin, subject: "New employer waiting for approval: " + row.company,
+    text: row.contact_name + (row.job_title ? " (" + row.job_title + ")" : "") + " from " + row.company + " (" + me.email + (row.website ? ", " + row.website : "") + ") wants to search candidates on Trazerr.\n\nApprove or reject them on your usage page: " + SITE + "/stats.html" });
+  return res.status(200).json({ status: "pending" });
+}
+
+async function employerOf(cfg, userId) {
+  return (await db(cfg, "employers?select=company,contact_name,website,job_title,status&user_id=eq." + userId))[0] || null;
+}
+async function approvedEmployer(req) {
+  const cfg = accountsConfig(), me = await signedInUser(req, cfg), emp = await employerOf(cfg, me.id);
+  if (!emp || emp.status !== "approved") throw new UserError(403, "Your employer account isn't approved yet.");
+  return { cfg, me, emp };
+}
+
+// The employer's own account, and their contact requests. Contact details appear only once accepted.
+async function employerme(req, res) {
+  const cfg = accountsConfig(), me = await signedInUser(req, cfg), emp = await employerOf(cfg, me.id);
+  let requests = [];
+  if (emp && emp.status === "approved") {
+    const rows = await db(cfg, "contact_requests?select=id,candidate_id,job_title,status,created_at,responded_at&employer_id=eq." + me.id + "&order=created_at.desc&limit=100");
+    const ids = rows.map(r => r.candidate_id);
+    const profiles = ids.length ? await db(cfg, "talent_profiles?select=user_id,public_id,profile&user_id=in.(" + ids.join(",") + ")") : [];
+    for (const r of rows) {
+      const tp = profiles.find(p => p.user_id === r.candidate_id);
+      const item = { id: r.id, jobTitle: r.job_title, status: r.status, createdAt: r.created_at, headline: tp?.profile?.headline || "A Trazerr candidate", candidate: tp?.public_id || null };
+      if (r.status === "accepted") {
+        item.email = await emailOf(cfg, r.candidate_id);
+        const rec = (await db(cfg, "career_records?select=career_dna&user_id=eq." + r.candidate_id))[0];
+        item.name = str(rec?.career_dna?.fullName, 80);
+      }
+      requests.push(item);
+    }
+  }
+  return res.status(200).json({ email: me.email, employer: emp && { company: emp.company, contactName: emp.contact_name, website: emp.website, jobTitle: emp.job_title, status: emp.status }, requests });
+}
+
+const MATCH_TALENT_SYSTEM = `You are Trazerr's candidate matcher. An employer describes one job; you score anonymous candidates for it using only the evidence in each profile.
+- Score 0-100 for how well the candidate's shown experience and skills fit the job. Transferable experience counts: don't mark someone down just because past job titles differ.
+- If the job isn't remote and a location is given, a candidate far away who isn't open to remote work fits less well; say so in the gap.
+- Never consider age, gender, race, ethnicity, religion, disability, nationality, family status or anything else that isn't about doing the job.
+- For each candidate give 2-3 short reasons that cite their evidence, and the biggest gap or unknown in one line.
+${JSON_ONLY} Use exactly this shape: { "results": [ { "n": 1, "score": 80, "why": [ "" ], "gap": "" } ] } with one entry per candidate, using the candidate numbers given.`;
+
+const wordsOf = (t) => new Set(String(t || "").toLowerCase().match(/[a-z][a-z0-9+#.]{2,}/g) || []);
+
+async function searchtalent(req, res) {
+  const { cfg, me } = await approvedEmployer(req);
+  const b = getBody(req) || {};
+  const title = str(b.title, 100), posting = str(stripHtml(b.posting), 6000), location = str(b.location, 100), remote = !!b.remote;
+  if (title.length < 2) throw new UserError(400, "Enter the job title you're hiring for.");
+  const pool = await db(cfg, "talent_profiles?select=user_id,public_id,profile,location,remote_ok,updated_at&visible=eq.true&order=updated_at.desc&limit=1000");
+  if (!pool.length) return res.status(200).json({ poolSize: 0, candidates: [] });
+  // A quick word-overlap pass picks the closest 20; the AI then scores those with reasons.
+  const want = wordsOf(title + " " + posting);
+  const near = (c) => location && c.location && c.location.toLowerCase().split(/[ ,]+/).some(w => w.length > 2 && location.toLowerCase().includes(w));
+  const top = pool.map(c => {
+    const have = wordsOf(JSON.stringify(c.profile));
+    let overlap = 0; for (const w of want) if (have.has(w)) overlap++;
+    return { c, rough: overlap + (near(c) || remote || c.remote_ok ? 2 : 0) };
+  }).sort((a, b) => b.rough - a.rough).slice(0, 20).map(x => x.c);
+  const job = "Job: " + title + (location ? "\nLocation: " + location : "") + (remote ? "\nRemote: yes" : "") + (posting ? "\n\nPosting:\n" + posting : "");
+  const list_ = top.map((c, i) => "Candidate " + (i + 1) + " (location: " + (c.location || "not given") + (c.remote_ok ? ", open to remote" : "") + "):\n" + JSON.stringify(c.profile)).join("\n\n");
+  const parsed = await askClaude(MATCH_TALENT_SYSTEM, [{ type: "text", text: job + "\n\n" + list_ + "\n\nScore every candidate and return the JSON object." }]);
+  const scored = new Map(list(parsed.results, 40).map(r => [Number(r?.n), r]));
+  const sent = await db(cfg, "contact_requests?select=candidate_id,status&employer_id=eq." + me.id);
+  const candidates = top.map((c, i) => {
+    const r = scored.get(i + 1) || {};
+    return { id: c.public_id, score: toScore(r.score), why: list(r.why, 3).map(x => clip(x, 200)).filter(Boolean), gap: clip(r.gap, 200), profile: c.profile, location: c.location, remoteOk: c.remote_ok,
+      requested: sent.find(x => x.candidate_id === c.user_id)?.status || null };
+  }).filter(c => c.score !== null).sort((a, b) => b.score - a.score).slice(0, 12);
+  await countEvent("talent_search");
+  return res.status(200).json({ poolSize: pool.length, candidates });
+}
+
+async function contactrequest(req, res) {
+  const { cfg, me, emp } = await approvedEmployer(req);
+  const b = getBody(req) || {};
+  const publicId = str(b.candidate, 40), jobTitle = str(b.jobTitle, 120), message = str(b.message, 1000);
+  if (!/^[0-9a-f-]{36}$/i.test(publicId)) throw new UserError(400, "That candidate couldn't be found.");
+  if (jobTitle.length < 2) throw new UserError(400, "Enter the job you'd like to talk about.");
+  const today = new Date(Date.now() - 86400000).toISOString();
+  const recent = await db(cfg, "contact_requests?select=id&employer_id=eq." + me.id + "&created_at=gt." + today);
+  if (recent.length >= 25) throw new UserError(429, "You've sent 25 requests in the past day. Try again tomorrow.");
+  const cand = (await db(cfg, "talent_profiles?select=user_id,visible&public_id=eq." + publicId))[0];
+  if (!cand || !cand.visible) throw new UserError(404, "That candidate is no longer available.");
+  const made = await db(cfg, "contact_requests", { method: "POST", body: { employer_id: me.id, candidate_id: cand.user_id, job_title: jobTitle, message }, prefer: "return=minimal", conflictOk: true });
+  if (made && made.conflict) throw new UserError(409, "You've already contacted this candidate.");
+  await countEvent("contact_requested");
+  const to = await emailOf(cfg, cand.user_id);
+  await sendEmail({ to, from: "Trazerr <hello@trazerr.com>", subject: emp.company + " would like to talk to you about a " + jobTitle + " role",
+    text: emp.company + " found your anonymous profile on Trazerr and would like to talk to you about a " + jobTitle + " role." + (message ? "\n\nTheir message:\n" + message : "") +
+      "\n\nThey don't have your name or contact details. If you accept, we'll share your name and email with them, and theirs with you.\n\nAccept or decline: " + SITE + "/#account\n\nYou get this because you chose to let employers find you on Trazerr. You can hide your profile any time from your account.",
+    html: simpleHtml(["<b>" + escHtml(emp.company) + "</b> found your anonymous profile on Trazerr and would like to talk to you about a <b>" + escHtml(jobTitle) + "</b> role.",
+      ...(message ? ["Their message:<br>" + escHtml(message).replace(/\n/g, "<br>")] : []),
+      "They don't have your name or contact details. If you accept, we'll share your name and email with them, and theirs with you.",
+      '<a href="' + SITE + '/#account" style="display:inline-block;background:#1F3F82;color:#fff;padding:10px 18px;border-radius:4px;text-decoration:none;font-weight:bold">Accept or decline</a>',
+      '<span style="color:#4A5163;font-size:13px">You get this because you chose to let employers find you on Trazerr. You can hide your profile any time from your account.</span>']) });
+  return res.status(200).json({ ok: true });
+}
+
+// A candidate's contact requests. Employer contact details appear once the candidate accepts.
+async function myrequests(req, res) {
+  const cfg = accountsConfig(), me = await signedInUser(req, cfg);
+  const rows = await db(cfg, "contact_requests?select=id,employer_id,job_title,message,status,created_at&candidate_id=eq." + me.id + "&order=created_at.desc&limit=50");
+  const out = [];
+  for (const r of rows) {
+    const emp = await employerOf(cfg, r.employer_id);
+    const item = { id: r.id, company: emp?.company || "An employer", website: emp?.website || "", jobTitle: r.job_title, message: r.message, status: r.status, createdAt: r.created_at };
+    if (r.status === "accepted") { item.contactName = emp?.contact_name || ""; item.email = await emailOf(cfg, r.employer_id); }
+    out.push(item);
+  }
+  return res.status(200).json({ requests: out });
+}
+
+async function respondrequest(req, res) {
+  const cfg = accountsConfig(), me = await signedInUser(req, cfg), b = getBody(req) || {};
+  const id = str(b.id, 40), accept = b.accept === true;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new UserError(400, "That request couldn't be found.");
+  const r = (await db(cfg, "contact_requests?select=id,employer_id,candidate_id,job_title,status&id=eq." + id + "&candidate_id=eq." + me.id))[0];
+  if (!r) throw new UserError(404, "That request couldn't be found.");
+  if (r.status !== "pending") return res.status(200).json({ status: r.status });
+  await db(cfg, "contact_requests?id=eq." + id, { method: "PATCH", body: { status: accept ? "accepted" : "declined", responded_at: new Date().toISOString() }, prefer: "return=minimal" });
+  if (accept) {
+    await countEvent("contact_accepted");
+    const emp = await employerOf(cfg, r.employer_id), empEmail = await emailOf(cfg, r.employer_id);
+    const rec = (await db(cfg, "career_records?select=career_dna&user_id=eq." + me.id))[0];
+    const name = str(rec?.career_dna?.fullName, 80) || "The candidate";
+    await sendEmail({ to: empEmail, replyTo: me.email, subject: name + " accepted your request about the " + r.job_title + " role",
+      text: name + " accepted your contact request on Trazerr about the " + r.job_title + " role.\n\nEmail: " + me.email + "\n\nReply to this email to reach them directly.",
+      html: simpleHtml(["<b>" + escHtml(name) + "</b> accepted your contact request on Trazerr about the <b>" + escHtml(r.job_title) + "</b> role.", "Email: " + escHtml(me.email), "Reply to this email to reach them directly."]) });
+    await sendEmail({ to: me.email, replyTo: empEmail, subject: "You're connected with " + (emp?.company || "the employer"),
+      text: "You accepted " + (emp?.company || "the employer") + "'s request about the " + r.job_title + " role. We've sent them your name and email.\n\nTheir contact: " + (emp?.contact_name || "") + ", " + empEmail + "\n\nReply to this email to reach them directly." });
+  }
+  return res.status(200).json({ status: accept ? "accepted" : "declined" });
+}
+
+// Admin: see employers and approve or reject them (usage page, STATS_KEY).
+async function adminemployers(req, res) {
+  requireAdmin(req);
+  const cfg = accountsConfig();
+  if (req.method === "POST") {
+    const b = getBody(req) || {}, id = str(b.userId, 40), decision = b.decision === "approved" ? "approved" : b.decision === "rejected" ? "rejected" : "";
+    if (!/^[0-9a-f-]{36}$/i.test(id) || !decision) throw new UserError(400, "Choose approve or reject.");
+    const emp = await employerOf(cfg, id);
+    if (!emp) throw new UserError(404, "That employer couldn't be found.");
+    await db(cfg, "employers?user_id=eq." + id, { method: "PATCH", body: { status: decision, decided_at: new Date().toISOString() }, prefer: "return=minimal" });
+    if (decision === "approved" && emp.status !== "approved") {
+      await sendEmail({ to: await emailOf(cfg, id), subject: "You can now find candidates on Trazerr",
+        text: "Hi " + emp.contact_name + ",\n\n" + emp.company + " is approved. You can now describe a job and see the candidates who fit it best: " + SITE + "/employers.html\n\nCandidates stay anonymous until they accept your contact request.",
+        html: simpleHtml(["Hi " + escHtml(emp.contact_name) + ",", "<b>" + escHtml(emp.company) + "</b> is approved. You can now describe a job and see the candidates who fit it best.", '<a href="' + SITE + '/employers.html" style="display:inline-block;background:#1F3F82;color:#fff;padding:10px 18px;border-radius:4px;text-decoration:none;font-weight:bold">Find candidates</a>', "Candidates stay anonymous until they accept your contact request."]) });
+    }
+    return res.status(200).json({ ok: true });
+  }
+  const rows = await db(cfg, "employers?select=user_id,company,contact_name,website,job_title,status,created_at&order=created_at.desc&limit=200");
+  const pool = await db(cfg, "talent_profiles?select=user_id&visible=eq.true&limit=5000");
+  const employers = [];
+  for (const e of rows) employers.push({ userId: e.user_id, company: e.company, contactName: e.contact_name, website: e.website, jobTitle: e.job_title, status: e.status, createdAt: e.created_at, email: await emailOf(cfg, e.user_id) });
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).json({ employers, visibleCandidates: pool.length });
 }
 
 /* ---------------- Job alerts ---------------- */
@@ -1156,14 +1445,14 @@ async function health(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
   const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health", "sendalerts"].includes(action) ? "GET" : "POST";
-  const allowed = action === "unsubscribe" ? ["GET", "POST"] : [method];
+  const allowed = action === "unsubscribe" || action === "adminemployers" ? ["GET", "POST"] : [method];
   if (!allowed.includes(req.method)) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });
