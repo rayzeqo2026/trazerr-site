@@ -817,15 +817,38 @@ async function waitlist(req, res) {
   return res.status(200).json({ ok: true, already: data.result === 0 });
 }
 
+/* ---------------- Supabase connection check ---------------- */
+// Says whether Supabase is set up and reachable. Lists setting names only, never their values.
+function supabaseConfig() {
+  const e = process.env;
+  const url = e.SUPABASE_URL || e.SUPABASE_SUPABASE_URL || e.NEXT_PUBLIC_SUPABASE_URL || e.SUPABASE_NEXT_PUBLIC_SUPABASE_URL;
+  const key = e.SUPABASE_SERVICE_ROLE_KEY || e.SUPABASE_SUPABASE_SERVICE_ROLE_KEY;
+  const anon = e.SUPABASE_ANON_KEY || e.SUPABASE_SUPABASE_ANON_KEY || e.NEXT_PUBLIC_SUPABASE_ANON_KEY || e.SUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return url ? { url: url.replace(/\/$/, ""), key, anon } : null;
+}
+
+async function dbstatus(req, res) {
+  const settingNames = Object.keys(process.env).filter(k => /SUPABASE|POSTGRES/.test(k)).sort();
+  const cfg = supabaseConfig();
+  let reachable = false, detail = "not configured";
+  if (cfg && (cfg.anon || cfg.key)) {
+    try {
+      const r = await fetch(cfg.url + "/auth/v1/health", { headers: { apikey: cfg.anon || cfg.key }, signal: AbortSignal.timeout(8000) });
+      reachable = r.ok; detail = "auth health " + r.status;
+    } catch (e) { detail = "could not reach Supabase"; }
+  }
+  return res.status(200).json({ configured: !!cfg, hasServiceKey: !!(cfg && cfg.key), reachable, detail, settingNames });
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = action === "jobs" || action === "stats" ? "GET" : "POST";
+  const method = action === "jobs" || action === "stats" || action === "dbstatus" ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });
