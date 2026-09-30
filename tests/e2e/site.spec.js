@@ -65,3 +65,12 @@ test("errors in the page's own code are reported, at most 5 per visit", async ({
   expect(seen.reports.length).toBe(5);
   expect(seen.reports[0]).toMatchObject({ message: expect.stringContaining("Test"), where: "page" });
 });
+
+test("the page still works if its stylesheet fails to load", async ({ page }) => {
+  const seen = await mockSite(page);
+  await page.route("**/assets/site.css", r => r.abort());
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.mouse.wheel(0, 3000);
+  await page.waitForTimeout(1500);
+  expect(seen.errors).toEqual([]);
+});

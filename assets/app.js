@@ -1171,7 +1171,8 @@ function drawDNA(ctx, o){
   return { out, end: pt(1, 0), axisEnd: { x: o.x1, y: o.y1 }, px, py };
 }
 
-function roundRect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+// Sizes can come out negative when the page is squeezed or its styles failed to load; draw nothing odd, never throw.
+function roundRect(ctx, x, y, w, h, r){ w = Math.max(0, w); h = Math.max(0, h); r = Math.max(0, Math.min(r, w / 2, h / 2)); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function wrapText(ctx, text, width){ const out = []; let line = ""; for (const w of text.split(" ")) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > width && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; }
 function cut(ctx, text, width){ if (ctx.measureText(text).width <= width) return text; while (text.length > 4 && ctx.measureText(text + "…").width > width) text = text.slice(0, -1); return text.trimEnd() + "…"; }
 function pill(ctx, text, x, y, size, alpha, col){
