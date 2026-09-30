@@ -63,7 +63,7 @@ function getQuery(req) {
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
 const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20 };
-const MEMORY_ONLY = new Set(["track", "jobs"]); // cheap requests; not worth a storage round trip
+const MEMORY_ONLY = new Set(["track", "jobs", "authconfig"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -717,7 +717,7 @@ async function redisPipeline(cfg, commands) {
 const EVENTS = new Set([
   "visit", "resume_file", "dna_started", "dna_built", "dna_failed", "example_viewed",
   "job_search", "fit_check", "job_dna", "path_planned", "card_saved", "waitlist_joined",
-  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark"
+  "tailor_started", "tailor_built", "feedback_up", "feedback_down", "gap_line_copied", "theme_light", "theme_dark", "account_signed_in", "account_saved", "account_deleted"
 ]);
 const day = (d) => d.toISOString().slice(0, 10);
 
@@ -839,15 +839,49 @@ async function dbstatus(req, res) {
   return res.status(200).json({ configured: !!cfg, hasServiceKey: !!(cfg && cfg.key), reachable, detail });
 }
 
+/* ---------------- Accounts ---------------- */
+// The browser signs people in with Supabase directly. It needs the project address and the public (anon) key,
+// which are designed to be public: row level security in the database decides what each person can read.
+async function authconfig(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.anon) throw new UserError(503, "Accounts aren't switched on yet.");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  return res.status(200).json({ url: cfg.url, anonKey: cfg.anon });
+}
+
+// "Delete everything": checks who is asking from their sign-in token, then removes their saved record and the account.
+async function deleteaccount(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Accounts aren't switched on yet.");
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in again, then try deleting.");
+  const who = await fetch(cfg.url + "/auth/v1/user", { headers: { apikey: cfg.anon, Authorization: "Bearer " + token } });
+  const user = who.ok ? await who.json().catch(() => null) : null;
+  if (!user || !user.id || !/^[0-9a-f-]{36}$/i.test(user.id)) throw new UserError(401, "Your sign-in has expired. Sign in again, then try deleting.");
+  const admin = { apikey: cfg.key, Authorization: "Bearer " + cfg.key };
+  const rows = await fetch(cfg.url + "/rest/v1/career_records?user_id=eq." + user.id, { method: "DELETE", headers: admin });
+  if (!rows.ok && rows.status !== 404) {
+    console.error("Saved record delete error", rows.status);
+    throw new UserError(502, "That didn't go through. Try again in a moment.");
+  }
+  const del = await fetch(cfg.url + "/auth/v1/admin/users/" + user.id, { method: "DELETE", headers: admin });
+  if (!del.ok) {
+    console.error("Account delete error", del.status);
+    throw new UserError(502, "Your saved Career DNA and resume were deleted, but the account itself couldn't be. Email hello@trazerr.com and we'll finish it.");
+  }
+  return res.status(200).json({ ok: true });
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = action === "jobs" || action === "stats" || action === "dbstatus" ? "GET" : "POST";
+  const method = ["jobs", "stats", "dbstatus", "authconfig"].includes(action) ? "GET" : "POST";
   if (req.method !== method) {
     res.setHeader("Allow", method);
     return res.status(405).json({ error: "Use " + method + "." });

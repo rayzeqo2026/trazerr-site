@@ -670,6 +670,25 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 .site-head.on-dark .theme-toggle{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.28); color:#fff}
 @media (max-width:820px){ .theme-toggle{margin-left:auto} .site-head .btn{margin-left:0} }
 
+/* Account button in the menu bar */
+.acct-btn{flex:none; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:700 16px/1 var(--sans)}
+.acct-btn:hover{border-color:var(--blue)}
+.acct-btn svg{width:20px; height:20px}
+.acct-btn.on{background:var(--blue); border-color:var(--blue); color:#fff}
+.acct-btn.on svg{display:none}
+.site-head.on-dark .acct-btn:not(.on){background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.28); color:#fff}
+@media (max-width:820px){ .site-head .acct-btn{margin-left:auto} .site-head .acct-btn ~ .theme-toggle{margin-left:0} }
+@media (max-width:480px){ .site-head .wrap{gap:10px} .site-head .btn{padding:10px 14px} }
+@media (max-width:359px){ .site-head .brand{font-size:0; gap:0} }
+.acct-rec{display:flex; flex-wrap:wrap; gap:14px 20px; align-items:center; justify-content:space-between; margin-top:14px; padding:18px 20px; background:var(--surface); border:1px solid var(--line); border-radius:14px}
+.acct-rec > div:first-child{display:grid; gap:4px; min-width:0; flex:1 1 260px}
+.acct-rec span{color:var(--ink-2); font-size:15px}
+.acct-rec small{color:var(--ink-2); font-size:14px}
+.acct-actions{display:flex; flex-wrap:wrap; gap:10px}
+.btn-danger{color:var(--err); border-color:currentColor}
+.btn-danger-solid{background:var(--err); color:#fff}
+.acct-confirm{margin-top:14px; padding:16px 18px; border:1.5px solid var(--err); border-radius:12px; background:var(--surface)}
+
 /* Shared fixes for both themes */
 :where(:root[data-theme="dark"]) a, :where(:root[data-theme="dark"]) .linkish{color:var(--link)}
 :root[data-theme="dark"] .chip:hover, :root[data-theme="dark"] .skills .q, :root[data-theme="dark"] .dm-list em.inf, :root[data-theme="dark"] .live-tag{color:var(--link)}
@@ -904,6 +923,13 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 :root[data-design]:not([data-design="0"]) .brand{color:var(--d-text); font-family:var(--d-font)}
 :root[data-design]:not([data-design="0"]) .site-nav a{color:var(--d-text); font-size:1rem}
 :root[data-design]:not([data-design="0"]) .site-nav a:hover{color:var(--d-action); text-decoration:underline; text-underline-offset:4px}
+:root[data-design]:not([data-design="0"]) .acct-btn{border-color:var(--d-border-strong); background:var(--d-surface); color:var(--d-text)}
+:root[data-design]:not([data-design="0"]) .acct-btn.on{background:var(--d-action); border-color:var(--d-action); color:var(--d-action-fg)}
+:root[data-design]:not([data-design="0"]) .acct-rec{border-color:var(--d-border); border-radius:var(--d-r-card)}
+:root[data-design]:not([data-design="0"]) .acct-rec span, :root[data-design]:not([data-design="0"]) .acct-rec small{color:var(--d-text2)}
+:root[data-design]:not([data-design="0"]) .btn-danger{color:var(--d-err)}
+:root[data-design]:not([data-design="0"]) .btn-danger-solid{background:var(--d-err); color:#fff}
+:root[data-design]:not([data-design="0"]) .acct-confirm{border-color:var(--d-err); border-radius:var(--d-r-card)}
 :root[data-design]:not([data-design="0"]):not([data-design="1"]) .theme-toggle{display:none}
 /* hero */
 :root[data-design]:not([data-design="0"]) .hero{background:var(--d-bg); color:var(--d-text)}
@@ -1164,6 +1190,10 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
       <a href="#employers">Job DNA</a>
       <a href="#about">About</a>
     </nav>
+    <button class="acct-btn" id="acctBtn" type="button" aria-label="Sign in">
+      <svg class="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.5 20.2c1.3-3.6 4.2-5.4 7.5-5.4s6.2 1.8 7.5 5.4"/></svg>
+      <span class="acct-initial" id="acctInitial" aria-hidden="true" hidden></span>
+    </button>
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
       <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
       <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
@@ -1204,7 +1234,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
         <button class="btn btn-primary" id="analyzeBtn" type="button">Build my Career DNA</button>
         <div class="hero-progress" id="heroProg" hidden aria-hidden="true"><i id="heroBar"></i></div>
         <p class="status" id="status" role="status" aria-live="polite"></p>
-        <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy">Never stored on servers</a></div>
+        <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy">Stored only if you save it</a></div>
       </div>
     </div>
   </section>
@@ -1382,12 +1412,12 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
       <div class="principles">
         <div><b>Your word first</b><p>We take your resume at its word. Every strength points to something you wrote, and anything we read between the lines is labeled.</p></div>
         <div><b>Honest about gaps</b><p>What your resume doesn't show is named, not hidden. We never add a skill, title or number you didn't give us.</p></div>
-        <div><b>Yours to keep</b><p>We don't store your resume. Your Career DNA stays on your device unless you ask for something that needs it.</p></div>
+        <div><b>Yours to keep</b><p>Nothing is stored on our servers unless you choose to save it to your account, and you can delete it all any time.</p></div>
         <div><b>Talk to us</b><p>Questions, or a result that seemed off? Email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a>. We read everything.</p></div>
       </div>
       <div class="roadmap">
-        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Career paths</li><li>Job DNA</li></ul></div>
-        <div><h3>Coming next</h3><ul class="pills soon"><li>Accounts and Career Passport</li><li>Candidate discovery for employers</li><li>Interview practice</li></ul></div>
+        <div><h3>Live now</h3><ul class="pills"><li>Career DNA</li><li>Tailor my DNA</li><li>Job search</li><li>Fit checks</li><li>Career paths</li><li>Job DNA</li><li>Accounts</li></ul></div>
+        <div><h3>Coming next</h3><ul class="pills soon"><li>Career Passport</li><li>Candidate discovery for employers</li><li>Interview practice</li></ul></div>
       </div>
     </div>
   </section>
@@ -1397,7 +1427,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
       <div class="join">
         <div>
           <h2>Your resume says more than you think. Find out what.</h2>
-          <p>Join the waitlist for early access to accounts, the Career Passport and employer tools.</p>
+          <p>Join the waitlist for early access to the Career Passport and employer tools.</p>
         </div>
         <form id="waitlist" novalidate>
           <label for="wlEmail">Email address</label>
@@ -1413,7 +1443,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
   <section class="privacy-line" id="privacy">
     <div class="wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-      <p><b>Your resume is never stored on our servers.</b> It's sent securely to Claude, an AI model by Anthropic, to build your result. Your Career DNA stays in this browser unless you ask for something that needs it. <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms</a></p>
+      <p><b>Your resume isn't stored on our servers unless you save it to your account.</b> It's sent securely to Claude, an AI model by Anthropic, to build your result. Otherwise your Career DNA stays in this browser unless you ask for something that needs it. <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms</a></p>
     </div>
   </section>
 </main>
@@ -1827,10 +1857,13 @@ function showProfile(p){
   if (ex) h += '<button class="btn btn-primary" type="button" id="tryOwnBtn">Build my own Career DNA</button>';
   else {
     h += isSaved() ? '<button class="btn btn-quiet" type="button" id="unsaveBtn">Remove from this device</button>' : '<button class="btn btn-quiet" type="button" id="saveBtn">Save on this device</button>';
+    h += '<button class="btn btn-quiet" type="button" id="acctSaveBtn">Save to my account</button>';
     h += '<button class="btn btn-quiet" type="button" id="againBtn">Analyze another resume</button>';
   }
   h += '<button class="btn btn-quiet" type="button" id="cardBtn">' + (ex ? "Save this example card" : "Save my Career DNA card") + "</button>";
-  h += '</div><p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
+  h += "</div>";
+  if (!ex) h += '<p class="o-note">"Save to my account" keeps this Career DNA and your resume in your Trazerr account, so you can use them on any device. You can delete them any time.</p>';
+  h += '<p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
 
   openOverlay(ex ? "Example Career DNA" : (p.fullName || "Your Career DNA"), h);
   animateRing("ev", p.evidenceScore);
@@ -1857,6 +1890,21 @@ function showProfile(p){
   const rb = $("rebuildBtn"); if (rb) rb.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
+  const as = $("acctSaveBtn"); if (as) as.onclick = async () => {
+    const note = $("oNote"); as.disabled = true;
+    try {
+      await acct();
+      if (!sbUser) {
+        saveProfile(p); if (resumeSrc) saveResume(resumeSrc);
+        try { localStorage.setItem(PENDING_KEY, "1"); } catch (e) {}
+        return openAccount({ intro: "Sign in to save. We'll email you a link, and your Career DNA is saved to your account as soon as you open it. Until then it's kept on this device." });
+      }
+      const ok = await saveToAccount(p, resumeSrc || loadResume());
+      note.textContent = ok ? "Saved to your account. Sign in on any device to open it." : "That didn't save. Try again in a moment.";
+      if (ok) as.textContent = "Saved to your account";
+    } catch (e) { note.textContent = e.message || "Sign-in isn't available right now."; }
+    finally { as.disabled = false; }
+  };
   const s = $("saveBtn"); if (s) s.onclick = () => { if (saveProfile(p)) { $("oNote").textContent = "Saved on this device."; s.remove(); refreshProfileUI(); } else $("oNote").textContent = "This browser blocked saving. Private browsing mode can cause this."; };
   $("cardBtn").onclick = () => saveCard(p, $("cardBtn"));
   const u = $("unsaveBtn"); if (u) u.onclick = () => { removeProfile(); refreshProfileUI(); $("oNote").textContent = "Removed from this device. It stays available until you close this page."; u.remove(); };
@@ -2941,6 +2989,145 @@ window.Seqlay = (() => {
   window.addEventListener("resize", () => { if (running) size(); });
   return { start, step, finish };
 })();
+
+/* ---------- accounts: optional saving to a Trazerr account (Supabase) ----------
+   Sign-in is an emailed link, no password. Nothing is stored in an account until the person chooses
+   "Save to my account". The database only lets each signed-in person read and change their own row. */
+const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js";
+const SB_STORE = "trazerr.auth", PENDING_KEY = "trazerr.pendingAccountSave";
+const linkHash = /access_token=|error_description=/.test(location.hash) ? new URLSearchParams(location.hash.slice(1)) : null;
+let sb = null, sbUser = null, sbLoading = null, acctRecord, signinHandled = false;
+function hadSession(){ try { return !!localStorage.getItem(SB_STORE); } catch (e) { return false; } }
+function acct(){
+  if (!sbLoading) sbLoading = (async () => {
+    const cfg = await api("authconfig");
+    if (!window.supabase) { try { await loadScript(SB_LIB); } catch (e) { throw new Error("Sign-in couldn't load. Check your connection and try again."); } }
+    sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { storageKey: SB_STORE, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } });
+    const { data } = await sb.auth.getSession();
+    sbUser = data && data.session ? data.session.user : null;
+    sb.auth.onAuthStateChange((event, session) => {
+      sbUser = session ? session.user : null; paintAcctBtn();
+      if (event === "SIGNED_OUT") acctRecord = undefined;
+    });
+    paintAcctBtn();
+    return sb;
+  })().catch(e => { sbLoading = null; throw e; });
+  return sbLoading;
+}
+function paintAcctBtn(){
+  const b = $("acctBtn"), i = $("acctInitial");
+  const email = sbUser && sbUser.email ? sbUser.email : "";
+  b.classList.toggle("on", !!sbUser);
+  b.setAttribute("aria-label", sbUser ? "Your account, signed in as " + email : "Sign in");
+  i.textContent = email ? email[0].toUpperCase() : ""; i.hidden = !sbUser;
+}
+async function fetchRecord(withResume){
+  const { data, error } = await sb.from("career_records").select(withResume ? "career_dna, resume, updated_at" : "career_dna, updated_at").maybeSingle();
+  if (error) throw new Error("Your saved Career DNA couldn't be loaded. Try again in a moment.");
+  if (!withResume) acctRecord = data || null;
+  return data || null;
+}
+async function saveToAccount(p, resume){
+  if (!sbUser) return false;
+  const row = { user_id: sbUser.id, career_dna: p, resume: resume || null, updated_at: new Date().toISOString() };
+  const { error } = await sb.from("career_records").upsert(row, { onConflict: "user_id" });
+  if (error) return false;
+  acctRecord = { career_dna: p, updated_at: row.updated_at }; track("account_saved");
+  return true;
+}
+// Back from the emailed link: finish a save that was waiting, or bring saved work to this device.
+async function afterSignIn(){
+  if (signinHandled) return; signinHandled = true;
+  track("account_signed_in");
+  let pending = false; try { pending = localStorage.getItem(PENDING_KEY) === "1"; localStorage.removeItem(PENDING_KEY); } catch (e) {}
+  const local = loadSaved();
+  if (pending && local) return openAccount({ note: (await saveToAccount(local, loadResume())) ? "You're signed in, and your Career DNA is saved to your account." : "You're signed in, but the save didn't go through. Try Save again below." });
+  try {
+    const rec = await fetchRecord(true);
+    if (rec && !local) { saveProfile(normalize(rec.career_dna)); if (rec.resume) saveResume(rec.resume); resumeSrc = loadResume(); setProfile(loadSaved()); }
+  } catch (e) {}
+  openAccount({ note: "You're signed in." });
+}
+function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return ""; } }
+async function openAccount(o){
+  o = o || {};
+  if (!sbUser) {
+    let h = '<span class="flag">Your account</span><h2 class="o-headline">Sign in to Trazerr</h2>';
+    h += '<p class="greet" style="margin-top:10px">' + esc(o.intro || "Save your Career DNA and resume to an account and use them on any device. We'll email you a sign-in link, so there's no password to remember.") + "</p>";
+    if (o.note) h += '<p class="saved-note">' + esc(o.note) + "</p>";
+    h += '<form class="t-field" id="signinForm" novalidate><label for="siEmail">Email address</label><div class="goal-form"><input class="input" id="siEmail" type="email" autocomplete="email" required placeholder="you@example.com"><button class="btn btn-primary" type="submit" id="siBtn">Email me a sign-in link</button></div></form>';
+    h += '<p class="status" id="siStatus" role="status" aria-live="polite"></p>';
+    h += '<p class="o-note">Nothing goes into your account until you choose "Save to my account" on a result, and you can delete it all any time. <a href="/privacy.html">Privacy policy</a></p>';
+    openOverlay("Your account", h);
+    $("signinForm").onsubmit = async e => {
+      e.preventDefault();
+      const email = $("siEmail").value.trim(), st = $("siStatus"), btn = $("siBtn");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setStatus(st, "Enter a valid email address, like name@example.com.", true); $("siEmail").focus(); return; }
+      btn.disabled = true; setStatus(st, "Sending…");
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true } });
+      btn.disabled = false;
+      if (error) setStatus(st, error.status === 429 ? "A lot of sign-in emails were sent just now. Wait a few minutes, then try again." : "That didn't go through. Check the address and try again.", true);
+      else setStatus(st, "Check your email. We sent a sign-in link to " + email + ". Open it on this device. It works once and expires after an hour.");
+    };
+    return;
+  }
+  let rec = acctRecord;
+  if (rec === undefined) { openOverlay("Your account", loadingHTML("Loading your account…")); try { rec = await fetchRecord(false); } catch (e) { rec = null; o.note = e.message; } }
+  const local = loadSaved();
+  let h = '<span class="flag">Your account</span><h2 class="o-headline">Signed in</h2><p class="greet" style="margin-top:6px">as <b>' + esc(sbUser.email || "") + "</b></p>";
+  if (o.note) h += '<p class="saved-note">' + esc(o.note) + "</p>";
+  h += '<div class="o-sec"><h3>Saved to your account</h3>';
+  if (rec) {
+    const p = normalize(rec.career_dna);
+    h += '<div class="acct-rec"><div><b>' + esc(p.fullName || "Your Career DNA") + "</b><span>" + esc(p.headline).slice(0, 140) + '</span><small>Saved ' + esc(fmtDate(rec.updated_at)) + '</small></div><div class="acct-actions"><button class="btn btn-primary btn-sm" type="button" id="acctOpen">Open it</button><button class="btn btn-quiet btn-sm" type="button" id="acctDownload">Download my data</button></div></div>';
+  } else {
+    h += '<p class="hint">Nothing saved yet. Build your Career DNA, then choose "Save to my account" on the result.</p>';
+    if (local) h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-primary" type="button" id="acctSaveLocal">Save the Career DNA on this device to my account</button></div>';
+  }
+  h += "</div>";
+  h += '<div class="o-sec"><h3>Delete everything</h3><p class="hint">Permanently deletes your saved Career DNA, your resume and your account, and removes them from this device too. This can\'t be undone.</p>';
+  h += '<div class="o-foot" style="margin-top:14px"><button class="btn btn-quiet btn-danger" type="button" id="delAsk">Delete everything</button></div>';
+  h += '<div class="acct-confirm" id="delConfirm" hidden><p><b>Delete your account and everything saved in it?</b></p><div class="o-foot" style="margin-top:12px"><button class="btn btn-danger-solid" type="button" id="delYes">Yes, delete everything</button><button class="btn btn-quiet" type="button" id="delNo">Keep my account</button></div></div></div>';
+  h += '<div class="o-foot"><button class="btn btn-quiet" type="button" id="signOutBtn">Sign out</button></div><p class="o-note" id="acctNote" role="status" aria-live="polite"></p>';
+  openOverlay("Your account", h);
+  const note = $("acctNote");
+  const op = $("acctOpen"); if (op) op.onclick = () => showProfile(normalize(rec.career_dna));
+  const dl = $("acctDownload"); if (dl) dl.onclick = async () => {
+    try { const full = await fetchRecord(true); const blob = new Blob([JSON.stringify({ email: sbUser.email, savedAt: full.updated_at, careerDNA: full.career_dna, resume: full.resume }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "trazerr-my-data.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      note.textContent = "Downloaded trazerr-my-data.json."; } catch (e) { note.textContent = e.message; }
+  };
+  const sl = $("acctSaveLocal"); if (sl) sl.onclick = async () => { sl.disabled = true; const ok = await saveToAccount(local, loadResume()); openAccount({ note: ok ? "Saved to your account." : "That didn't save. Try again in a moment." }); };
+  $("delAsk").onclick = () => { $("delConfirm").hidden = false; $("delAsk").hidden = true; $("delYes").focus(); };
+  $("delNo").onclick = () => { $("delConfirm").hidden = true; $("delAsk").hidden = false; $("delAsk").focus(); };
+  $("delYes").onclick = async () => {
+    const y = $("delYes"); y.disabled = true; y.textContent = "Deleting…";
+    try {
+      const { data } = await sb.auth.getSession(); const token = data && data.session ? data.session.access_token : "";
+      const r = await fetch(API + "?action=deleteaccount", { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: "{}" });
+      const out = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(out.error || "That didn't go through. Try again in a moment.");
+      await sb.auth.signOut({ scope: "local" }).catch(() => {});
+      sbUser = null; acctRecord = undefined; paintAcctBtn(); removeProfile(); profile = null; resumeSrc = null; refreshProfileUI(); track("account_deleted");
+      openAccount({ note: "Everything is deleted: your account, your saved Career DNA and your resume, including the copy on this device." });
+    } catch (e) { y.disabled = false; y.textContent = "Yes, delete everything"; note.textContent = e.message; }
+  };
+  $("signOutBtn").onclick = async () => { await sb.auth.signOut().catch(() => {}); sbUser = null; acctRecord = undefined; paintAcctBtn(); openAccount({ note: "You're signed out. Anything saved on this device stays here until you remove it." }); };
+}
+$("acctBtn").addEventListener("click", async () => {
+  try { await acct(); openAccount(); }
+  catch (e) { openOverlay("Your account", errorHTML(e.message || "Sign-in isn't available right now. Try again in a moment.")); }
+});
+// Only load sign-in when it's needed: returning from an emailed link, or someone who signed in before.
+if (linkHash || hadSession()) {
+  acct().then(() => {
+    if (!linkHash) return;
+    if (sbUser) return afterSignIn();
+    history.replaceState(history.state, "", location.pathname + location.search);
+    const expired = /expired|invalid/i.test(linkHash.get("error_description") || "");
+    openAccount({ note: expired ? "That sign-in link has expired or was already used. Enter your email to get a new one." : "That sign-in link didn't work. Enter your email to get a new one." });
+  }).catch(() => {});
+}
 
 /* ---------- start ---------- */
 setProfile(loadSaved());
