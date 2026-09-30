@@ -15,7 +15,8 @@
      "auto" = on for localhost and Vercel preview links, off on the public site. "on" or "off" force it. */
   var FLAG="auto", h=location.hostname;
   var on=FLAG==="on"||(FLAG==="auto"&&(h==="localhost"||h==="127.0.0.1"||/\.vercel\.app$/.test(h)));
-  var d=0, ok=function(v){return typeof v==="string"&&/^[0-6]$/.test(v)};
+  var DEFAULT=1; /* the public design: 1 = Brick & Ink. 0 would restore the previous look. */
+  var d=DEFAULT, ok=function(v){return typeof v==="string"&&/^[0-6]$/.test(v)};
   if(on){
     var q=null; try{q=new URLSearchParams(location.search).get("design")}catch(e){}
     if(ok(q)){d=+q;try{localStorage.setItem("trazerr.designPreview",q)}catch(e){}}
@@ -24,7 +25,9 @@
   root.dataset.preview=on?"on":"off"; root.dataset.design=String(d);
   window.TRAZERR_FONTS={1:"Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600",2:"Figtree:ital,wght@0,400;0,600;0,700;1,400;1,600",3:"Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700",4:"Lexend:wght@400;500;600",5:"Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600",6:"Figtree:ital,wght@0,400;0,600;0,700;1,400;1,600"};
   window.trazerrLoadFont=function(n){var f=window.TRAZERR_FONTS[n];if(!f||document.querySelector('link[data-font="'+f+'"]'))return;var l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family="+f+"&display=swap";l.setAttribute("data-font",f);document.head.appendChild(l)};
-  if(d>0){root.dataset.theme="light";document.querySelector('meta[name="theme-color"]').content="#FFFFFF";window.trazerrLoadFont(d)}
+  if(d>0)window.trazerrLoadFont(d);
+  if(d>1)root.dataset.theme="light"; /* designs 2-6 are light only */
+  document.querySelector('meta[name="theme-color"]').content=root.dataset.theme==="dark"?(d===1?"#0E1628":"#070B14"):"#FFFFFF";
 })()</script>
 <link rel="canonical" href="https://www.trazerr.com/">
 <meta property="og:type" content="website">
@@ -901,7 +904,7 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 :root[data-design]:not([data-design="0"]) .brand{color:var(--d-text); font-family:var(--d-font)}
 :root[data-design]:not([data-design="0"]) .site-nav a{color:var(--d-text); font-size:1rem}
 :root[data-design]:not([data-design="0"]) .site-nav a:hover{color:var(--d-action); text-decoration:underline; text-underline-offset:4px}
-:root[data-design]:not([data-design="0"]) .theme-toggle{display:none}
+:root[data-design]:not([data-design="0"]):not([data-design="1"]) .theme-toggle{display:none}
 /* hero */
 :root[data-design]:not([data-design="0"]) .hero{background:var(--d-bg); color:var(--d-text)}
 :root[data-design]:not([data-design="0"]) .hero h1{color:var(--d-text)}
@@ -1076,6 +1079,27 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 /* 6 Plum & Sage: calm, pill buttons, a sage dot marking each label */
 :root[data-design="6"] .chapter::before, :root[data-design="6"] .seq-kicker::before, :root[data-design="6"] .sample .eyebrow::before{content:""; display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--d-accent); vertical-align:1px; margin-right:10px}
 :root[data-design="6"] .o-hero, :root[data-design="6"] .join{box-shadow:inset 0 -6px 0 var(--d-accent)}
+
+/* 1 Brick & Ink, dark: deep ink surfaces, the same brick accents. Used when the moon/sun switch is set to dark. */
+:root[data-design="1"][data-theme="dark"]{
+  --d-bg:#0E1628; --d-surface:#16213A; --d-alt:#111B31; --d-inverse:#1E2E52; --d-text:#EEF1F7; --d-text2:#B4BCCD;
+  --d-inv-text:#FFFFFF; --d-inv-text2:#D2D9E8; --d-link:#9DB8F5; --d-action:#86A7F2; --d-action-hover:#A5BEF6; --d-action-fg:#0B1426; --d-action-soft:#223358;
+  --d-accent:#E0584B; --d-accent-text:#FF8F82; --d-accent-inv:#FFA79B; --d-accent-soft:#3A2329; --d-border:#2B3A5C; --d-border-strong:#7E8AA6; --d-focus:#FF8F82;
+  --d-ev-ver:#EEF1F7; --d-ev-inf:#8FB0F5; --d-ev-pot:#E8B65C; --d-ev-miss:#98A1B4; --d-err:#FF8B7E;
+  --d-head-bg:rgba(14,22,40,.92); --d-chapnum:rgba(134,167,242,.07); --d-shadow:none;
+  --cv-a:134,167,242; --cv-b:224,88,75; --cv-rung:238,241,247; --cv-text:#EEF1F7; --cv-text2:#B4BCCD; --cv-ver:#EEF1F7; --cv-inf:#8FB0F5; --cv-pot:#E8B65C;
+  --cv-dir:255,143,130; --cv-dir-solid:#FF8F82; --cv-cur:180,188,205; --cv-cur-solid:#B4BCCD;
+  color-scheme:dark;
+}
+:root[data-design="1"][data-theme="dark"]{color-scheme:dark}
+:root[data-design="1"][data-theme="dark"] .hero{--night:var(--d-alt)}
+:root[data-design="1"][data-theme="dark"] .hero-card{background:rgba(22,33,58,.94); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+:root[data-design="1"][data-theme="dark"] .steps-cta .btn-primary, :root[data-design="1"][data-theme="dark"] .join .btn-primary{background:#FFFFFF; color:#16233F}
+:root[data-design="1"][data-theme="dark"] .steps-cta .btn-primary:hover, :root[data-design="1"][data-theme="dark"] .join .btn-primary:hover{background:#E8EDF7}
+:root[data-design="1"][data-theme="dark"] .join .input{background:rgba(255,255,255,.06)}
+:root[data-design="1"][data-theme="dark"] .dna-mock, :root[data-design="1"][data-theme="dark"] .sheet, :root[data-design="1"][data-theme="dark"] .score, :root[data-design="1"][data-theme="dark"] .fit, :root[data-design="1"][data-theme="dark"] .hero-card, :root[data-design="1"][data-theme="dark"] .ba, :root[data-design="1"][data-theme="dark"] #jobsEmpty, :root[data-design="1"][data-theme="dark"] .next-grid button, :root[data-design="1"][data-theme="dark"] .fb{box-shadow:none}
+:root[data-design="1"][data-theme="dark"] .o-hero, :root[data-design="1"][data-theme="dark"] .join, :root[data-design="1"][data-theme="dark"] .steps-cta{box-shadow:0 0 0 1px var(--d-border)}
+:root[data-design="1"][data-theme="dark"] .site-head.on-dark .theme-toggle{background:transparent}
 
 /* ---- design preview selector (preview builds only) ---- */
 .dp-bar, .o-dp{display:none}
@@ -2475,7 +2499,7 @@ function applyTheme(t){
   const b = $("themeToggle");
   b.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
   b.setAttribute("aria-pressed", String(t === "dark"));
-  document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#070B14" : "#FFFFFF";
+  document.querySelector('meta[name="theme-color"]').content = t === "dark" ? (root.dataset.design === "1" ? "#0E1628" : "#070B14") : "#FFFFFF";
   syncHead(); readPalette(); window.dispatchEvent(new Event("themechange"));
   setTimeout(() => root.classList.remove("theme-anim"), 420);
 }
@@ -2504,12 +2528,13 @@ function setDesign(n){
   if (!Number.isInteger(n) || n < 0 || n > 6 || document.documentElement.dataset.preview !== "on") return;
   const root = document.documentElement, anchor = readingAnchor();
   root.dataset.design = String(n);
-  if (n > 0) { window.trazerrLoadFont(n); root.dataset.theme = "light"; }
+  if (n > 0) window.trazerrLoadFont(n);
+  if (n > 1) root.dataset.theme = "light";
   else { let t = "light"; try { t = localStorage.getItem("trazerr.theme") === "dark" ? "dark" : "light"; } catch (e) {} root.dataset.theme = t; }
   try { localStorage.setItem("trazerr.designPreview", String(n)); } catch (e) {}
   const url = new URL(location.href);
   if (url.searchParams.has("design")) { url.searchParams.set("design", String(n)); history.replaceState(history.state, "", url); }
-  document.querySelector('meta[name="theme-color"]').content = root.dataset.theme === "dark" ? "#070B14" : "#FFFFFF";
+  document.querySelector('meta[name="theme-color"]').content = root.dataset.theme === "dark" ? (n === 1 ? "#0E1628" : "#070B14") : "#FFFFFF";
   showDesign(n); syncHead(); readPalette(); window.dispatchEvent(new Event("themechange")); keepAnchor(anchor);
 }
 if (document.documentElement.dataset.preview === "on") {

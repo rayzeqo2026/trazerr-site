@@ -1,6 +1,8 @@
 # Design preview: Original 0 and themes 1-6
 
-This adds six alternative visual designs to trazerr.com next to the unchanged current design (Original 0), with a preview selector for comparing them. Nothing about the product, content, data, API calls, prompts or scoring changes. **The public site stays on Original 0 and never shows the selector.**
+> **Update:** Brick & Ink (1) was chosen. It is now the public default, in light and a matching dark version switched by the moon/sun button. `DEFAULT` in the head script of `index.html` sets the public design (1); setting it to 0 restores the previous look. The other designs stay available on preview links for comparison until you ask for them to be removed. The privacy and terms pages use Brick & Ink colors and Public Sans.
+
+This adds six alternative visual designs to trazerr.com next to the unchanged current design (Original 0), with a preview selector for comparing them. Nothing about the product, content, data, API calls, prompts or scoring changes. **The public site never shows the selector.**
 
 ## How to use it
 
@@ -363,6 +365,46 @@ Files: `index.html` (head script, preview bar markup, design CSS block, switchin
 | `#6C6574` on `#FFFFFF` | 'Not shown yet' marker (non-text) | 5.60:1 | 3:1 |
 | `#5B2A6E` on `#EEEBF2` | 'Between the lines' marker on tinted (non-text) | 8.90:1 | 3:1 |
 | `#2B6A4F` on `#EEEBF2` | 'Worth exploring' marker on tinted (non-text) | 5.43:1 | 3:1 |
+
+### 1 · Brick & Ink, dark version
+
+Used when a visitor switches to dark. Deep ink surfaces, the same brick accents; the primary button is a light blue with dark ink text so it reads clearly on dark backgrounds.
+
+| Foreground on background | Use | Ratio | Needed |
+|---|---|---|---|
+| `#EEF1F7` on `#0E1628` | Body text on page | 15.94:1 | 4.5:1 |
+| `#EEF1F7` on `#16213A` | Body text on cards | 14.14:1 | 4.5:1 |
+| `#EEF1F7` on `#111B31` | Body text on tinted sections | 15.15:1 | 4.5:1 |
+| `#B4BCCD` on `#0E1628` | Secondary text on page | 9.46:1 | 4.5:1 |
+| `#B4BCCD` on `#16213A` | Secondary text, placeholders on cards/fields | 8.39:1 | 4.5:1 |
+| `#B4BCCD` on `#111B31` | Secondary text on tinted sections | 8.99:1 | 4.5:1 |
+| `#9DB8F5` on `#0E1628` | Links on page | 9.11:1 | 4.5:1 |
+| `#9DB8F5` on `#16213A` | Links on cards | 8.08:1 | 4.5:1 |
+| `#9DB8F5` on `#111B31` | Links on tinted sections | 8.66:1 | 4.5:1 |
+| `#0B1426` on `#86A7F2` | Primary button label | 7.72:1 | 4.5:1 |
+| `#0B1426` on `#A5BEF6` | Primary button label, hover | 9.89:1 | 4.5:1 |
+| `#86A7F2` on `#16213A` | White button label on dark bands | 6.72:1 | 4.5:1 |
+| `#86A7F2` on `#223358` | Selected chips / 'between the lines' badge | 5.24:1 | 4.5:1 |
+| `#FF8F82` on `#0E1628` | Kickers and chapter labels | 8.16:1 | 4.5:1 |
+| `#FF8F82` on `#111B31` | Kickers on tinted sections | 7.76:1 | 4.5:1 |
+| `#FF8F82` on `#3A2329` | Blanks to fill, example flag | 6.54:1 | 4.5:1 |
+| `#FFFFFF` on `#1E2E52` | Text on dark bands | 13.39:1 | 4.5:1 |
+| `#D2D9E8` on `#1E2E52` | Secondary text on dark bands | 9.46:1 | 4.5:1 |
+| `#FFA79B` on `#1E2E52` | Accent text on dark bands | 7.18:1 | 4.5:1 |
+| `#FF8B7E` on `#16213A` | Error messages | 7.04:1 | 4.5:1 |
+| `#7E8AA6` on `#16213A` | Form field borders (non-text) | 4.63:1 | 3:1 |
+| `#FF8F82` on `#0E1628` | Focus ring (non-text) | 8.16:1 | 3:1 |
+| `#FF8F82` on `#16213A` | Focus ring on cards (non-text) | 7.24:1 | 3:1 |
+| `#EEF1F7` on `#16213A` | 'On your resume' marker (non-text) | 14.14:1 | 3:1 |
+| `#8FB0F5` on `#16213A` | 'Between the lines' marker (non-text) | 7.39:1 | 3:1 |
+| `#E8B65C` on `#16213A` | 'Worth exploring' marker (non-text) | 8.59:1 | 3:1 |
+| `#98A1B4` on `#16213A` | 'Not shown yet' marker (non-text) | 6.16:1 | 3:1 |
+| `#8FB0F5` on `#111B31` | 'Between the lines' marker on tinted (non-text) | 7.92:1 | 3:1 |
+| `#E8B65C` on `#111B31` | 'Worth exploring' marker on tinted (non-text) | 9.21:1 | 3:1 |
+| `#16233F` on `#FFFFFF` | Label on white buttons in dark bands | 15.60:1 | 4.5:1 |
+| `#0B1426` on `#A5BEF6` | Primary button label, hover | 9.89:1 | 4.5:1 |
+
+All 31 pairs pass; lowest text ratio 5.24:1; body text 15.9:1. axe-core WCAG A/AA: 0 violations on the landing page and a result, light and dark, desktop and phone.
 
 All 174 measured pairs pass (29 per design). Lowest text ratio: 5.43:1. Primary reading text: 13.6:1 to 17.3:1, above the 7:1 project goal.
 
