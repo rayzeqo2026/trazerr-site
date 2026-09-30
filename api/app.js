@@ -818,7 +818,7 @@ async function waitlist(req, res) {
 }
 
 /* ---------------- Supabase connection check ---------------- */
-// Says whether Supabase is set up and reachable. Lists setting names only, never their values.
+// Says whether Supabase is set up and reachable. Never returns keys or setting values.
 function supabaseConfig() {
   const e = process.env;
   const url = e.SUPABASE_URL || e.SUPABASE_SUPABASE_URL || e.NEXT_PUBLIC_SUPABASE_URL || e.SUPABASE_NEXT_PUBLIC_SUPABASE_URL;
@@ -828,7 +828,6 @@ function supabaseConfig() {
 }
 
 async function dbstatus(req, res) {
-  const settingNames = Object.keys(process.env).filter(k => /SUPABASE|POSTGRES/.test(k)).sort();
   const cfg = supabaseConfig();
   let reachable = false, detail = "not configured";
   if (cfg && (cfg.anon || cfg.key)) {
@@ -837,7 +836,7 @@ async function dbstatus(req, res) {
       reachable = r.ok; detail = "auth health " + r.status;
     } catch (e) { detail = "could not reach Supabase"; }
   }
-  return res.status(200).json({ configured: !!cfg, hasServiceKey: !!(cfg && cfg.key), reachable, detail, settingNames });
+  return res.status(200).json({ configured: !!cfg, hasServiceKey: !!(cfg && cfg.key), reachable, detail });
 }
 
 /* ---------------- router ---------------- */
