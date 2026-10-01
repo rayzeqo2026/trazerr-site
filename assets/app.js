@@ -33,27 +33,63 @@ window.handleDnaJobFile = async function(input) {
   const st = document.getElementById("dnaFitStatus");
   if (!st) return;
   try {
-    setStatus(st, "Reading PDF...");
+    setStatus(st, "Reading file...");
     let text = null;
-    if (file.type === "application/pdf" && window.extractPdfText) {
-      text = await window.extractPdfText(file);
+
+    // For PDFs, try PDF.js extraction
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+      if (!window.extractPdfText) {
+        setStatus(st, "PDF reader loading... please try again.", true);
+        input.value = "";
+        return;
+      }
+      if (typeof pdfjsLib === 'undefined') {
+        setStatus(st, "PDF reader not ready. Try pasting text instead.", true);
+        input.value = "";
+        return;
+      }
+      try {
+        text = await window.extractPdfText(file);
+      } catch (pdfErr) {
+        console.error('PDF extraction error:', pdfErr);
+        setStatus(st, "Could not read PDF: " + pdfErr.message, true);
+        input.value = "";
+        return;
+      }
     } else {
-      const f = await readResumeFile(file);
-      if (f.kind === "text") text = f.text;
+      // For non-PDF files, use readResumeFile
+      try {
+        const f = await readResumeFile(file);
+        if (f.kind === "text") {
+          text = f.text;
+        } else {
+          setStatus(st, "File format not supported. Try TXT or paste text instead.", true);
+          input.value = "";
+          return;
+        }
+      } catch (err) {
+        setStatus(st, "Error reading file: " + err.message, true);
+        input.value = "";
+        return;
+      }
     }
-    if (text) {
+
+    if (text && text.trim().length > 0) {
       const jobTextarea = document.getElementById("dnaFitJob");
       if (jobTextarea) {
         jobTextarea.value = text.trim();
         setStatus(st, "✓ Job posting loaded");
         setTimeout(() => setStatus(st, ""), 2000);
+      } else {
+        setStatus(st, "Error: Job posting field not found", true);
       }
     } else {
-      setStatus(st, "Could not extract text from file", true);
+      setStatus(st, "File appears to be empty", true);
     }
     input.value = "";
   } catch (err) {
-    setStatus(st, "Error: " + err.message, true);
+    console.error('Error in handleDnaJobFile:', err);
+    setStatus(st, "Unexpected error: " + err.message, true);
     input.value = "";
   }
 };
