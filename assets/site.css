@@ -119,7 +119,7 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 @keyframes slideDown2{from{opacity:0; transform:translateY(-30px)}to{opacity:1; transform:translateY(0)}}
 
 /* Pointing hand element */
-.pointer-hand{position:fixed; z-index:100; font-size:48px; cursor:pointer; animation:slideDown2 .5s ease-out forwards, pointingWave 1.2s ease-in-out 1s infinite; transform-origin:center center; pointer-events:none; user-select:none; text-shadow:0 2px 8px rgba(0,0,0,.2); filter:drop-shadow(2px 2px 4px rgba(0,0,0,.1))}
+.pointer-hand{position:fixed; z-index:100; font-size:24px; cursor:pointer; animation:slideDown2 .5s ease-out forwards, pointingWave 1.2s ease-in-out 1s infinite; transform-origin:center center; pointer-events:none; user-select:none; text-shadow:0 1px 4px rgba(0,0,0,.2); filter:drop-shadow(1px 1px 2px rgba(0,0,0,.1))}
 .pointer-hand.hidden{display:none}
 
 /* Scroll animation classes */
