@@ -391,9 +391,8 @@ function showProfile(p){
     h += '<p style="margin:8px 0 0; color:var(--ink-2); font-size:14px">See how you fit any role:</p>';
     h += '</div>';
     h += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; z-index:2">';
-    h += '<div style="display:flex; gap:8px; align-items:center">';
-    h += '<input type="file" id="dnaFitJobFile" accept=".pdf,.application/pdf" aria-label="Upload job posting PDF" style="display:none !important">';
-    h += '<button type="button" id="dnaFitJobFileBtn" class="fit-file-label" onclick="document.getElementById(\'dnaFitJobFile\').click(); return false;" style="margin:0; cursor:pointer; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; display:flex; align-items:center; gap:6px">📄 Upload PDF</button>';
+    h += '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">';
+    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; cursor:pointer">';
     h += '<span style="color:var(--ink-2); font-size:13px">or paste below</span>';
     h += '</div>';
     h += '<textarea id="dnaFitJob" placeholder="Paste the full job posting here" aria-label="Job posting for fit analysis" spellcheck="true" autocomplete="off" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical; width:100%; box-sizing:border-box; background:white; color:var(--ink)"></textarea>';
@@ -1275,10 +1274,14 @@ function initDnaFitBtn(resumePayload) {
   const btn = $("dnaFitBtn");
   if (!btn) return;
 
-  // Setup PDF upload for job posting
-  const jobFileInput = $("dnaFitJobFile");
+  // Setup PDF upload for job posting - retry until element exists
+  function setupJobFileUpload() {
+    const jobFileInput = $("dnaFitJobFile");
+    if (!jobFileInput) {
+      setTimeout(setupJobFileUpload, 50);
+      return;
+    }
 
-  if (jobFileInput) {
     jobFileInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -1301,6 +1304,7 @@ function initDnaFitBtn(resumePayload) {
       }
     });
   }
+  setupJobFileUpload();
 
   // Remove old listener if exists
   btn.onclick = null;
