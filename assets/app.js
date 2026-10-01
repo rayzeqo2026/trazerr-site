@@ -40,9 +40,12 @@ window.handleDnaJobFile = async function(input) {
   const st = document.getElementById("dnaFitStatus");
   console.log('[handleDnaJobFile] Status element found:', !!st);
 
-  if (!st) return;
+  if (!st) {
+    alert('ERROR: Status element not found. Try refreshing the page.');
+    return;
+  }
   try {
-    setStatus(st, "Reading file...");
+    setStatus(st, "Processing: " + file.name);
     let text = null;
 
     // For PDFs, try PDF.js extraction
@@ -106,16 +109,25 @@ window.handleDnaJobFile = async function(input) {
       if (jobTextarea) {
         console.log('[handleDnaJobFile] Setting textarea value with text length:', text.trim().length);
         jobTextarea.value = text.trim();
+        jobTextarea.dispatchEvent(new Event('change', { bubbles: true }));
         console.log('[handleDnaJobFile] Textarea value set, current length:', jobTextarea.value.length);
-        setStatus(st, "✓ Job posting loaded");
-        setTimeout(() => setStatus(st, ""), 2000);
+        setStatus(st, "✓ Loaded " + text.trim().length + " characters");
+        setTimeout(() => setStatus(st, ""), 3000);
       } else {
         console.log('[handleDnaJobFile] ERROR: Textarea not found');
-        setStatus(st, "Error: Job posting field not found", true);
+        setStatus(st, "ERROR: Job posting field not found on page", true);
+        if (!document.getElementById("dnaFitJob")) {
+          alert('ERROR: The job posting field is missing. Try refreshing the page and rebuilding your Career DNA.');
+        }
       }
     } else {
       console.log('[handleDnaJobFile] Text is empty or missing');
-      setStatus(st, "File appears to be empty", true);
+      if (!text) {
+        setStatus(st, "ERROR: PDF extraction returned no text. This PDF might be a scanned image.", true);
+        alert('Cannot read this PDF. It appears to be a scanned image or is empty. Please paste the job posting text manually instead.');
+      } else {
+        setStatus(st, "ERROR: Extracted text is too short or empty", true);
+      }
     }
     input.value = "";
   } catch (err) {
