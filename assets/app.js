@@ -12,7 +12,12 @@ let lastFocus = null;
 
 /* ---------- utilities ---------- */
 function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function setStatus(el, msg, isErr){ el.textContent = msg || ""; el.classList.toggle("err", !!isErr); }
+function setStatus(el, msg, isErr){
+  el.textContent = msg || "";
+  el.classList.toggle("err", !!isErr);
+  if(isErr){ el.setAttribute("role", "alert"); el.setAttribute("aria-live", "assertive"); el.setAttribute("aria-atomic", "true"); }
+  else { el.setAttribute("aria-live", "polite"); el.removeAttribute("aria-atomic"); }
+}
 function toScore(v){
   const n = typeof v === "number" ? v : parseFloat((String(v ?? "").match(/\d+(\.\d+)?/) || [""])[0]);
   return isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : null;

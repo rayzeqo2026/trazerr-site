@@ -41,7 +41,7 @@
     <div class="seqlay-bar"><i id="seqlayBar"></i></div>
   </div>
   <p class="seqlay-count" id="seqlayCount" aria-hidden="true"></p>
-  <button class="seqlay-hide" id="seqlayHide" type="button">Hide</button>
+  <button class="seqlay-hide" id="seqlayHide" type="button" aria-label="Hide sequencing animation">Hide</button>
 </div>
 <header class="site-head">
   <div class="wrap">
@@ -53,11 +53,11 @@
       <a href="/employers.html">For employers</a>
       <a href="#about">About</a>
     </nav>
-    <button class="acct-btn" id="acctBtn" type="button" aria-label="Sign in">
+    <button class="acct-btn" id="acctBtn" type="button" aria-label="Account menu">
       <svg class="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.5 20.2c1.3-3.6 4.2-5.4 7.5-5.4s6.2 1.8 7.5 5.4"/></svg>
       <span class="acct-initial" id="acctInitial" aria-hidden="true" hidden></span>
     </button>
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark theme" aria-pressed="false" title="Switch between light and dark theme">
       <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
       <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
     </button>
@@ -89,7 +89,7 @@
       <div class="hero-card" id="try">
         <h2>See your Career DNA</h2>
         <div class="welcome" id="welcome" hidden></div>
-        <textarea id="paste" placeholder="Paste your resume here" aria-label="Paste your resume"></textarea>
+        <textarea id="paste" placeholder="Paste your resume here" aria-label="Paste your resume" aria-describedby="saveNote"></textarea>
         <label class="upload" id="drop" for="file">
           <input id="file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
@@ -100,7 +100,7 @@
         <button class="btn btn-primary" id="analyzeBtn" type="button">Build my Career DNA</button>
         <div class="hero-progress" id="heroProg" hidden aria-hidden="true"><i id="heroBar"></i></div>
         <p class="status" id="status" role="status" aria-live="polite"></p>
-        <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy">Stored only if you save it</a></div>
+        <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy" id="saveNote">Stored only if you save it</a></div>
       </div>
     </div>
   </section>
@@ -319,7 +319,7 @@
   <div class="o-bar"><div class="inner">
     <img src="/logo.png" alt="">
     <span class="who" id="oTitle">Trazerr</span>
-    <button class="btn btn-quiet btn-sm" id="closeBtn" type="button">Close</button>
+    <button class="btn btn-quiet btn-sm" id="closeBtn" type="button" aria-label="Close this dialog">Close</button>
   </div></div>
   <div class="o-body" id="oBody"></div>
 </div>
