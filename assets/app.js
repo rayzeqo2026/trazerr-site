@@ -1908,3 +1908,88 @@ function animateNumbers(){
   document.querySelectorAll(".dm-ring b, .emp-score b, .ba-row b, .proof-stats .count").forEach(el => observer.observe(el));
 }
 animateNumbers();
+
+/* Scroll-triggered animations and enhanced interactivity */
+function initializeScrollAnimations(){
+  if (reduceMotion) return; // Respect prefers-reduced-motion
+
+  const observerOptions = {
+    threshold: [0, 0.25],
+    rootMargin: "0px 0px -50px 0px"
+  };
+
+  const animationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      if (entry.target.classList.contains("in-view")) return;
+
+      // Add in-view class to trigger animation
+      entry.target.classList.add("in-view");
+
+      // For staggered animations, re-observe won't hurt but isn't needed after first trigger
+      if (!entry.target.classList.contains("animate-stagger")) {
+        animationObserver.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // Observe elements with animation classes
+  const animatedElements = document.querySelectorAll(
+    ".animate-on-scroll, .animate-fade, .animate-scale, .animate-bounce, " +
+    ".animate-left, .animate-right, .animate-rotate, .animate-stagger, " +
+    "section.block, .sheet, .trio li, .principles div, .job"
+  );
+
+  animatedElements.forEach(el => {
+    // Add animate-on-scroll class if not already present
+    if (!el.classList.contains("animate-on-scroll") && !el.classList.contains("animate-fade")) {
+      el.classList.add("animate-on-scroll");
+    }
+    animationObserver.observe(el);
+  });
+
+  // Parallax effect for hero section
+  const heroCard = document.querySelector(".hero-card");
+  if (heroCard && window.innerWidth > 900) {
+    window.addEventListener("scroll", () => {
+      const scrollY = window.scrollY;
+      const parallaxAmount = scrollY * 0.5;
+      heroCard.style.transform = `translateY(${parallaxAmount}px)`;
+    }, { passive: true });
+  }
+
+  // Enhanced button interactions
+  document.querySelectorAll(".btn").forEach(btn => {
+    btn.addEventListener("mouseenter", (e) => {
+      // Create ripple effect on hover
+      const ripple = document.createElement("span");
+      ripple.style.position = "absolute";
+      ripple.style.borderRadius = "50%";
+      ripple.style.background = "rgba(255,255,255,0.5)";
+      ripple.style.pointerEvents = "none";
+      ripple.style.width = ripple.style.height = "20px";
+      ripple.style.left = e.offsetX - 10 + "px";
+      ripple.style.top = e.offsetY - 10 + "px";
+      ripple.style.animation = "pulse 0.6s ease-out";
+      btn.style.position = "relative";
+      btn.style.overflow = "hidden";
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  });
+
+  // Add pulse animation keyframe if not exists
+  const style = document.createElement("style");
+  style.textContent = `@keyframes pulse{to{transform:scale(4);opacity:0}}`;
+  if (!document.querySelector('style[data-animation="pulse"]')) {
+    style.setAttribute("data-animation", "pulse");
+    document.head.appendChild(style);
+  }
+}
+
+// Initialize animations when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeScrollAnimations);
+} else {
+  initializeScrollAnimations();
+}

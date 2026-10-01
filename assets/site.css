@@ -11,10 +11,11 @@
 [hidden]{display:none !important}
 html{scroll-behavior:smooth; -webkit-text-size-adjust:100%; scroll-padding-top:84px}
 body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:17px; line-height:1.55;
-  padding-bottom:env(safe-area-inset-bottom,0px)}
+  padding-bottom:env(safe-area-inset-bottom,0px); animation:pageLoad .4s ease-out forwards}
+@keyframes pageLoad{from{opacity:.98}to{opacity:1}}
 img{max-width:100%; display:block}
-a{color:var(--blue-deep); transition:color .2s ease, text-decoration-color .2s ease}
-a:hover{color:var(--blue)}
+a{color:var(--blue-deep); transition:color .2s ease, text-decoration-color .2s ease, text-shadow .2s ease; text-decoration-thickness:2px}
+a:hover{color:var(--blue); text-shadow:0 0 8px rgba(0,102,224,.3)}
 a:active{color:var(--blue-deep)}
 :focus-visible{outline:3px solid var(--blue); outline-offset:2px; border-radius:4px}
 .wrap{max-width:var(--wrap); margin:0 auto; padding:0 24px}
@@ -37,8 +38,8 @@ p{margin:0}
 .linkish{background:none; border:0; padding:0; font:inherit; color:var(--blue-deep); text-decoration:underline; text-underline-offset:3px; cursor:pointer; transition:color .2s ease, text-decoration-color .2s ease}
 .linkish:hover{color:var(--blue)}
 .linkish:active{color:var(--blue-deep)}
-.input, textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:13px 14px; font:16px/1.4 var(--sans); color:var(--ink); background:var(--field, #FBFBFA); transition:border-color .2s ease, box-shadow .2s ease, background-color .15s ease}
-.input:focus, textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft), inset 0 0 0 1px rgba(0,102,224,.1); background-color:#fff}
+.input, textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:13px 14px; font:16px/1.4 var(--sans); color:var(--ink); background:var(--field, #FBFBFA); transition:border-color .2s ease, box-shadow .3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color .15s ease, transform .2s ease; will-change:box-shadow,border-color}
+.input:focus, textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft), inset 0 0 0 1px rgba(0,102,224,.1), 0 4px 16px rgba(0,102,224,.15); background-color:#fff; transform:translateY(-1px)}
 textarea{min-height:120px; resize:vertical; line-height:1.5}
 .field{margin-bottom:16px}
 .field label{display:block; font-size:14px; color:var(--ink-2); margin-bottom:8px; font-weight:500; transition:color .2s ease}
@@ -56,8 +57,10 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-family:var(--serif); font-size:24px; font-weight:600}
 .brand img{width:40px; height:40px}
 .site-nav{display:flex; gap:24px; margin-left:auto}
-.site-nav a{color:var(--ink-2); text-decoration:none; font-size:15px; font-weight:500; transition:color .2s ease; padding:4px 8px; margin:-4px -8px; border-radius:4px}
-.site-nav a:hover{color:var(--ink); background:var(--paper)}
+.site-nav a{color:var(--ink-2); text-decoration:none; font-size:15px; font-weight:500; transition:all .2s ease; padding:4px 8px; margin:-4px -8px; border-radius:4px; position:relative}
+.site-nav a::after{content:""; position:absolute; bottom:-2px; left:8px; width:0; height:2px; background:var(--blue); transition:width .3s ease}
+.site-nav a:hover{color:var(--ink); background:var(--paper); transform:translateY(-1px)}
+.site-nav a:hover::after{width:calc(100% - 16px)}
 .site-head .btn{padding:10px 16px; min-height:42px; font-size:15px; white-space:nowrap}
 @media (max-width:820px){
   .site-nav{display:none}
@@ -98,8 +101,39 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .hero-card{align-self:end; justify-self:end; width:100%; max-width:400px; padding:22px; border-radius:14px; display:grid; gap:10px;
   background:rgba(8,14,30,.78); border:1px solid rgba(255,255,255,.16); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3);
   box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1); animation:slideUp .5s ease-out}
+/* ===== Enhanced Animations ===== */
 @keyframes slideUp{from{opacity:0; transform:translateY(20px)}to{opacity:1; transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0; transform:translateY(-20px)}to{opacity:1; transform:translateY(0)}}
+@keyframes slideInLeft{from{opacity:0; transform:translateX(-30px)}to{opacity:1; transform:translateX(0)}}
+@keyframes slideInRight{from{opacity:0; transform:translateX(30px)}to{opacity:1; transform:translateX(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0; transform:scale(0.95)}to{opacity:1; transform:scale(1)}}
+@keyframes bounceIn{0%{opacity:0; transform:scale(0.8)}50%{transform:scale(1.05)}100%{opacity:1; transform:scale(1)}}
+@keyframes pulseGlow{0%{box-shadow:0 0 0 0 currentColor}50%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+@keyframes shimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-10px)}}
+@keyframes rotateIn{from{opacity:0; transform:rotate(-5deg) scale(0.98)}to{opacity:1; transform:rotate(0) scale(1)}}
+@keyframes expandHeight{from{max-height:0; opacity:0}to{max-height:1000px; opacity:1}}
+
+/* Scroll animation classes */
+.animate-on-scroll{opacity:0; will-change:transform,opacity}
+.animate-on-scroll.in-view{animation:slideUp .6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+.animate-fade{animation:fadeIn .8s ease forwards}
+.animate-scale{animation:scaleIn .6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+.animate-bounce{animation:bounceIn .7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+.animate-left{animation:slideInLeft .6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+.animate-right{animation:slideInRight .6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+.animate-rotate{animation:rotateIn .6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+
+/* Staggered animations for list items */
+.animate-stagger > *{opacity:0}
+.animate-stagger.in-view > *{animation:slideUp .6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards}
+.animate-stagger > *:nth-child(1){animation-delay:.05s}
+.animate-stagger > *:nth-child(2){animation-delay:.1s}
+.animate-stagger > *:nth-child(3){animation-delay:.15s}
+.animate-stagger > *:nth-child(4){animation-delay:.2s}
+.animate-stagger > *:nth-child(5){animation-delay:.25s}
+.animate-stagger > *:nth-child(n+6){animation-delay:.3s}
 .hero-card > *{min-width:0}
 .hero-card h2{color:#fff; font-size:18px; max-width:none}
 .hero-card .saved-note{margin:0; background:rgba(0,102,224,.22); color:#E4E9F7; font-size:13px; padding:8px 10px; border-radius:8px}
@@ -160,7 +194,8 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
   .hero-notes{display:none}
 }
 
-.sheet{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:28px; box-shadow:0 1px 0 var(--line-soft), 0 18px 40px -24px rgba(21,32,58,.35); transition:box-shadow .3s ease, border-color .3s ease}
+.sheet{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:28px; box-shadow:0 1px 0 var(--line-soft), 0 18px 40px -24px rgba(21,32,58,.35); transition:box-shadow .3s ease, border-color .3s ease, transform .3s ease; will-change:transform,box-shadow}
+.sheet:hover{box-shadow:0 1px 0 var(--line-soft), 0 28px 60px -20px rgba(21,32,58,.45); transform:translateY(-2px)}
 .sheet h2{font-size:26px; max-width:none}
 .sheet .sub{color:var(--ink-2); font-size:15px; margin-top:6px}
 @media (max-width:480px){ .sheet{padding:22px 18px} }
@@ -172,7 +207,7 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .saved-note{margin-top:14px; padding:12px 14px; background:var(--blue-soft); border-radius:10px; font-size:15px}
 
 
-section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
+section.block{padding:80px 0; border-top:1px solid var(--line-soft); animation:fadeIn 1s ease forwards}
 /* Section header: heading on the left, intro on the right, so short headings don't leave a gap beside them */
 .sec-head{display:grid; grid-template-columns:1fr 1fr; gap:20px 64px; align-items:end}
 .sec-head h2{max-width:none}
@@ -185,7 +220,7 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 .steps::before{content:""; position:absolute; top:22px; left:22px; right:40px; height:2px; background:linear-gradient(90deg, var(--gold-deep), var(--gold) 40%, var(--line))}
 .steps li{counter-increment:step; position:relative; display:flex; flex-direction:column; gap:6px; padding-right:18px}
 .steps li::before{content:counter(step); position:relative; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; margin-bottom:14px;
-  background:var(--paper); border:2px solid var(--gold); color:var(--gold-deep); font:500 20px/1 var(--serif); box-shadow:0 0 0 6px var(--paper)}
+  background:var(--paper); border:2px solid var(--gold); color:var(--gold-deep); font:500 20px/1 var(--serif); box-shadow:0 0 0 6px var(--paper); transition:all .3s ease; will-change:transform,box-shadow}
 .steps li:first-child::before{background:var(--navy); border-color:var(--navy); color:var(--gold)}
 .steps b{font-weight:600; font-size:17px}
 .steps span{color:var(--ink-2); font-size:15px; line-height:1.5}
@@ -277,11 +312,12 @@ section.block{padding:80px 0; border-top:1px solid var(--line-soft)}
 @media (max-width:760px){ .jobs-form{grid-template-columns:1fr} }
 .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; align-items:center}
 .chips small{color:var(--ink-2); font-size:14px; margin-right:4px}
-.chip{border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:8px 14px; font:500 15px var(--sans); color:var(--ink); cursor:pointer; min-height:40px}
-.chip:hover{border-color:var(--blue); color:var(--blue-deep)}
+.chip{border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:8px 14px; font:500 15px var(--sans); color:var(--ink); cursor:pointer; min-height:40px; transition:all .25s ease; will-change:transform,border-color,background-color}
+.chip:hover{border-color:var(--blue); color:var(--blue-deep); background:var(--blue-soft); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,102,224,.15)}
 .job-list{list-style:none; padding:0; margin:24px 0 0}
-.job{padding:22px 0; border-top:1px solid var(--line)}
-.job-top{display:flex; justify-content:space-between; gap:16px; align-items:baseline}
+.job{padding:22px 0; border-top:1px solid var(--line); transition:all .2s ease; cursor:pointer; will-change:background-color}
+.job:hover{background:var(--paper); margin:0 -22px; padding:22px}
+.job-top{display:flex; justify-content:space-between; gap:16px; align-items:baseline; transition:color .2s ease}
 .job h3{font-size:22px}
 .salary{font-weight:600; white-space:nowrap; font-size:15px}
 .job-meta{color:var(--ink-2); font-size:15px; margin-top:4px}
@@ -360,8 +396,10 @@ footer .wrap{display:flex; flex-wrap:wrap; gap:16px 32px; justify-content:space-
 .foot-brand{display:flex; align-items:center; gap:10px}
 .foot-brand img{width:28px; height:28px}
 .foot-links{display:flex; flex-wrap:wrap; gap:8px 22px}
-.foot-links a{color:var(--ink-2); text-decoration:none}
-.foot-links a:hover{color:var(--ink); text-decoration:underline}
+.foot-links a{color:var(--ink-2); text-decoration:none; transition:all .2s ease; position:relative}
+.foot-links a::after{content:""; position:absolute; bottom:-2px; left:0; width:0; height:1.5px; background:var(--ink-2); transition:width .3s ease}
+.foot-links a:hover{color:var(--ink)}
+.foot-links a:hover::after{width:100%}
 section#tailor{background:var(--navy); color:#fff; border-top:0}
 section#tailor h2{color:#fff}
 section#tailor .lede{color:#C9D1E3}
@@ -370,14 +408,20 @@ section#tailor .trio li::before{color:var(--gold)}
 section#tailor .trio span{color:#AEB8CC}
 section#tailor .hint-sm{color:#AEB8CC}
 .trio{list-style:none; padding:0; margin:36px 0 0; counter-reset:t; display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
-.trio li{counter-increment:t; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; display:grid; gap:6px}
+.trio li{counter-increment:t; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; display:grid; gap:6px; transition:all .3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor:pointer; will-change:transform,box-shadow,border-color; position:relative}
+.trio li::after{content:""; position:absolute; inset:0; border-radius:14px; background:linear-gradient(135deg, rgba(0,102,224,.05), transparent); opacity:0; transition:opacity .3s ease; pointer-events:none}
+.trio li:hover{border-color:var(--blue); box-shadow:0 8px 24px rgba(0,102,224,.12); transform:translateY(-4px)}
+.trio li:hover::after{opacity:1}
 .trio li::before{content:counter(t); font-family:var(--serif); font-size:32px; line-height:1; color:var(--blue); margin-bottom:6px}
 .trio b{font-weight:600; font-size:17px}
 .trio span{color:var(--ink-2); font-size:15.5px}
 .hint-sm{color:var(--ink-2); font-size:14.5px}
 @media (max-width:760px){ .trio{grid-template-columns:1fr} }
 .principles{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:40px}
-.principles div{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px}
+.principles div{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; transition:all .3s cubic-bezier(0.34, 1.56, 0.64, 1); will-change:transform,box-shadow; position:relative; overflow:hidden}
+.principles div::before{content:""; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent); transition:left .5s ease; pointer-events:none}
+.principles div:hover{transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,102,224,.1)}
+.principles div:hover::before{left:100%}
 .principles b{font-family:var(--serif); font-weight:500; font-size:21px; display:block}
 .principles p{color:var(--ink-2); font-size:15.5px; margin-top:8px}
 @media (max-width:1000px){ .principles{grid-template-columns:repeat(2,1fr)} }
