@@ -1274,17 +1274,24 @@ function initDnaFitBtn(resumePayload) {
   const btn = $("dnaFitBtn");
   if (!btn) return;
 
-  // Setup PDF upload for job posting - retry until element exists
-  function setupJobFileUpload() {
+  // Setup PDF upload for job posting
+  setTimeout(() => {
     const jobFileInput = $("dnaFitJobFile");
     if (!jobFileInput) {
-      setTimeout(setupJobFileUpload, 50);
+      console.warn("dnaFitJobFile not found");
       return;
     }
 
-    jobFileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    // Remove any previous listeners by cloning and replacing
+    const newInput = jobFileInput.cloneNode(true);
+    jobFileInput.parentNode.replaceChild(newInput, jobFileInput);
+
+    newInput.addEventListener("change", async function(e) {
+      const file = this.files[0];
+      if (!file) {
+        console.log("No file selected");
+        return;
+      }
       const st = $("dnaFitStatus");
       try {
         setStatus(st, "Reading PDF...");
@@ -1297,14 +1304,14 @@ function initDnaFitBtn(resumePayload) {
           setStatus(st, "Ready to analyze. Check the job posting above.", false);
           setTimeout(() => setStatus(st, ""), 2000);
         }
-        e.target.value = "";
+        this.value = "";
       } catch (err) {
-        setStatus(st, err.message, true);
-        e.target.value = "";
+        console.error("PDF read error:", err);
+        setStatus(st, "Error: " + err.message, true);
+        this.value = "";
       }
     });
-  }
-  setupJobFileUpload();
+  }, 100);
 
   // Remove old listener if exists
   btn.onclick = null;
