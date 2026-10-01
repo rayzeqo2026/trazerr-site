@@ -1235,6 +1235,11 @@ a:not(.btn):not(.linkish):hover{text-decoration-color:currentColor}
 .fit-input-group{display:flex; flex-direction:column}
 .fit-input-group label{font-weight:600; font-size:14px; margin-bottom:8px; color:var(--ink)}
 .fit-input-group textarea{min-height:200px}
+.fit-upload-section{display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap}
+.fit-file-input{display:none}
+.fit-file-label{padding:6px 12px; background:var(--line-soft); border:1px solid var(--line); border-radius:6px; color:var(--ink); font-size:13px; cursor:pointer; font-weight:500; transition:all 150ms ease; user-select:none}
+.fit-file-label:hover{background:var(--line); border-color:var(--ink-2)}
+.fit-upload-or{font-size:12px; color:var(--ink-2); white-space:nowrap}
 .fit-note{line-height:1.5}
 
 /* Fit Result Card */

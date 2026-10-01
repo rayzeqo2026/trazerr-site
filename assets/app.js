@@ -1104,6 +1104,83 @@ function renderFit(job, fit){
 }
 
 /* ---------- Role Match / Fit Analysis ---------- */
+
+// PDF parsing setup - wait for PDF.js library to load
+(function initPdfHandling() {
+  function setupPdfWorker() {
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      return true;
+    }
+    return false;
+  }
+
+  if (!setupPdfWorker()) {
+    let retries = 0;
+    const checkInterval = setInterval(() => {
+      if (setupPdfWorker() || retries++ > 50) clearInterval(checkInterval);
+    }, 100);
+  }
+
+  async function extractPdfText(file) {
+    try {
+      if (!file || file.type !== 'application/pdf') throw new Error('Please select a valid PDF file');
+      if (typeof pdfjsLib === 'undefined') throw new Error('PDF reader is loading. Please try again.');
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let text = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(item => item.str).join(' ') + '\n';
+      }
+
+      return text.trim();
+    } catch (error) {
+      throw new Error('Could not read PDF: ' + (error.message || 'Unknown error'));
+    }
+  }
+
+  function setupPdfUpload(fileInputId, textareaId) {
+    const fileInput = $(fileInputId);
+    const textarea = $(textareaId);
+    if (!fileInput) return;
+
+    let fileLabel = fileInput.nextElementSibling;
+    while (fileLabel && fileLabel.tagName !== 'LABEL') fileLabel = fileLabel.nextElementSibling;
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const originalLabel = fileLabel?.textContent || '📄 Upload PDF';
+      if (fileLabel) fileLabel.textContent = '⏳ Reading PDF...';
+
+      try {
+        const text = await extractPdfText(file);
+        textarea.value = text;
+        if (fileLabel) fileLabel.textContent = '✓ ' + originalLabel;
+        setTimeout(() => { if (fileLabel) fileLabel.textContent = originalLabel; }, 2000);
+      } catch (error) {
+        if (fileLabel) fileLabel.textContent = originalLabel;
+        setStatus($('fitStatus'), 'Error: ' + error.message, true);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setupPdfUpload('fitResumeFile', 'fitResume');
+      setupPdfUpload('fitJobFile', 'fitJob');
+    });
+  } else {
+    setupPdfUpload('fitResumeFile', 'fitResume');
+    setupPdfUpload('fitJobFile', 'fitJob');
+  }
+})();
+
 function analyzeFit(resumeText, jobText){
   const jobLower = jobText.toLowerCase();
   const resumeLower = resumeText.toLowerCase();

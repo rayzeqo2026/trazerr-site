@@ -30,6 +30,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -217,11 +218,21 @@
         <div class="fit-inputs">
           <div class="fit-input-group">
             <label for="fitResume"><b>Your Resume</b></label>
-            <textarea id="fitResume" placeholder="Paste your resume here" aria-label="Your resume for fit analysis"></textarea>
+            <div class="fit-upload-section">
+              <input type="file" id="fitResumeFile" accept=".pdf" aria-label="Upload resume PDF" class="fit-file-input">
+              <label for="fitResumeFile" class="fit-file-label">📄 Upload PDF</label>
+              <span class="fit-upload-or">or paste below</span>
+            </div>
+            <textarea id="fitResume" placeholder="Paste your resume here or upload a PDF" aria-label="Your resume for fit analysis"></textarea>
           </div>
           <div class="fit-input-group">
             <label for="fitJob"><b>Job Posting</b></label>
-            <textarea id="fitJob" placeholder="Paste the job posting here" aria-label="Job posting for fit analysis"></textarea>
+            <div class="fit-upload-section">
+              <input type="file" id="fitJobFile" accept=".pdf" aria-label="Upload job posting PDF" class="fit-file-input">
+              <label for="fitJobFile" class="fit-file-label">📄 Upload PDF</label>
+              <span class="fit-upload-or">or paste below</span>
+            </div>
+            <textarea id="fitJob" placeholder="Paste the job posting here or upload a PDF" aria-label="Job posting for fit analysis"></textarea>
           </div>
         </div>
         <button class="btn btn-primary" id="fitBtn" type="button" style="width:100%; margin-top:16px">Analyze Fit</button>
