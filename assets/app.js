@@ -408,7 +408,7 @@ function showProfile(p){
     p.unknowns.forEach((u, i) => {
       h += '<li><i class="mark unknown" aria-hidden="true"></i><b>' + esc(u.what) + "</b>";
       if (u.how) h += '<span class="how">How to show it: ' + esc(u.how) + "</span>";
-      if (u.example) h += '<span class="ex-line"><small>Example line</small>' + esc(u.example).replace(/\[([^\]]{1,60})\]/g, '<mark class="blank">[$1]</mark>') + '</span><span class="row-actions"><button class="btn btn-quiet btn-sm" type="button" data-copyex="' + i + '">Copy this line</button></span>';
+      if (u.example) h += '<span class="row-actions"><input type="text" class="editable-line" data-editex="' + i + '" value="' + esc(u.example) + '" aria-label="Editable example line"></span>';
       h += "</li>";
     });
     h += "</ul>";
@@ -449,10 +449,14 @@ function showProfile(p){
   const tb = $("nxTailor"); if (tb) tb.onclick = () => openTailor(p, {});
   const np = $("nxPath"); if (np) np.onclick = () => { $("pathSec").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); $("goalInput").focus({ preventScroll: true }); };
   const dc = $("dnaCanvas"); if (dc) { const ctx = dc.getContext("2d"); drawHelix(ctx, p, 40, dc.width - 40, dc.height / 2); }
-  $("oBody").querySelectorAll("[data-copyex]").forEach(b => b.onclick = async () => {
-    const line = p.unknowns[+b.dataset.copyex].example;
-    try { await navigator.clipboard.writeText(line); b.textContent = "Copied. Fill in the brackets"; track("gap_line_copied"); }
-    catch (e) { b.textContent = "Couldn't copy. Select the line instead"; }
+  $("oBody").querySelectorAll("[data-editex]").forEach(input => {
+    input.addEventListener("focus", () => {
+      input.select();
+      track("gap_line_edited");
+    });
+    input.addEventListener("change", () => {
+      track("gap_line_changed");
+    });
   });
   const rb = $("rebuildBtn"); if (rb) rb.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
