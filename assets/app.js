@@ -1948,15 +1948,6 @@ function initializeScrollAnimations(){
     animationObserver.observe(el);
   });
 
-  // Parallax effect for hero section
-  const heroCard = document.querySelector(".hero-card");
-  if (heroCard && window.innerWidth > 900) {
-    window.addEventListener("scroll", () => {
-      const scrollY = window.scrollY;
-      const parallaxAmount = scrollY * 0.5;
-      heroCard.style.transform = `translateY(${parallaxAmount}px)`;
-    }, { passive: true });
-  }
 
   // Enhanced button interactions
   document.querySelectorAll(".btn").forEach(btn => {
