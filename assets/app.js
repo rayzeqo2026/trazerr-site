@@ -384,19 +384,19 @@ function showProfile(p){
 
   // Add Quick Role Match section after intro (not for examples)
   if (!ex && resumeSrc) {
-    h += '<div id="dnaFitSection" style="margin-top:48px; padding:32px; background:var(--bg-secondary); border-radius:8px; border:1px solid var(--line)">';
+    h += '<div id="dnaFitSection" style="margin-top:48px; padding:32px; background:var(--bg-secondary); border-radius:8px; border:1px solid var(--line); position:relative; z-index:1">';
     h += '<div style="margin-bottom:24px">';
     h += '<p style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-2); margin:0 0 8px"><b>Try This Now</b></p>';
     h += '<h3 style="margin:0 0 8px; font-size:18px">Quick Role Match <span class="launch-badge" style="margin-left:8px">Free During Launch</span></h3>';
-    h += '<p style="margin:8px 0 0; color:var(--ink-2); font-size:14px">See how you fit any role. Paste a job posting to get your instant fit score:</p>';
+    h += '<p style="margin:8px 0 0; color:var(--ink-2); font-size:14px">See how you fit any role:</p>';
     h += '</div>';
-    h += '<div style="display:flex; flex-direction:column; gap:12px">';
+    h += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; z-index:2">';
     h += '<div style="display:flex; gap:8px; align-items:center">';
     h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="display:none !important">';
     h += '<button type="button" id="dnaFitJobFileBtn" class="fit-file-label" style="margin:0; cursor:pointer; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; display:flex; align-items:center; gap:6px">📄 Upload PDF</button>';
     h += '<span style="color:var(--ink-2); font-size:13px">or paste below</span>';
     h += '</div>';
-    h += '<textarea id="dnaFitJob" placeholder="Paste any job posting here or upload a PDF" aria-label="Job posting for fit analysis" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical"></textarea>';
+    h += '<textarea id="dnaFitJob" placeholder="Paste the full job posting here" aria-label="Job posting for fit analysis" spellcheck="true" autocomplete="off" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical; width:100%; box-sizing:border-box; background:white; color:var(--ink)"></textarea>';
     h += '<button class="btn btn-primary" id="dnaFitBtn" type="button" style="align-self:flex-start">Analyze Fit</button>';
     h += '<p class="status" id="dnaFitStatus" role="status" aria-live="polite"></p>';
     h += '<div id="dnaFitResult" hidden style="margin-top:16px"></div>';
