@@ -1253,9 +1253,27 @@ a:not(.btn):not(.linkish):hover{text-decoration-color:currentColor}
 .fit-item-title{font-weight:600; color:var(--ink); margin:0 0 4px; font-size:15px}
 .fit-item-desc{color:var(--ink-2); margin:0; font-size:14px; line-height:1.4}
 
+/* Print-friendly styles */
+.fit-print-btn{display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--surface); border:1px solid var(--line); border-radius:6px; color:var(--ink); font-size:14px; cursor:pointer; font-weight:500; transition:all 150ms ease}
+.fit-print-btn:hover{background:var(--line-soft); border-color:var(--ink-2)}
+.fit-actions-bar{display:flex; gap:12px; margin-bottom:20px; justify-content:flex-start}
+
+@media print{
+  #seqlay, header, footer, .site-head, .site-foot, .fit-tool .fit-inputs, #fitBtn, #fitStatus, .fit-note, .fit-print-btn, .fit-actions-bar{display:none !important}
+  body{background:white; color:black}
+  .fit-tool{border:none; padding:0; background:none; margin:0}
+  #fitResult{margin:0}
+  .fit-score-card{border:2px solid black; background:white; color:black}
+  .fit-score-num{color:#0066E0}
+  .fit-section{page-break-inside:avoid}
+  .fit-item{page-break-inside:avoid}
+}
+
 @media (max-width:800px){
   .fit-inputs{grid-template-columns:1fr; gap:16px}
   .fit-score-header{flex-direction:column; align-items:flex-start}
   .fit-score-num{font-size:3rem; min-width:auto}
   .fit-tool{padding:20px}
+  .fit-actions-bar{flex-direction:column}
+  .fit-print-btn{width:100%}
 }

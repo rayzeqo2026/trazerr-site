@@ -1105,39 +1105,62 @@ function renderFit(job, fit){
 
 /* ---------- Role Match / Fit Analysis ---------- */
 function analyzeFit(resumeText, jobText){
-  const resumeWords = new Set(resumeText.toLowerCase().split(/\W+/));
-  const jobWords = new Set(jobText.toLowerCase().split(/\W+/));
   const jobLower = jobText.toLowerCase();
   const resumeLower = resumeText.toLowerCase();
 
-  const scoreKeywords = {
-    leader: ["lead", "leader", "leadership", "manage", "manager", "director"],
-    technical: ["python", "javascript", "sql", "api", "aws", "azure", "data"],
-    communication: ["present", "communication", "speak", "write", "report"],
-    strategy: ["strategy", "strategic", "plan", "planning", "roadmap"],
-    teamwork: ["team", "collaborate", "collaboration", "cross-functional"],
-    customer: ["customer", "client", "stakeholder", "sales", "support"]
+  const categories = {
+    "Leadership": {
+      keywords: ["lead", "leader", "leadership", "manage", "manager", "director", "head of", "chief"],
+      strength: "Team leadership and management",
+      gap: "Management or leadership experience"
+    },
+    "Technical Skills": {
+      keywords: ["python", "javascript", "java", "sql", "database", "api", "aws", "azure", "cloud"],
+      strength: "Technical expertise",
+      gap: "Technical skills mentioned in the role"
+    },
+    "Communication": {
+      keywords: ["present", "communication", "speak", "write", "written", "speaking", "presentation"],
+      strength: "Communication and presentation skills",
+      gap: "Strong communication abilities"
+    },
+    "Strategy": {
+      keywords: ["strategy", "strategic", "plan", "planning", "roadmap", "vision"],
+      strength: "Strategic planning ability",
+      gap: "Strategic thinking and planning"
+    },
+    "Collaboration": {
+      keywords: ["team", "collaborate", "collaboration", "cross-functional", "partner"],
+      strength: "Team collaboration and partnership",
+      gap: "Ability to work cross-functionally"
+    },
+    "Customer Focus": {
+      keywords: ["customer", "client", "stakeholder", "sales", "revenue", "business"],
+      strength: "Customer and revenue focus",
+      gap: "Customer-facing or revenue experience"
+    }
   };
 
-  let score = 50;
+  let score = 55;
   const strengths = [];
   const gaps = [];
 
-  Object.entries(scoreKeywords).forEach(([category, keywords]) => {
-    const hasKeyword = keywords.some(kw => resumeLower.includes(kw));
-    const jobNeeds = keywords.some(kw => jobLower.includes(kw));
+  Object.entries(categories).forEach(([cat, data]) => {
+    const jobNeeds = data.keywords.some(kw => jobLower.includes(kw));
+    const hasMatch = data.keywords.some(kw => resumeLower.includes(kw));
+
     if (jobNeeds) {
-      if (hasKeyword) {
-        score += 8;
-        strengths.push({ title: category.charAt(0).toUpperCase() + category.slice(1), desc: "Your resume shows experience in " + category });
+      if (hasMatch) {
+        score += 7;
+        strengths.push({ title: cat, desc: data.strength + " shown in your experience." });
       } else {
-        gaps.push({ title: category.charAt(0).toUpperCase() + category.slice(1), desc: "This role emphasizes " + category + ". Consider highlighting any related experience." });
+        gaps.push({ title: cat, desc: data.gap + " would strengthen your candidacy." });
       }
     }
   });
 
-  score = Math.min(100, Math.max(30, score));
-  return { score: Math.round(score), strengths: strengths.slice(0, 5), gaps: gaps.slice(0, 5) };
+  score = Math.min(100, Math.max(25, score));
+  return { score: Math.round(score), strengths: strengths.slice(0, 4), gaps: gaps.slice(0, 4) };
 }
 
 $("fitBtn").addEventListener("click", () => {
@@ -1152,21 +1175,29 @@ $("fitBtn").addEventListener("click", () => {
   const analysis = analyzeFit(resume, job);
   const resultDiv = $("fitResult");
 
-  let html = '<div class="fit-score-card"><div class="fit-score-header"><div class="fit-score-num">' + analysis.score + '%</div><div class="fit-score-info"><h3>Your Fit Score</h3><p>This reflects how your background aligns with the role based on keywords and experience overlap.</p></div></div></div>';
+  const scoreColor = analysis.score >= 75 ? "var(--blue)" : analysis.score >= 60 ? "var(--gold)" : "#e74c3c";
+  const scoreMessage = analysis.score >= 75 ? "Strong match" : analysis.score >= 60 ? "Good match" : "Worth considering";
+
+  let html = '<div class="fit-actions-bar"><button class="fit-print-btn" type="button" onclick="window.print()" title="Print or save as PDF"><span>🖨</span>Print this card</button></div>';
+  html += '<div class="fit-score-card" style="background:linear-gradient(135deg, rgba(0,102,224,.08) 0%, rgba(224,176,112,.04) 100%);"><div class="fit-score-header"><div class="fit-score-num" style="color:' + scoreColor + '">' + analysis.score + '%</div><div class="fit-score-info"><h3>Your Fit Score</h3><p style="margin:8px 0 0"><strong>' + scoreMessage + '.</strong> This score reflects your background against the role requirements based on experience keywords and category alignment.</p></div></div></div>';
 
   if (analysis.strengths.length) {
-    html += '<div class="fit-section"><h3 class="fit-section-title"><i class="mark verified" aria-hidden="true"></i>What You Bring</h3><ul class="fit-list">';
-    analysis.strengths.forEach(s => html += '<li class="fit-item"><p class="fit-item-title">' + esc(s.title) + '</p><p class="fit-item-desc">' + esc(s.desc) + '</p></li>');
+    html += '<div class="fit-section"><h3 class="fit-section-title"><span style="color:var(--blue); font-weight:700">✓</span> What You Bring (' + analysis.strengths.length + ')</h3><ul class="fit-list">';
+    analysis.strengths.forEach(s => html += '<li class="fit-item"><p class="fit-item-title">' + esc(s.title) + '</p><p class="fit-item-desc">' + esc(s.desc) + ' <strong>Highlight this in your application and interview.</strong></p></li>');
     html += '</ul></div>';
   }
 
   if (analysis.gaps.length) {
-    html += '<div class="fit-section"><h3 class="fit-section-title"><i class="mark potential" aria-hidden="true"></i>Things to Address</h3><ul class="fit-list">';
-    analysis.gaps.forEach(g => html += '<li class="fit-item"><p class="fit-item-title">' + esc(g.title) + '</p><p class="fit-item-desc">' + esc(g.desc) + '</p></li>');
+    html += '<div class="fit-section"><h3 class="fit-section-title"><span style="color:#e74c3c; font-weight:700">●</span> Things to Address (' + analysis.gaps.length + ')</h3><ul class="fit-list">';
+    analysis.gaps.forEach(g => html += '<li class="fit-item"><p class="fit-item-title">' + esc(g.title) + '</p><p class="fit-item-desc">' + esc(g.desc) + ' Be ready to explain or discuss during interviews.</p></li>');
     html += '</ul></div>';
   }
 
-  html += '<div class="fit-section" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--line)"><h3 style="margin:0 0 12px; font-size:14px; color:var(--ink-2)">Next Steps</h3><p style="margin:0; color:var(--ink-2); line-height:1.5">Use this score to decide if you should apply or tailor your resume for this role. If you build your Career DNA, you\'ll get even more detailed insights.</p></div>';
+  const actionHtml = analysis.score >= 75 ? 'This is a strong match. <strong>Apply now or tailor your resume</strong> to emphasize your top strengths.' :
+    analysis.score >= 60 ? 'You\'re a reasonable fit. Consider <strong>tailoring your resume</strong> to highlight the strengths above and prepare talking points about the gaps.' :
+    'You have some relevant experience. <strong>Build your Career DNA</strong> for deeper analysis and personalized recommendations before applying.';
+
+  html += '<div class="fit-section" style="margin-top:32px; padding:20px; background:var(--blue-soft); border-radius:8px; border-left:4px solid var(--blue)"><h3 style="margin:0 0 12px; font-size:14px; color:var(--ink); font-weight:700">Recommended Action</h3><p style="margin:0; color:var(--ink); line-height:1.6">' + actionHtml + '</p></div>';
 
   resultDiv.innerHTML = html;
   resultDiv.hidden = false;
