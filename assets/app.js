@@ -28,9 +28,18 @@ function safeOn(id, event, handler) { const el = $(id); if (el) el.addEventListe
 
 // Global handler for DNA fit job file upload
 window.handleDnaJobFile = async function(input) {
+  console.log('[handleDnaJobFile] Starting handler');
   const file = input.files[0];
-  if (!file) return;
+  console.log('[handleDnaJobFile] File selected:', file?.name, file?.type, file?.size);
+
+  if (!file) {
+    console.log('[handleDnaJobFile] No file found');
+    return;
+  }
+
   const st = document.getElementById("dnaFitStatus");
+  console.log('[handleDnaJobFile] Status element found:', !!st);
+
   if (!st) return;
   try {
     setStatus(st, "Reading file...");
@@ -38,21 +47,30 @@ window.handleDnaJobFile = async function(input) {
 
     // For PDFs, try PDF.js extraction
     if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+      console.log('[handleDnaJobFile] PDF detected, checking extraction setup');
+      console.log('[handleDnaJobFile] extractPdfText available:', typeof window.extractPdfText);
+      console.log('[handleDnaJobFile] pdfjsLib available:', typeof pdfjsLib);
+
       if (!window.extractPdfText) {
+        console.log('[handleDnaJobFile] extractPdfText not available');
         setStatus(st, "PDF reader loading... please try again.", true);
         input.value = "";
         return;
       }
       if (typeof pdfjsLib === 'undefined') {
+        console.log('[handleDnaJobFile] pdfjsLib not loaded');
         setStatus(st, "PDF reader not ready. Try pasting text instead.", true);
         input.value = "";
         return;
       }
       try {
+        console.log('[handleDnaJobFile] Starting PDF extraction...');
         text = await window.extractPdfText(file);
+        console.log('[handleDnaJobFile] PDF extraction successful, text length:', text?.length);
       } catch (pdfErr) {
-        console.error('PDF extraction error:', pdfErr);
+        console.error('[handleDnaJobFile] PDF extraction error:', pdfErr);
         const errMsg = pdfErr.message || 'Unknown error reading PDF';
+        console.log('[handleDnaJobFile] Showing error:', errMsg);
         setStatus(st, errMsg, true);
         input.value = "";
         return;
@@ -75,21 +93,34 @@ window.handleDnaJobFile = async function(input) {
       }
     }
 
+    console.log('[handleDnaJobFile] Text extraction complete:', {
+      hasText: !!text,
+      textLength: text?.length,
+      trimmedLength: text?.trim().length
+    });
+
     if (text && text.trim().length > 0) {
       const jobTextarea = document.getElementById("dnaFitJob");
+      console.log('[handleDnaJobFile] Textarea element found:', !!jobTextarea, jobTextarea?.id);
+
       if (jobTextarea) {
+        console.log('[handleDnaJobFile] Setting textarea value with text length:', text.trim().length);
         jobTextarea.value = text.trim();
+        console.log('[handleDnaJobFile] Textarea value set, current length:', jobTextarea.value.length);
         setStatus(st, "✓ Job posting loaded");
         setTimeout(() => setStatus(st, ""), 2000);
       } else {
+        console.log('[handleDnaJobFile] ERROR: Textarea not found');
         setStatus(st, "Error: Job posting field not found", true);
       }
     } else {
+      console.log('[handleDnaJobFile] Text is empty or missing');
       setStatus(st, "File appears to be empty", true);
     }
     input.value = "";
   } catch (err) {
-    console.error('Error in handleDnaJobFile:', err);
+    console.error('[handleDnaJobFile] Caught error:', err);
+    console.error('[handleDnaJobFile] Error stack:', err.stack);
     setStatus(st, "Unexpected error: " + err.message, true);
     input.value = "";
   }
@@ -1227,24 +1258,51 @@ function renderFit(job, fit){
 
   window.extractPdfText = async function(file) {
     try {
-      if (!file || file.type !== 'application/pdf') throw new Error('Please select a valid PDF file');
-      if (typeof pdfjsLib === 'undefined') throw new Error('PDF reader is loading. Please try again.');
+      console.log('[extractPdfText] Starting extraction for file:', file.name, file.type, file.size);
 
+      if (!file || file.type !== 'application/pdf') {
+        throw new Error('Please select a valid PDF file');
+      }
+      if (typeof pdfjsLib === 'undefined') {
+        throw new Error('PDF reader is loading. Please try again.');
+      }
+
+      console.log('[extractPdfText] Reading file as array buffer...');
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let text = '';
+      console.log('[extractPdfText] ArrayBuffer created, size:', arrayBuffer.byteLength);
 
+      console.log('[extractPdfText] Loading PDF with pdfjsLib...');
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      console.log('[extractPdfText] PDF loaded, pages:', pdf.numPages);
+
+      let text = '';
       for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(item => item.str).join(' ') + '\n';
+        try {
+          console.log('[extractPdfText] Processing page', i);
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items.map(item => item.str).join(' ');
+          console.log('[extractPdfText] Page', i, 'text length:', pageText.length);
+          text += pageText + '\n';
+        } catch (pageErr) {
+          console.error('[extractPdfText] Error processing page', i, ':', pageErr.message);
+          throw pageErr;
+        }
       }
 
       const extracted = text.trim();
-      if (!extracted) throw new Error('PDF appears to be empty or is a scanned image. Please paste the job posting text instead.');
+      console.log('[extractPdfText] Total extracted text length:', extracted.length);
+
+      if (!extracted) {
+        throw new Error('PDF appears to be empty or is a scanned image. Please paste the job posting text instead.');
+      }
+
+      console.log('[extractPdfText] Success! Returning text');
       return extracted;
     } catch (error) {
-      console.error('PDF extraction error details:', error);
+      console.error('[extractPdfText] Full error object:', error);
+      console.error('[extractPdfText] Error message:', error.message);
+      console.error('[extractPdfText] Error stack:', error.stack);
       throw new Error('Could not read PDF: ' + (error.message || 'Unknown error'));
     }
   };
@@ -1284,6 +1342,35 @@ function renderFit(job, fit){
   } else {
     setupPdfUpload('fitResumeFile', 'fitResume');
     setupPdfUpload('fitJobFile', 'fitJob');
+  }
+
+  // Backup: Attach listeners to DNA page file inputs when they're created
+  // Use MutationObserver to detect when dnaFitJobFile is added to the page
+  function attachDnaFileListeners() {
+    const dnaJobFile = $('dnaFitJobFile');
+    if (dnaJobFile && !dnaJobFile.dataset.listenerAttached) {
+      console.log('[PDF Handler] Attaching backup listener to dnaFitJobFile');
+      dnaJobFile.addEventListener('change', function(e) {
+        console.log('[PDF Handler] Change event fired on dnaFitJobFile');
+        if (window.handleDnaJobFile) {
+          window.handleDnaJobFile(this);
+        }
+      });
+      dnaJobFile.dataset.listenerAttached = 'true';
+    }
+  }
+
+  // Try to attach immediately
+  setTimeout(attachDnaFileListeners, 100);
+  setTimeout(attachDnaFileListeners, 500);
+  setTimeout(attachDnaFileListeners, 1000);
+
+  // Also watch for new elements being added
+  if (window.MutationObserver) {
+    const observer = new MutationObserver(() => {
+      attachDnaFileListeners();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 })();
 
