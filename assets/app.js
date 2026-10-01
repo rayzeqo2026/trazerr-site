@@ -52,7 +52,8 @@ window.handleDnaJobFile = async function(input) {
         text = await window.extractPdfText(file);
       } catch (pdfErr) {
         console.error('PDF extraction error:', pdfErr);
-        setStatus(st, "Could not read PDF: " + pdfErr.message, true);
+        const errMsg = pdfErr.message || 'Unknown error reading PDF';
+        setStatus(st, errMsg, true);
         input.value = "";
         return;
       }
@@ -1239,8 +1240,11 @@ function renderFit(job, fit){
         text += content.items.map(item => item.str).join(' ') + '\n';
       }
 
-      return text.trim();
+      const extracted = text.trim();
+      if (!extracted) throw new Error('PDF appears to be empty or is a scanned image. Please paste the job posting text instead.');
+      return extracted;
     } catch (error) {
+      console.error('PDF extraction error details:', error);
       throw new Error('Could not read PDF: ' + (error.message || 'Unknown error'));
     }
   };
