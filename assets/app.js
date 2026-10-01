@@ -1240,10 +1240,15 @@ function analyzeFit(resumeText, jobText){
   return { score: Math.round(score), strengths: strengths.slice(0, 4), gaps: gaps.slice(0, 4) };
 }
 
-$("fitBtn").addEventListener("click", () => {
-  const resume = $("fitResume").value.trim();
-  const job = $("fitJob").value.trim();
-  const st = $("fitStatus");
+// Attach event listener when DOM is ready
+function attachFitBtnListener() {
+  const btn = $("fitBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const resume = $("fitResume").value.trim();
+    const job = $("fitJob").value.trim();
+    const st = $("fitStatus");
 
   if (!resume || resume.length < 50) { setStatus(st, "Paste your resume (at least a few lines).", true); return; }
   if (!job || job.length < 50) { setStatus(st, "Paste the job posting (at least a few lines).", true); return; }
@@ -1276,11 +1281,19 @@ $("fitBtn").addEventListener("click", () => {
 
   html += '<div class="fit-section" style="margin-top:32px; padding:20px; background:var(--blue-soft); border-radius:8px; border-left:4px solid var(--blue)"><h3 style="margin:0 0 12px; font-size:14px; color:var(--ink); font-weight:700">Recommended Action</h3><p style="margin:0; color:var(--ink); line-height:1.6">' + actionHtml + '</p></div>';
 
-  resultDiv.innerHTML = html;
-  resultDiv.hidden = false;
-  setStatus(st, "");
-  window.scrollTo({ top: resultDiv.offsetTop - 100, behavior: "smooth" });
-});
+    resultDiv.innerHTML = html;
+    resultDiv.hidden = false;
+    setStatus(st, "");
+    window.scrollTo({ top: resultDiv.offsetTop - 100, behavior: "smooth" });
+  });
+}
+
+// Call when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachFitBtnListener);
+} else {
+  attachFitBtnListener();
+}
 
 /* ---------- Job DNA ---------- */
 // A posting can be pasted, or uploaded like a resume. Word and text files are read here and fill the box,
