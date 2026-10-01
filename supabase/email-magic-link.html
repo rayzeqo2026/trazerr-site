@@ -1,8 +1,10 @@
 <!-- Trazerr sign-in email. Paste into Supabase: Authentication > Emails > Magic Link (and Confirm signup). Subject: Your Trazerr sign-in link -->
 <div style="background:#F6F4F0;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #DCD8D0;border-top:4px solid #B42A1F;border-radius:6px;border-collapse:separate">
-    <tr><td style="padding:20px 24px 4px"><a href="https://www.trazerr.com" style="text-decoration:none;color:#16233F;font-weight:bold;font-size:20px"><img src="https://www.trazerr.com/logo.png" width="28" height="28" alt="" style="vertical-align:middle;border:0;margin-right:8px">Trazerr</a></td></tr>
-    <tr><td style="padding:12px 24px 24px;color:#16233F;font-size:15px;line-height:1.55">
+    <tr><td style="padding:24px 24px 0;text-align:center">
+      <img src="https://www.trazerr.com/logo.png" width="56" height="56" alt="Trazerr" style="display:inline-block;border:0;margin:0 0 16px">
+    </td></tr>
+    <tr><td style="padding:0 24px 24px;color:#16233F;font-size:15px;line-height:1.55">
       <p style="font-size:20px;font-weight:bold;margin:0 0 10px">Your sign-in link</p>
       <p style="margin:0 0 18px">Tap the button to sign in to Trazerr. It works once and expires in an hour. Open it on the same device you asked from.</p>
       <p style="margin:0 0 18px"><a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#1F3F82;color:#FFFFFF;padding:11px 20px;border-radius:4px;text-decoration:none;font-weight:bold">Sign in to Trazerr</a></p>

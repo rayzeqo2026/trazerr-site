@@ -1084,7 +1084,13 @@ async function employerjoin(req, res) {
   await countEvent("employer_joined");
   const admin = str(process.env.ALERT_EMAIL, 500).split(",")[0].trim();
   if (admin) await sendEmail({ to: admin, subject: "New employer waiting for approval: " + row.company,
-    text: row.contact_name + (row.job_title ? " (" + row.job_title + ")" : "") + " from " + row.company + " (" + me.email + (row.website ? ", " + row.website : "") + ") wants to search candidates on Trazerr.\n\nApprove or reject them on your usage page: " + SITE + "/stats.html" });
+    text: row.contact_name + (row.job_title ? " (" + row.job_title + ")" : "") + " from " + row.company + " (" + me.email + (row.website ? ", " + row.website : "") + ") wants to search candidates on Trazerr.\n\nApprove or reject them on your usage page: " + SITE + "/stats.html",
+    html: simpleHtml([
+      "<b>" + escHtml(row.company) + "</b> signed up and is waiting for approval.",
+      "Contact: " + escHtml(row.contact_name) + (row.job_title ? " (" + escHtml(row.job_title) + ")" : ""),
+      "Email: " + escHtml(me.email) + (row.website ? "<br>Website: " + escHtml(row.website) : ""),
+      emailButton(SITE + "/stats.html", "Approve or reject")
+    ], "Review new employers on your admin page.") });
   return res.status(200).json({ status: "pending" });
 }
 
