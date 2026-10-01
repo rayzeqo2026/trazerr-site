@@ -20,7 +20,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
-<script src="/assets/pdfjs/pdf.min.js"></script>
 </head>
 <body class="emp-page">
 <a class="skip" href="#main">Skip to content</a>
@@ -37,43 +36,6 @@
     <p class="lede">Describe the role and Trazerr ranks candidates by the evidence in their experience, with the reasons. Career changers and under-sold talent show up too. Candidates stay anonymous until they agree to talk.</p>
   </section>
 
-  <!-- Role Match for employers -->
-  <section class="block chap" id="fit">
-    <span class="chap-num" aria-hidden="true">00</span>
-    <div class="wrap">
-      <p class="chapter"><b>00</b>Role Match <span class="launch-badge">Free During Launch</span></p>
-      <div class="sec-head">
-        <h2>See how you really fit any role.</h2>
-        <p class="lede">Paste your resume and any job posting. Get your fit score, see what you bring, and discover what you'd need to stand out.</p>
-      </div>
-      <div class="fit-tool">
-        <div class="fit-inputs">
-          <div class="fit-input-group">
-            <label for="fitResume"><b>Your Resume</b></label>
-            <div class="fit-upload-section">
-              <input type="file" id="fitResumeFile" accept=".pdf" aria-label="Upload resume PDF" class="fit-file-input">
-              <label for="fitResumeFile" class="fit-file-label">📄 Upload PDF</label>
-              <span class="fit-upload-or">or paste below</span>
-            </div>
-            <textarea id="fitResume" placeholder="Paste your resume here or upload a PDF" aria-label="Your resume for fit analysis"></textarea>
-          </div>
-          <div class="fit-input-group">
-            <label for="fitJob"><b>Job Posting</b></label>
-            <div class="fit-upload-section">
-              <input type="file" id="fitJobFile" accept=".pdf" aria-label="Upload job posting PDF" class="fit-file-input">
-              <label for="fitJobFile" class="fit-file-label">📄 Upload PDF</label>
-              <span class="fit-upload-or">or paste below</span>
-            </div>
-            <textarea id="fitJob" placeholder="Paste the job posting here or upload a PDF" aria-label="Job posting for fit analysis"></textarea>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="fitBtn" type="button" style="width:100%; margin-top:16px">Analyze Fit</button>
-        <p class="status" id="fitStatus" role="status" aria-live="polite" style="margin-top:14px"></p>
-        <div id="fitResult" hidden style="margin-top:28px"></div>
-      </div>
-      <p class="fit-note" style="margin-top:32px; font-size:14px; color:var(--ink-2)">No job posting yet? Build your Career DNA first to explore suggested opportunities that match you.</p>
-    </div>
-  </section>
 
   <!-- Employer Profile Section -->
   <section class="emp-profile-section" style="margin-top:64px; padding:48px; background:linear-gradient(135deg, rgba(0,102,224,.08) 0%, rgba(224,176,112,.04) 100%); border-radius:12px; text-align:center">
