@@ -24,6 +24,7 @@ function toScore(v){
 }
 const arr = (v) => Array.isArray(v) ? v : [];
 function safeUrl(u){ try { const x = new URL(u); return (x.protocol === "https:" || x.protocol === "http:") ? x.href : "#"; } catch(e){ return "#"; } }
+function safeOn(id, event, handler) { const el = $(id); if (el) el.addEventListener(event, handler); }
 
 // Global handler for DNA fit job file upload
 window.handleDnaJobFile = async function(input) {
@@ -33,16 +34,22 @@ window.handleDnaJobFile = async function(input) {
   if (!st) return;
   try {
     setStatus(st, "Reading PDF...");
-    const f = await readResumeFile(file);
-    const jobTextarea = document.getElementById("dnaFitJob");
-    if (jobTextarea) {
-      if (f.kind === "text") {
-        jobTextarea.value = f.text.trim();
+    let text = null;
+    if (file.type === "application/pdf" && window.extractPdfText) {
+      text = await window.extractPdfText(file);
+    } else {
+      const f = await readResumeFile(file);
+      if (f.kind === "text") text = f.text;
+    }
+    if (text) {
+      const jobTextarea = document.getElementById("dnaFitJob");
+      if (jobTextarea) {
+        jobTextarea.value = text.trim();
         setStatus(st, "✓ Job posting loaded");
         setTimeout(() => setStatus(st, ""), 2000);
-      } else {
-        setStatus(st, "File type not supported for auto-fill", true);
       }
+    } else {
+      setStatus(st, "Could not extract text from file", true);
     }
     input.value = "";
   } catch (err) {
@@ -229,8 +236,8 @@ function loadingHTML(msg, steps){
   return '<div class="loading" aria-busy="true"><div class="spinner" aria-hidden="true"></div><p id="loadMsg">' + esc(steps[0]) + '</p><div class="progress" aria-hidden="true"><i id="loadBar" style="width:' + Math.round(100 / (steps.length + 1)) + '%"></i></div></div>';
 }
 function errorHTML(msg, retryLabel){ return '<div class="loading"><p style="color:var(--err)">' + esc(msg) + '</p><div class="o-foot" style="justify-content:center"><button class="btn btn-quiet" type="button" data-close>Close</button>' + (retryLabel ? '<button class="btn btn-primary" type="button" id="retryBtn">' + esc(retryLabel) + "</button>" : "") + "</div></div>"; }
-$("closeBtn").addEventListener("click", closeOverlay);
-$("oBody").addEventListener("click", e => { if (e.target.closest("[data-close]")) closeOverlay(); });
+if ($("closeBtn")) $("closeBtn").addEventListener("click", closeOverlay);
+if ($("oBody")) $("oBody").addEventListener("click", e => { if (e.target.closest("[data-close]")) closeOverlay(); });
 document.addEventListener("keydown", e => {
   const o = $("overlay");
   if (!o.classList.contains("open")) return;
@@ -298,13 +305,15 @@ async function handleFile(file){
   } catch (e) { picked = null; setStatus(status, e.message, true); }
 }
 const drop = $("drop");
-$("file").addEventListener("change", e => handleFile(e.target.files[0]));
-["dragenter","dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
-["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
-drop.addEventListener("drop", e => handleFile(e.dataTransfer.files[0]));
+if ($("file")) $("file").addEventListener("change", e => handleFile(e.target.files[0]));
+if (drop) {
+  ["dragenter","dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => handleFile(e.dataTransfer.files[0]));
+}
 
 const STEPS = ["Step 1 of 4 · Reading your resume…", "Step 2 of 4 · Finding the evidence…", "Step 3 of 4 · Looking for hidden talent…", "Step 4 of 4 · Writing your Career DNA…"];
-$("analyzeBtn").addEventListener("click", async () => {
+if ($("analyzeBtn")) $("analyzeBtn").addEventListener("click", async () => {
   const btn = $("analyzeBtn"), status = $("status");
   const pasted = $("paste").value.trim();
   let payload = null;
@@ -344,14 +353,14 @@ $("analyzeBtn").addEventListener("click", async () => {
   } finally { clearInterval(ticker); btn.disabled = false; btn.textContent = label; bar.style.width = "100%"; setTimeout(() => { prog.hidden = true; bar.style.width = "0"; }, 400); }
 });
 
-$("homeTailor").addEventListener("click", () => {
+if ($("homeTailor")) $("homeTailor").addEventListener("click", () => {
   const p = profile && !profile.isExample ? profile : loadSaved();
   if (p) openTailor(p, {});
-  else { $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); $("drop").focus({ preventScroll: true }); }
+  else { $("try")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); $("drop")?.focus({ preventScroll: true }); }
 });
 
-$("jw").addEventListener("input", () => { delete $("jw").dataset.auto; $("jwNote").hidden = true; });
-$("jwChange").addEventListener("click", () => { const jw = $("jw"); delete jw.dataset.auto; $("jwNote").hidden = true; jw.select(); jw.focus(); });
+if ($("jw")) $("jw").addEventListener("input", () => { delete $("jw").dataset.auto; if ($("jwNote")) $("jwNote").hidden = true; });
+if ($("jwChange")) $("jwChange").addEventListener("click", () => { const jw = $("jw"); if (jw) { delete jw.dataset.auto; if ($("jwNote")) $("jwNote").hidden = true; jw.select(); jw.focus(); } });
 
 /* ---------- example ---------- */
 const EXAMPLE = {
@@ -378,8 +387,8 @@ const EXAMPLE = {
     { what: "Sales tools", how: "List the CRM and forecasting tools you use day to day.", example: "Tracked the Northeast pipeline in [CRM name] and built monthly forecasts in [tool]." }
   ]
 };
-$("exampleBtn").addEventListener("click", () => { track("example_viewed"); showProfile(normalize(EXAMPLE)); });
-$("exampleBtn2").addEventListener("click", () => $("exampleBtn").click());
+if ($("exampleBtn")) $("exampleBtn").addEventListener("click", () => { track("example_viewed"); showProfile(normalize(EXAMPLE)); });
+if ($("exampleBtn2")) $("exampleBtn2").addEventListener("click", () => { if ($("exampleBtn")) $("exampleBtn").click(); });
 
 /* ---------- Career DNA view ---------- */
 function greeting(){ const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
@@ -1009,9 +1018,10 @@ async function planPath(p){
 }
 
 /* ---------- jobs ---------- */
-$("jobsForm").addEventListener("submit", e => { e.preventDefault(); runJobSearch(true); });
-document.querySelectorAll("#jobsEmpty [data-q]").forEach(b => b.addEventListener("click", () => { $("jq").value = b.dataset.q; runJobSearch(true); }));
-$("moreBtn").addEventListener("click", () => runJobSearch(false));
+safeOn("jobsForm", "submit", e => { e.preventDefault(); runJobSearch(true); });
+const jobsEmpty = document.querySelector("#jobsEmpty");
+if (jobsEmpty) jobsEmpty.querySelectorAll("[data-q]").forEach(b => b.addEventListener("click", () => { $("jq").value = b.dataset.q; runJobSearch(true); }));
+safeOn("moreBtn", "click", () => runJobSearch(false));
 
 async function runJobSearch(fresh){
   const st = $("jobsStatus"), btn = $("jobsBtn"), more = $("moreBtn");
@@ -1081,8 +1091,9 @@ async function addAlert(a){
   if (error.code === "42501") return { ok: false, text: "You can have up to 3 job alerts. Stop one from your account to add another." };
   return { ok: false, text: "The job alert didn't save. Try again in a moment." };
 }
-$("alertBtn").addEventListener("click", async () => {
+safeOn("alertBtn", "click", async () => {
   const st = $("alertStatus"), btn = $("alertBtn"), a = currentAlert();
+  if (!btn || !st) return;
   btn.disabled = true; setStatus(st, "Saving…");
   try {
     await acct();
@@ -1177,7 +1188,7 @@ function renderFit(job, fit){
     }, 100);
   }
 
-  async function extractPdfText(file) {
+  window.extractPdfText = async function(file) {
     try {
       if (!file || file.type !== 'application/pdf') throw new Error('Please select a valid PDF file');
       if (typeof pdfjsLib === 'undefined') throw new Error('PDF reader is loading. Please try again.');
@@ -1196,7 +1207,7 @@ function renderFit(job, fit){
     } catch (error) {
       throw new Error('Could not read PDF: ' + (error.message || 'Unknown error'));
     }
-  }
+  };
 
   function setupPdfUpload(fileInputId, textareaId) {
     const fileInput = $(fileInputId);
@@ -1368,13 +1379,18 @@ function initDnaFitBtn(resumePayload) {
 
 // Attach event listener when DOM is ready
 function attachFitBtnListener() {
+  console.log('attachFitBtnListener called');
   const btn = $("fitBtn");
   if (!btn) {
+    console.log('fitBtn not found, retrying...');
     setTimeout(attachFitBtnListener, 50);
     return;
   }
 
+  console.log('attachFitBtnListener: attaching click listener to fitBtn');
+
   btn.addEventListener("click", function(event) {
+    console.log('fitBtn click event triggered', event);
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -1428,11 +1444,21 @@ function attachFitBtnListener() {
 }
 
 // Initialize immediately and retry if needed
-attachFitBtnListener();
+window._attachFitBtnListenerCalled = false;
+try {
+  console.log('About to call attachFitBtnListener, fitBtn element exists:', !!document.getElementById('fitBtn'));
+  attachFitBtnListener();
+  window._attachFitBtnListenerCalled = true;
+} catch (e) {
+  console.error('Error calling attachFitBtnListener:', e);
+}
 
 // Also ensure it's attached when DOM is fully ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', attachFitBtnListener);
+  document.addEventListener('DOMContentLoaded', () => {
+    attachFitBtnListener();
+    window._attachFitBtnListenerCalled = true;
+  });
 }
 
 /* ---------- Job DNA ---------- */
@@ -1452,14 +1478,16 @@ async function handlePostingFile(file){
     track("posting_file");
   } catch (e) { clearPostingFile(); setStatus(st, e.message, true); }
 }
-$("postingFile").addEventListener("change", e => handlePostingFile(e.target.files[0]));
+safeOn("postingFile", "change", e => handlePostingFile(e.target.files[0]));
 const postingDrop = $("postingDrop");
-["dragenter","dragover"].forEach(t => postingDrop.addEventListener(t, e => { e.preventDefault(); postingDrop.classList.add("over"); }));
-["dragleave","drop"].forEach(t => postingDrop.addEventListener(t, e => { e.preventDefault(); postingDrop.classList.remove("over"); }));
-postingDrop.addEventListener("drop", e => handlePostingFile(e.dataTransfer.files[0]));
-$("postingText").addEventListener("input", () => { if (postingPdf) clearPostingFile(); });
+if (postingDrop) {
+  ["dragenter","dragover"].forEach(t => postingDrop.addEventListener(t, e => { e.preventDefault(); postingDrop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(t => postingDrop.addEventListener(t, e => { e.preventDefault(); postingDrop.classList.remove("over"); }));
+  postingDrop.addEventListener("drop", e => handlePostingFile(e.dataTransfer.files[0]));
+}
+safeOn("postingText", "input", () => { if (postingPdf) clearPostingFile(); });
 
-$("jobdnaBtn").addEventListener("click", async () => {
+safeOn("jobdnaBtn", "click", async () => {
   const text = $("postingText").value.trim(), st = $("jobdnaStatus"), btn = $("jobdnaBtn");
   const usePdf = postingPdf && !text;
   if (!usePdf && text.length < 120) { setStatus(st, "Paste the full job posting, at least a few lines, or upload it.", true); return; }
@@ -1472,8 +1500,10 @@ $("jobdnaBtn").addEventListener("click", async () => {
   } catch (e) { setStatus(st, e.message, true); }
   finally { btn.disabled = false; }
 });
-$("postingFitBtn").addEventListener("click", () => {
-  const text = $("postingText").value.trim(), st = $("jobdnaStatus");
+safeOn("postingFitBtn", "click", () => {
+  const textEl = $("postingText"), st = $("jobdnaStatus");
+  if (!textEl || !st) return;
+  const text = textEl.value.trim();
   if (postingPdf && !text) { setStatus(st, "Choose Build Job DNA first, so Trazerr can read the PDF.", true); return; }
   if (text.length < 120) { setStatus(st, "Paste the full job posting first, or upload it.", true); return; }
   setStatus(st, "");
@@ -1515,8 +1545,8 @@ function applyTheme(t){
   syncHead(); readPalette(); window.dispatchEvent(new Event("themechange"));
   setTimeout(() => root.classList.remove("theme-anim"), 420);
 }
-$("themeToggle").addEventListener("click", () => { const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; applyTheme(t); track("theme_" + t); });
-if (document.documentElement.dataset.theme === "dark") { $("themeToggle").setAttribute("aria-label", "Switch to light theme"); $("themeToggle").setAttribute("aria-pressed", "true"); }
+safeOn("themeToggle", "click", () => { const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; applyTheme(t); track("theme_" + t); });
+if (document.documentElement.dataset.theme === "dark") { const tt = $("themeToggle"); if (tt) { tt.setAttribute("aria-label", "Switch to light theme"); tt.setAttribute("aria-pressed", "true"); } }
 
 /* ---------- signature: the sequencer ---------- */
 const TAU = Math.PI * 2;
@@ -1893,7 +1923,7 @@ window.Seqlay = (() => {
     $("seqlayStep").textContent = "Your Career DNA is ready"; $("seqlayBar").style.width = "100%"; done = .001;
     setTimeout(stop, 900);
   }
-  $("seqlayHide").addEventListener("click", stop);
+  safeOn("seqlayHide", "click", stop);
   window.addEventListener("resize", () => { if (running) size(); });
   return { start, step, finish };
 })();
@@ -2164,7 +2194,7 @@ async function loadAlerts(){
     loadAlerts();
   });
 }
-$("acctBtn").addEventListener("click", async () => {
+safeOn("acctBtn", "click", async () => {
   try { await acct(); openAccount(); }
   catch (e) { openOverlay("Your account", errorHTML(e.message || "Sign-in isn't available right now. Try again in a moment.")); }
 });
