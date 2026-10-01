@@ -1253,6 +1253,30 @@ function initDnaFitBtn(resumePayload) {
   const btn = $("dnaFitBtn");
   if (!btn) return;
 
+  // Setup PDF upload for job posting
+  const jobFileInput = $("dnaFitJobFile");
+  if (jobFileInput) {
+    jobFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const st = $("dnaFitStatus");
+      try {
+        setStatus(st, "Reading PDF...");
+        const f = await readResumeFile(file);
+        if (f.kind === "text") {
+          $("dnaFitJob").value = f.text.trim();
+        } else {
+          setStatus(st, "Ready to analyze. Check the job posting above.", false);
+        }
+        setStatus(st, "");
+        e.target.value = "";
+      } catch (err) {
+        setStatus(st, err.message, true);
+        e.target.value = "";
+      }
+    });
+  }
+
   // Remove old listener if exists
   btn.onclick = null;
 
