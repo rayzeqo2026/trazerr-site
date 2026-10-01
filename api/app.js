@@ -1281,7 +1281,10 @@ function alertEmail(groups, unsub) {
   const label = (a) => a.query + (a.remote ? " (remote)" : a.location ? " near " + a.location : "");
   const subject = total + " new job" + (total === 1 ? "" : "s") + " for " + label(groups[0].alert) + (groups.length > 1 ? " and more" : "");
   const searchUrl = (a) => SITE + "/?" + new URLSearchParams({ q: a.query, where: a.location || "", ...(a.remote ? { remote: "1" } : {}), src: "alert" }) + "#jobs";
-  let html = '<p style="font-size:20px;font-weight:bold;margin:0 0 4px">New jobs for you</p>' +
+  let html = '<div style="text-align:center;margin:0 0 24px">' +
+    '<img src="' + SITE + '/logo.png" width="56" height="56" alt="Trazerr" style="display:inline-block;border:0">' +
+    '</div>' +
+    '<p style="font-size:20px;font-weight:bold;margin:0 0 4px">New jobs for you</p>' +
     '<p style="color:#4A5163;margin:0 0 18px">Posted in the past week, matching your job alerts on Trazerr.</p>';
   let text = "New jobs for you, posted in the past week.\n";
   for (const g of groups) {
