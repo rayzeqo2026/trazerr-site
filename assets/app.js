@@ -416,6 +416,12 @@ function showProfile(p){
     h += "</div>";
   }
   if (!ex) {
+    h += '<div class="o-sec" id="skillsSec"><h3>Add skills we might have missed</h3><p class="hint">Think of skills or achievements we didn\'t catch? Add them here.</p>';
+    h += '<div class="skill-input-group"><input class="input" id="newSkillInput" type="text" placeholder="e.g. Project management, Leadership, Data analysis" aria-label="Add a skill"><button class="btn btn-primary" type="button" id="addSkillBtn">Add skill</button></div>';
+    h += '<ul class="added-skills" id="addedSkillsList"></ul>';
+    h += '<p class="status" id="skillStatus" role="status" aria-live="polite"></p></div>';
+  }
+  if (!ex) {
     h += '<div class="o-sec" id="pathSec"><h3>Plan a path</h3><p class="hint">Name a role you\'d like to reach and Trazerr maps the steps from here.</p>';
     h += '<form class="goal-form" id="goalForm" novalidate><input class="input" id="goalInput" type="text" placeholder="e.g. Hotel general manager" aria-label="Goal role"><button class="btn btn-primary" type="submit" id="goalBtn">Plan my path</button></form><p class="status" id="goalStatus" role="status" aria-live="polite"></p><div id="pathOut"></div></div>';
   }
@@ -458,6 +464,59 @@ function showProfile(p){
       track("gap_line_changed");
     });
   });
+
+  // Handle adding skills
+  const addedSkills = new Set();
+  const skillInput = $("newSkillInput");
+  const addSkillBtn = $("addSkillBtn");
+  const skillsList = $("addedSkillsList");
+  const skillStatus = $("skillStatus");
+
+  function renderSkillsList(){
+    skillsList.innerHTML = Array.from(addedSkills).map((skill, i) =>
+      '<li class="added-skill animate-bounce"><span>' + esc(skill) + '</span><button class="btn btn-quiet btn-sm" type="button" data-removeskill="' + i + '" aria-label="Remove ' + esc(skill) + '">Remove</button></li>'
+    ).join('');
+
+    // Add remove listeners
+    skillsList.querySelectorAll("[data-removeskill]").forEach((btn, idx) => {
+      btn.onclick = () => {
+        const skills = Array.from(addedSkills);
+        addedSkills.delete(skills[idx]);
+        renderSkillsList();
+        track("skill_removed");
+      };
+    });
+  }
+
+  if (addSkillBtn) {
+    addSkillBtn.onclick = () => {
+      const skill = (skillInput.value || "").trim();
+      if (!skill) {
+        setStatus(skillStatus, "Please enter a skill", true);
+        skillInput.focus();
+        return;
+      }
+      if (addedSkills.has(skill)) {
+        setStatus(skillStatus, "You already added this skill", true);
+        skillInput.focus();
+        return;
+      }
+      addedSkills.add(skill);
+      skillInput.value = "";
+      renderSkillsList();
+      setStatus(skillStatus, skill + " added. Keep adding or rebuild your Career DNA to see the impact.");
+      skillInput.focus();
+      track("skill_added");
+    };
+
+    skillInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addSkillBtn.click();
+      }
+    });
+  }
+
   const rb = $("rebuildBtn"); if (rb) rb.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const t = $("tryOwnBtn"); if (t) t.onclick = () => { closeOverlay(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
   const a = $("againBtn"); if (a) a.onclick = () => { closeOverlay(); resetForm(); $("try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); };
