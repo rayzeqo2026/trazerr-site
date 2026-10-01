@@ -1243,9 +1243,14 @@ function analyzeFit(resumeText, jobText){
 // Attach event listener when DOM is ready
 function attachFitBtnListener() {
   const btn = $("fitBtn");
-  if (!btn) return;
+  if (!btn) {
+    setTimeout(attachFitBtnListener, 50);
+    return;
+  }
 
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", function(event) {
+    event.preventDefault();
+    event.stopPropagation();
     const resume = $("fitResume").value.trim();
     const job = $("fitJob").value.trim();
     const st = $("fitStatus");
@@ -1288,11 +1293,12 @@ function attachFitBtnListener() {
   });
 }
 
-// Call when DOM is ready
+// Initialize immediately and retry if needed
+attachFitBtnListener();
+
+// Also ensure it's attached when DOM is fully ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', attachFitBtnListener);
-} else {
-  attachFitBtnListener();
 }
 
 /* ---------- Job DNA ---------- */
