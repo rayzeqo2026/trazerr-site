@@ -24,6 +24,32 @@ function toScore(v){
 }
 const arr = (v) => Array.isArray(v) ? v : [];
 function safeUrl(u){ try { const x = new URL(u); return (x.protocol === "https:" || x.protocol === "http:") ? x.href : "#"; } catch(e){ return "#"; } }
+
+// Global handler for DNA fit job file upload
+window.handleDnaJobFile = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const st = document.getElementById("dnaFitStatus");
+  if (!st) return;
+  try {
+    setStatus(st, "Reading PDF...");
+    const f = await readResumeFile(file);
+    const jobTextarea = document.getElementById("dnaFitJob");
+    if (jobTextarea) {
+      if (f.kind === "text") {
+        jobTextarea.value = f.text.trim();
+        setStatus(st, "✓ Job posting loaded");
+        setTimeout(() => setStatus(st, ""), 2000);
+      } else {
+        setStatus(st, "File type not supported for auto-fill", true);
+      }
+    }
+    input.value = "";
+  } catch (err) {
+    setStatus(st, "Error: " + err.message, true);
+    input.value = "";
+  }
+};
 function ago(d){
   const t = Date.parse(d); if (!t) return "";
   const days = Math.floor((Date.now() - t) / 86400000);
@@ -392,7 +418,7 @@ function showProfile(p){
     h += '</div>';
     h += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; z-index:2">';
     h += '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">';
-    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; cursor:pointer">';
+    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" onchange="window.handleDnaJobFile && window.handleDnaJobFile(this)" style="padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; cursor:pointer">';
     h += '<span style="color:var(--ink-2); font-size:13px">or paste below</span>';
     h += '</div>';
     h += '<textarea id="dnaFitJob" placeholder="Paste the full job posting here" aria-label="Job posting for fit analysis" spellcheck="true" autocomplete="off" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical; width:100%; box-sizing:border-box; background:white; color:var(--ink)"></textarea>';
@@ -1274,44 +1300,7 @@ function initDnaFitBtn(resumePayload) {
   const btn = $("dnaFitBtn");
   if (!btn) return;
 
-  // Setup PDF upload for job posting
-  setTimeout(() => {
-    const jobFileInput = $("dnaFitJobFile");
-    if (!jobFileInput) {
-      console.warn("dnaFitJobFile not found");
-      return;
-    }
-
-    // Remove any previous listeners by cloning and replacing
-    const newInput = jobFileInput.cloneNode(true);
-    jobFileInput.parentNode.replaceChild(newInput, jobFileInput);
-
-    newInput.addEventListener("change", async function(e) {
-      const file = this.files[0];
-      if (!file) {
-        console.log("No file selected");
-        return;
-      }
-      const st = $("dnaFitStatus");
-      try {
-        setStatus(st, "Reading PDF...");
-        const f = await readResumeFile(file);
-        if (f.kind === "text") {
-          $("dnaFitJob").value = f.text.trim();
-          setStatus(st, "✓ Job posting loaded");
-          setTimeout(() => setStatus(st, ""), 2000);
-        } else {
-          setStatus(st, "Ready to analyze. Check the job posting above.", false);
-          setTimeout(() => setStatus(st, ""), 2000);
-        }
-        this.value = "";
-      } catch (err) {
-        console.error("PDF read error:", err);
-        setStatus(st, "Error: " + err.message, true);
-        this.value = "";
-      }
-    });
-  }, 100);
+  // PDF upload is handled by inline onchange handler (window.handleDnaJobFile)
 
   // Remove old listener if exists
   btn.onclick = null;
