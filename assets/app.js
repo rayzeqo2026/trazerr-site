@@ -392,8 +392,8 @@ function showProfile(p){
     h += '</div>';
     h += '<div style="display:flex; flex-direction:column; gap:12px">';
     h += '<div style="display:flex; gap:8px; align-items:center">';
-    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="display:none">';
-    h += '<label for="dnaFitJobFile" class="fit-file-label" style="margin:0; cursor:pointer">📄 Upload PDF</label>';
+    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="display:none !important">';
+    h += '<button type="button" id="dnaFitJobFileBtn" class="fit-file-label" style="margin:0; cursor:pointer; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; display:flex; align-items:center; gap:6px">📄 Upload PDF</button>';
     h += '<span style="color:var(--ink-2); font-size:13px">or paste below</span>';
     h += '</div>';
     h += '<textarea id="dnaFitJob" placeholder="Paste any job posting here or upload a PDF" aria-label="Job posting for fit analysis" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical"></textarea>';
@@ -1277,12 +1277,17 @@ function initDnaFitBtn(resumePayload) {
 
   // Setup PDF upload for job posting
   const jobFileInput = $("dnaFitJobFile");
-  if (jobFileInput) {
-    // Remove old listeners by cloning
-    const newInput = jobFileInput.cloneNode(true);
-    jobFileInput.parentNode.replaceChild(newInput, jobFileInput);
+  const jobFileBtn = $("dnaFitJobFileBtn");
 
-    newInput.addEventListener("change", async (e) => {
+  if (jobFileBtn) {
+    jobFileBtn.onclick = (e) => {
+      e.preventDefault();
+      jobFileInput.click();
+    };
+  }
+
+  if (jobFileInput) {
+    jobFileInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const st = $("dnaFitStatus");
@@ -1291,7 +1296,8 @@ function initDnaFitBtn(resumePayload) {
         const f = await readResumeFile(file);
         if (f.kind === "text") {
           $("dnaFitJob").value = f.text.trim();
-          setStatus(st, "");
+          setStatus(st, "✓ Job posting loaded");
+          setTimeout(() => setStatus(st, ""), 2000);
         } else {
           setStatus(st, "Ready to analyze. Check the job posting above.", false);
           setTimeout(() => setStatus(st, ""), 2000);
