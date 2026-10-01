@@ -362,26 +362,6 @@ function showProfile(p){
   const ex = p.isExample;
   let h = '';
 
-  // Add Quick Role Match section at top (not for examples)
-  if (!ex && resumeSrc) {
-    h += '<div id="dnaFitSection" style="margin-bottom:48px; padding-bottom:32px; border-bottom:1px solid var(--line-soft)">';
-    h += '<div style="margin-bottom:24px">';
-    h += '<p style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-2); margin:0 0 8px"><b>Try This Now</b></p>';
-    h += '<h3 style="margin:0 0 8px; font-size:18px">Quick Role Match <span class="launch-badge" style="margin-left:8px">Free During Launch</span></h3>';
-    h += '<p style="margin:8px 0 0; color:var(--ink-2); font-size:14px">See how you fit any role. Paste a job posting to get your instant fit score:</p>';
-    h += '</div>';
-    h += '<div style="display:flex; flex-direction:column; gap:12px">';
-    h += '<div style="display:flex; gap:8px; align-items:center">';
-    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="display:none">';
-    h += '<label for="dnaFitJobFile" class="fit-file-label" style="margin:0">📄 Upload PDF</label>';
-    h += '<span style="color:var(--ink-2); font-size:13px">or paste below</span>';
-    h += '</div>';
-    h += '<textarea id="dnaFitJob" placeholder="Paste any job posting here or upload a PDF" aria-label="Job posting for fit analysis" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical"></textarea>';
-    h += '<button class="btn btn-primary" id="dnaFitBtn" type="button" style="align-self:flex-start">Analyze Fit</button>';
-    h += '<p class="status" id="dnaFitStatus" role="status" aria-live="polite"></p>';
-    h += '<div id="dnaFitResult" hidden style="margin-top:16px"></div>';
-    h += '</div></div>';
-  }
 
   h += '<div class="o-hero">';
   if (ex) h += '<span class="flag">Example profile. Build your own to see yours.</span>';
@@ -400,6 +380,27 @@ function showProfile(p){
     if (p.directions.length) h += '<button type="button" data-findjobs="0"><b>Find jobs that fit</b><span>Live openings for ' + esc(p.directions[0].role) + (near ? " near " + esc(near) : "") + ", with a fit check for each.</span></button>";
     h += '<button type="button" id="nxPath"><b>Plan a path</b><span>Map the steps from where you are to a bigger goal.</span></button>';
     h += "</div></div>";
+  }
+
+  // Add Quick Role Match section after intro (not for examples)
+  if (!ex && resumeSrc) {
+    h += '<div id="dnaFitSection" style="margin-top:48px; padding:32px; background:var(--bg-secondary); border-radius:8px; border:1px solid var(--line)">';
+    h += '<div style="margin-bottom:24px">';
+    h += '<p style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-2); margin:0 0 8px"><b>Try This Now</b></p>';
+    h += '<h3 style="margin:0 0 8px; font-size:18px">Quick Role Match <span class="launch-badge" style="margin-left:8px">Free During Launch</span></h3>';
+    h += '<p style="margin:8px 0 0; color:var(--ink-2); font-size:14px">See how you fit any role. Paste a job posting to get your instant fit score:</p>';
+    h += '</div>';
+    h += '<div style="display:flex; flex-direction:column; gap:12px">';
+    h += '<div style="display:flex; gap:8px; align-items:center">';
+    h += '<input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="display:none">';
+    h += '<label for="dnaFitJobFile" class="fit-file-label" style="margin:0; cursor:pointer">📄 Upload PDF</label>';
+    h += '<span style="color:var(--ink-2); font-size:13px">or paste below</span>';
+    h += '</div>';
+    h += '<textarea id="dnaFitJob" placeholder="Paste any job posting here or upload a PDF" aria-label="Job posting for fit analysis" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical"></textarea>';
+    h += '<button class="btn btn-primary" id="dnaFitBtn" type="button" style="align-self:flex-start">Analyze Fit</button>';
+    h += '<p class="status" id="dnaFitStatus" role="status" aria-live="polite"></p>';
+    h += '<div id="dnaFitResult" hidden style="margin-top:16px"></div>';
+    h += '</div></div>';
   }
 
   if (p.strengths.length) {
@@ -1277,7 +1278,11 @@ function initDnaFitBtn(resumePayload) {
   // Setup PDF upload for job posting
   const jobFileInput = $("dnaFitJobFile");
   if (jobFileInput) {
-    jobFileInput.addEventListener("change", async (e) => {
+    // Remove old listeners by cloning
+    const newInput = jobFileInput.cloneNode(true);
+    jobFileInput.parentNode.replaceChild(newInput, jobFileInput);
+
+    newInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const st = $("dnaFitStatus");
@@ -1286,10 +1291,11 @@ function initDnaFitBtn(resumePayload) {
         const f = await readResumeFile(file);
         if (f.kind === "text") {
           $("dnaFitJob").value = f.text.trim();
+          setStatus(st, "");
         } else {
           setStatus(st, "Ready to analyze. Check the job posting above.", false);
+          setTimeout(() => setStatus(st, ""), 2000);
         }
-        setStatus(st, "");
         e.target.value = "";
       } catch (err) {
         setStatus(st, err.message, true);
