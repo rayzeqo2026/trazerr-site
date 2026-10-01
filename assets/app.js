@@ -1873,7 +1873,7 @@ function animateNumbers(){
     entries.forEach(entry => {
       if (!entry.isIntersecting || entry.target.dataset.animated) return;
       entry.target.dataset.animated = "1";
-      const final = parseInt(entry.target.textContent, 10);
+      const final = parseInt(entry.target.dataset.target || entry.target.textContent, 10);
       if (isNaN(final)) return;
       let current = 0;
       const duration = 600;
@@ -1889,6 +1889,6 @@ function animateNumbers(){
       requestAnimationFrame(animate);
     });
   }, { threshold: 0.5 });
-  document.querySelectorAll(".dm-ring b, .emp-score b, .ba-row b").forEach(el => observer.observe(el));
+  document.querySelectorAll(".dm-ring b, .emp-score b, .ba-row b, .proof-stats .count").forEach(el => observer.observe(el));
 }
 animateNumbers();

@@ -1174,6 +1174,48 @@ html.theme-anim, html.theme-anim *{transition:background-color .35s ease, color 
 @media (max-width:360px){ .acct-tabs [role=tab]{font-size:.8125rem; padding:6px 2px} }
 .posting-upload{margin-top:10px}
 
+/* ---------- Social Proof Section ---------- */
+.proof{background:linear-gradient(135deg, var(--d-action-soft) 0%, rgba(0,102,224,.05) 100%); border-top:1px solid var(--d-action-soft); border-bottom:1px solid var(--d-action-soft)}
+.proof-head{margin-bottom:48px; text-align:center}
+.proof-head h2{font-size:2rem; margin-bottom:12px}
+.proof-head .lede{max-width:500px; margin:0 auto}
+.proof-stats{list-style:none; padding:0; margin:0 0 64px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px}
+.proof-stats li{text-align:center; padding:32px 24px; background:rgba(255,255,255,.6); border-radius:var(--d-r-card); border:1px solid var(--d-border); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+:root[data-theme="dark"] .proof-stats li{background:rgba(14,22,40,.4); border-color:var(--d-border)}
+.stat-num{display:flex; align-items:baseline; justify-content:center; gap:4px; margin-bottom:12px; font-size:2.5rem; font-weight:800; color:var(--d-action); line-height:1}
+.stat-num span{font-size:1.8rem; color:var(--d-action); font-weight:700}
+.stat-label{font-weight:600; color:var(--d-text); margin-bottom:4px; font-size:1.1rem}
+.stat-note{font-size:.9rem; color:var(--d-text2); margin:0}
+.proof-testimonial{margin-top:48px; text-align:center}
+.testimonial-card{background:var(--d-surface); border:1px solid var(--d-border); border-radius:var(--d-r-card); padding:48px 40px; max-width:660px; margin:0 auto; box-shadow:0 8px 24px rgba(0,0,0,.08)}
+:root[data-theme="dark"] .testimonial-card{border-color:var(--d-border); box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.testimonial-quote{font-size:1.25rem; line-height:1.6; font-style:italic; color:var(--d-text); margin:0 0 32px; letter-spacing:-.25px}
+.testimonial-author{display:flex; align-items:center; gap:16px; justify-content:center}
+.author-avatar{width:56px; height:56px; border-radius:50%; background:var(--d-action-soft); color:var(--d-action); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.2rem; flex-shrink:0}
+.author-name{font-weight:600; color:var(--d-text); margin:0}
+.author-role{font-size:.9rem; color:var(--d-text2); margin:2px 0 0}
+
+@media (max-width:800px){
+  .proof-stats{grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px}
+  .stat-num{font-size:2rem}
+  .stat-num span{font-size:1.4rem}
+  .testimonial-card{padding:32px 24px}
+  .testimonial-quote{font-size:1.1rem}
+  .testimonial-author{flex-direction:column; gap:12px}
+}
+@media (max-width:560px){
+  .proof-stats{grid-template-columns:1fr; gap:20px}
+  .proof-head h2{font-size:1.5rem}
+  .proof-stats li{padding:24px 16px}
+  .stat-num{font-size:1.8rem}
+  .stat-num span{font-size:1.2rem}
+  .stat-label{font-size:1rem}
+  .stat-note{font-size:.85rem}
+  .testimonial-card{padding:24px 16px}
+  .testimonial-quote{font-size:1rem; margin-bottom:24px}
+  .author-avatar{width:48px; height:48px; font-size:1rem}
+}
+
 /* Easy wins: animations & micro-interactions */
 @keyframes fadeIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:translateY(0)}}
 @keyframes countUp{from{--count:0}to{--count:1}}
