@@ -104,26 +104,6 @@
         <p class="status" id="status" role="status" aria-live="polite"></p>
         <div class="mini"><button class="linkish" id="exampleBtn" type="button">See an example</button><a href="#privacy" id="saveNote">Stored only if you save it</a></div>
       </div>
-
-      <!-- Role Match section - appears after DNA analysis -->
-      <div id="dnaFitSection" hidden style="margin-top:48px; padding-top:32px; border-top:1px solid var(--line-soft)">
-        <div style="margin-bottom:24px">
-          <p style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-2); margin:0 0 8px"><b>Next Step</b></p>
-          <h3 style="margin:0 0 8px; font-size:18px">Quick Role Match <span class="launch-badge" style="margin-left:8px">Free During Launch</span></h3>
-          <p style="margin:8px 0 0; color:var(--ink-2); font-size:14px">See how your strengths fit any role. Just paste a job posting:</p>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px">
-          <div style="display:flex; gap:8px; align-items:center">
-            <input type="file" id="dnaFitJobFile" accept=".pdf" aria-label="Upload job posting PDF" style="display:none">
-            <label for="dnaFitJobFile" class="fit-file-label" style="margin:0">📄 Upload PDF</label>
-            <span style="color:var(--ink-2); font-size:13px">or paste below</span>
-          </div>
-          <textarea id="dnaFitJob" placeholder="Paste any job posting here or upload a PDF" aria-label="Job posting for fit analysis" style="padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:14px; min-height:120px; resize:vertical"></textarea>
-          <button class="btn btn-primary" id="dnaFitBtn" type="button" style="align-self:flex-start">Analyze Fit</button>
-          <p class="status" id="dnaFitStatus" role="status" aria-live="polite"></p>
-          <div id="dnaFitResult" hidden style="margin-top:16px"></div>
-        </div>
-      </div>
     </div>
   </section>
 
