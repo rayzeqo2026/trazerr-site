@@ -49,6 +49,7 @@
     <a class="brand" href="#top" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
     <nav class="site-nav" aria-label="Main">
       <a href="#try">Career DNA</a>
+      <a href="#fit">Role Match</a>
       <a href="#tailor">Tailor my DNA</a>
       <a href="#jobs">Jobs</a>
       <a href="/employers.html">For employers</a>
@@ -201,6 +202,33 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="block chap" id="fit">
+    <span class="chap-num" aria-hidden="true">00</span>
+    <div class="wrap">
+      <p class="chapter"><b>00</b>Role Match</p>
+      <div class="sec-head">
+        <h2>See how you really fit any role.</h2>
+        <p class="lede">Paste your resume and any job posting. Get your fit score, see what you bring, and discover what you'd need to stand out.</p>
+      </div>
+      <div class="fit-tool">
+        <div class="fit-inputs">
+          <div class="fit-input-group">
+            <label for="fitResume"><b>Your Resume</b></label>
+            <textarea id="fitResume" placeholder="Paste your resume here" aria-label="Your resume for fit analysis"></textarea>
+          </div>
+          <div class="fit-input-group">
+            <label for="fitJob"><b>Job Posting</b></label>
+            <textarea id="fitJob" placeholder="Paste the job posting here" aria-label="Job posting for fit analysis"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="fitBtn" type="button" style="width:100%; margin-top:16px">Analyze Fit</button>
+        <p class="status" id="fitStatus" role="status" aria-live="polite" style="margin-top:14px"></p>
+        <div id="fitResult" hidden style="margin-top:28px"></div>
+      </div>
+      <p class="fit-note" style="margin-top:32px; font-size:14px; color:var(--ink-2)">No job posting yet? Build your Career DNA first to explore suggested opportunities that match you.</p>
     </div>
   </section>
 

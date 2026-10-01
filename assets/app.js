@@ -1103,6 +1103,77 @@ function renderFit(job, fit){
   }));
 }
 
+/* ---------- Role Match / Fit Analysis ---------- */
+function analyzeFit(resumeText, jobText){
+  const resumeWords = new Set(resumeText.toLowerCase().split(/\W+/));
+  const jobWords = new Set(jobText.toLowerCase().split(/\W+/));
+  const jobLower = jobText.toLowerCase();
+  const resumeLower = resumeText.toLowerCase();
+
+  const scoreKeywords = {
+    leader: ["lead", "leader", "leadership", "manage", "manager", "director"],
+    technical: ["python", "javascript", "sql", "api", "aws", "azure", "data"],
+    communication: ["present", "communication", "speak", "write", "report"],
+    strategy: ["strategy", "strategic", "plan", "planning", "roadmap"],
+    teamwork: ["team", "collaborate", "collaboration", "cross-functional"],
+    customer: ["customer", "client", "stakeholder", "sales", "support"]
+  };
+
+  let score = 50;
+  const strengths = [];
+  const gaps = [];
+
+  Object.entries(scoreKeywords).forEach(([category, keywords]) => {
+    const hasKeyword = keywords.some(kw => resumeLower.includes(kw));
+    const jobNeeds = keywords.some(kw => jobLower.includes(kw));
+    if (jobNeeds) {
+      if (hasKeyword) {
+        score += 8;
+        strengths.push({ title: category.charAt(0).toUpperCase() + category.slice(1), desc: "Your resume shows experience in " + category });
+      } else {
+        gaps.push({ title: category.charAt(0).toUpperCase() + category.slice(1), desc: "This role emphasizes " + category + ". Consider highlighting any related experience." });
+      }
+    }
+  });
+
+  score = Math.min(100, Math.max(30, score));
+  return { score: Math.round(score), strengths: strengths.slice(0, 5), gaps: gaps.slice(0, 5) };
+}
+
+$("fitBtn").addEventListener("click", () => {
+  const resume = $("fitResume").value.trim();
+  const job = $("fitJob").value.trim();
+  const st = $("fitStatus");
+
+  if (!resume || resume.length < 50) { setStatus(st, "Paste your resume (at least a few lines).", true); return; }
+  if (!job || job.length < 50) { setStatus(st, "Paste the job posting (at least a few lines).", true); return; }
+
+  track("fit_analysis");
+  const analysis = analyzeFit(resume, job);
+  const resultDiv = $("fitResult");
+
+  let html = '<div class="fit-score-card"><div class="fit-score-header"><div class="fit-score-num">' + analysis.score + '%</div><div class="fit-score-info"><h3>Your Fit Score</h3><p>This reflects how your background aligns with the role based on keywords and experience overlap.</p></div></div></div>';
+
+  if (analysis.strengths.length) {
+    html += '<div class="fit-section"><h3 class="fit-section-title"><i class="mark verified" aria-hidden="true"></i>What You Bring</h3><ul class="fit-list">';
+    analysis.strengths.forEach(s => html += '<li class="fit-item"><p class="fit-item-title">' + esc(s.title) + '</p><p class="fit-item-desc">' + esc(s.desc) + '</p></li>');
+    html += '</ul></div>';
+  }
+
+  if (analysis.gaps.length) {
+    html += '<div class="fit-section"><h3 class="fit-section-title"><i class="mark potential" aria-hidden="true"></i>Things to Address</h3><ul class="fit-list">';
+    analysis.gaps.forEach(g => html += '<li class="fit-item"><p class="fit-item-title">' + esc(g.title) + '</p><p class="fit-item-desc">' + esc(g.desc) + '</p></li>');
+    html += '</ul></div>';
+  }
+
+  html += '<div class="fit-section" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--line)"><h3 style="margin:0 0 12px; font-size:14px; color:var(--ink-2)">Next Steps</h3><p style="margin:0; color:var(--ink-2); line-height:1.5">Use this score to decide if you should apply or tailor your resume for this role. If you build your Career DNA, you\'ll get even more detailed insights.</p></div>';
+
+  resultDiv.innerHTML = html;
+  resultDiv.hidden = false;
+  setStatus(st, "");
+  window.scrollTo({ top: resultDiv.offsetTop - 100, behavior: "smooth" });
+});
+
 /* ---------- Job DNA ---------- */
 // A posting can be pasted, or uploaded like a resume. Word and text files are read here and fill the box,
 // so the person can check the text. A PDF is sent as is: the server reads it and sends back its text,
