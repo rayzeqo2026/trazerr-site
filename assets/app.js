@@ -309,6 +309,14 @@ $("analyzeBtn").addEventListener("click", async () => {
     track("dna_built");
     showProfile(p);
     window.Seqlay?.finish(true);
+
+    // Show DNA Fit section with the loaded resume
+    const dnaFitSection = $("dnaFitSection");
+    if (dnaFitSection) {
+      dnaFitSection.hidden = false;
+      initDnaFitBtn(payload);
+    }
+
     if (applyHomeLocation(p) && p.directions.length && !$("jq").value.trim()) { $("jq").value = p.directions[0].role; runJobSearch(true); }
   } catch (e) {
     track("dna_failed");
@@ -1238,6 +1246,75 @@ function analyzeFit(resumeText, jobText){
 
   score = Math.min(100, Math.max(25, score));
   return { score: Math.round(score), strengths: strengths.slice(0, 4), gaps: gaps.slice(0, 4) };
+}
+
+// Initialize DNA Fit button - uses loaded resume from DNA analysis
+function initDnaFitBtn(resumePayload) {
+  const btn = $("dnaFitBtn");
+  if (!btn) return;
+
+  // Remove old listener if exists
+  btn.onclick = null;
+
+  btn.addEventListener("click", function(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    try {
+      const job = $("dnaFitJob").value.trim();
+      const st = $("dnaFitStatus");
+      const resultDiv = $("dnaFitResult");
+
+      if (!job || job.length < 50) { setStatus(st, "Paste a job posting (at least a few lines).", true); return; }
+
+      // Get resume text from payload
+      let resumeText = "";
+      if (resumePayload.kind === "text") {
+        resumeText = resumePayload.text;
+      } else if (resumePayload.kind === "pdf" || resumePayload.kind === "docx") {
+        resumeText = resumePayload.text || "";
+      }
+
+      if (!resumeText || resumeText.length < 50) { setStatus(st, "Resume not loaded properly. Try building your Career DNA again.", true); return; }
+
+      track("dna_fit_analysis");
+      const analysis = analyzeFit(resumeText, job);
+
+      const scoreColor = analysis.score >= 75 ? "var(--blue)" : analysis.score >= 60 ? "var(--gold)" : "#e74c3c";
+      const scoreMessage = analysis.score >= 75 ? "Strong match" : analysis.score >= 60 ? "Good match" : "Worth considering";
+
+      let html = '<div class="fit-actions-bar"><button class="fit-print-btn" type="button" onclick="window.print()" title="Print or save as PDF"><span>🖨</span>Print this card</button></div>';
+      html += '<div class="fit-score-card" style="background:linear-gradient(135deg, rgba(0,102,224,.08) 0%, rgba(224,176,112,.04) 100%);"><div class="fit-score-header"><div class="fit-score-num" style="color:' + scoreColor + '">' + analysis.score + '%</div><div class="fit-score-info"><h3>Your Fit Score</h3><p style="margin:8px 0 0"><strong>' + scoreMessage + '.</strong> This score reflects your background against the role requirements based on experience keywords and category alignment.</p></div></div></div>';
+
+      if (analysis.strengths.length) {
+        html += '<div class="fit-section"><h3 class="fit-section-title"><span style="color:var(--blue); font-weight:700">✓</span> What You Bring (' + analysis.strengths.length + ')</h3><ul class="fit-list">';
+        analysis.strengths.forEach(s => html += '<li class="fit-item"><p class="fit-item-title">' + esc(s.title) + '</p><p class="fit-item-desc">' + esc(s.desc) + ' <strong>Highlight this in your application and interview.</strong></p></li>');
+        html += '</ul></div>';
+      }
+
+      if (analysis.gaps.length) {
+        html += '<div class="fit-section"><h3 class="fit-section-title"><span style="color:#e74c3c; font-weight:700">●</span> Things to Address (' + analysis.gaps.length + ')</h3><ul class="fit-list">';
+        analysis.gaps.forEach(g => html += '<li class="fit-item"><p class="fit-item-title">' + esc(g.title) + '</p><p class="fit-item-desc">' + esc(g.desc) + ' Be ready to explain or discuss during interviews.</p></li>');
+        html += '</ul></div>';
+      }
+
+      const actionHtml = analysis.score >= 75 ? 'This is a strong match. <strong>Apply now or tailor your resume</strong> to emphasize your top strengths.' :
+        analysis.score >= 60 ? 'You\'re a reasonable fit. Consider <strong>tailoring your resume</strong> to highlight the strengths above and prepare talking points about the gaps.' :
+        'You\'re worth considering. <strong>Tailor your resume</strong> for this role to emphasize your relevant experience.';
+
+      html += '<div class="fit-section" style="margin-top:32px; padding:20px; background:var(--blue-soft); border-radius:8px; border-left:4px solid var(--blue)"><h3 style="margin:0 0 12px; font-size:14px; color:var(--ink); font-weight:700">Recommended Action</h3><p style="margin:0; color:var(--ink); line-height:1.6">' + actionHtml + '</p></div>';
+
+      resultDiv.innerHTML = html;
+      resultDiv.hidden = false;
+      setStatus(st, "");
+      resultDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (error) {
+      console.error('Error in dnaFitBtn handler:', error);
+      setStatus($("dnaFitStatus"), 'Error: ' + error.message, true);
+    }
+  });
 }
 
 // Attach event listener when DOM is ready
