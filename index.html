@@ -69,11 +69,14 @@
   <section class="hero">
     <div class="hero-photo">
       <picture>
-        <source type="image/avif" srcset="/img/hero-640.avif 640w, /img/hero-960.avif 960w, /img/hero-1280.avif 1280w, /img/hero-1678.avif 1678w" sizes="100vw">
-        <source type="image/webp" srcset="/img/hero-640.webp 640w, /img/hero-960.webp 960w, /img/hero-1280.webp 1280w, /img/hero-1678.webp 1678w" sizes="100vw">
-        <img src="/img/hero-1280.jpg" srcset="/img/hero-640.jpg 640w, /img/hero-960.jpg 960w, /img/hero-1280.jpg 1280w, /img/hero-1678.jpg 1678w" sizes="100vw"
+        <!-- Mobile: portrait orientation for small screens -->
+        <source media="(max-width: 820px)" type="image/webp" srcset="/img/hero-640-mobile.webp 640w, /img/hero-960-mobile.webp 960w">
+        <source media="(max-width: 820px)" type="image/jpeg" srcset="/img/hero-640-mobile.jpg 640w, /img/hero-960-mobile.jpg 960w">
+        <!-- Desktop: landscape orientation for large screens -->
+        <source type="image/webp" srcset="/img/hero-640-desktop.webp 640w, /img/hero-960-desktop.webp 960w, /img/hero-1280-desktop.webp 1280w, /img/hero-1678-desktop.webp 1678w" sizes="100vw">
+        <img src="/img/hero-1280-desktop.jpg" srcset="/img/hero-640-desktop.jpg 640w, /img/hero-960-desktop.jpg 960w, /img/hero-1280-desktop.jpg 1280w, /img/hero-1678-desktop.jpg 1678w" sizes="100vw"
           width="1678" height="944" fetchpriority="high" decoding="async"
-          alt="Resume transforms into a Career DNA profile: hidden strengths and skills revealed through data visualization, with job matches and career insights displayed.">
+          alt="Resume to Career DNA to job matches: the complete journey from profile analysis to personalized opportunities.">
       </picture>
     </div>
     <div class="wrap">
