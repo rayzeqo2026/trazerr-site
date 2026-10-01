@@ -1987,6 +1987,76 @@ function initializeScrollAnimations(){
   }
 }
 
+// Pointing hand indicator for "Try it free" button
+function initializePointingHand(){
+  const tryBtn = document.querySelector('a[href="#try"]');
+  const heroCard = $("try");
+  let pointerHand = null;
+
+  function showPointingHand(){
+    // Remove existing pointer if present
+    if (pointerHand && pointerHand.parentNode) {
+      pointerHand.remove();
+    }
+
+    // Create pointer hand element
+    pointerHand = document.createElement("div");
+    pointerHand.className = "pointer-hand";
+    pointerHand.textContent = "👆";
+    pointerHand.setAttribute("aria-hidden", "true");
+    document.body.appendChild(pointerHand);
+
+    // Position pointer hand to point at hero card
+    function updatePointerPosition(){
+      if (!heroCard) return;
+      const rect = heroCard.getBoundingClientRect();
+      const pointerSize = 48;
+
+      // Position above and to the right of the hero card
+      const x = rect.right - pointerSize;
+      const y = rect.top - pointerSize / 2;
+
+      pointerHand.style.left = x + "px";
+      pointerHand.style.top = y + "px";
+    }
+
+    // Initial position
+    updatePointerPosition();
+
+    // Update position on scroll and resize
+    const updateOnEvent = () => updatePointerPosition();
+    window.addEventListener("scroll", updateOnEvent, { passive: true });
+    window.addEventListener("resize", updateOnEvent, { passive: true });
+
+    // Remove after 8 seconds
+    setTimeout(() => {
+      if (pointerHand) {
+        pointerHand.style.animation = "fadeIn .5s ease-out reverse forwards";
+        setTimeout(() => {
+          if (pointerHand && pointerHand.parentNode) {
+            pointerHand.remove();
+          }
+          window.removeEventListener("scroll", updateOnEvent);
+          window.removeEventListener("resize", updateOnEvent);
+        }, 500);
+      }
+    }, 8000);
+  }
+
+  // Show pointer when "Try it free" button is clicked (if not on hero section already)
+  if (tryBtn) {
+    tryBtn.addEventListener("click", (e) => {
+      // Check if already on the hero section
+      const isAlreadyOnHero = window.scrollY < 600;
+      if (!isAlreadyOnHero) {
+        showPointingHand();
+      }
+    });
+  }
+}
+
+initializePointingHand();
+
 // Initialize animations when DOM is ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initializeScrollAnimations);

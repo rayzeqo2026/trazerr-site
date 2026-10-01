@@ -100,7 +100,8 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 /* Upload window: small and see-through, bottom-right. Just an upload button, a one-line paste box and go. */
 .hero-card{align-self:end; justify-self:end; width:100%; max-width:400px; padding:22px; border-radius:14px; display:grid; gap:10px;
   background:rgba(8,14,30,.78); border:1px solid rgba(255,255,255,.16); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3);
-  box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1); animation:slideUp .5s ease-out}
+  box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1); animation:slideUp .6s cubic-bezier(0.34, 1.56, 0.64, 1), heroGlow 3s ease-in-out 1.2s infinite}
+@keyframes heroGlow{0%{box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1)}50%{box-shadow:0 35px 80px -10px rgba(92,168,255,.4), 0 0 0 2px rgba(92,168,255,.3)}100%{box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1)}}
 /* ===== Enhanced Animations ===== */
 @keyframes slideUp{from{opacity:0; transform:translateY(20px)}to{opacity:1; transform:translateY(0)}}
 @keyframes slideDown{from{opacity:0; transform:translateY(-20px)}to{opacity:1; transform:translateY(0)}}
@@ -114,6 +115,12 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 @keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-10px)}}
 @keyframes rotateIn{from{opacity:0; transform:rotate(-5deg) scale(0.98)}to{opacity:1; transform:rotate(0) scale(1)}}
 @keyframes expandHeight{from{max-height:0; opacity:0}to{max-height:1000px; opacity:1}}
+@keyframes pointingWave{0%{transform:rotate(45deg) scale(1)}25%{transform:rotate(45deg) scale(1.1)}50%{transform:rotate(45deg) scale(1)}75%{transform:rotate(45deg) scale(1.1)}100%{transform:rotate(45deg) scale(1)}}
+@keyframes slideDown2{from{opacity:0; transform:translateY(-30px)}to{opacity:1; transform:translateY(0)}}
+
+/* Pointing hand element */
+.pointer-hand{position:fixed; z-index:100; font-size:48px; cursor:pointer; animation:slideDown2 .5s ease-out forwards, pointingWave 1.2s ease-in-out 1s infinite; transform-origin:center center; pointer-events:none; user-select:none; text-shadow:0 2px 8px rgba(0,0,0,.2); filter:drop-shadow(2px 2px 4px rgba(0,0,0,.1))}
+.pointer-hand.hidden{display:none}
 
 /* Scroll animation classes */
 .animate-on-scroll{opacity:0; will-change:transform,opacity}
