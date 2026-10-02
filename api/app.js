@@ -1421,13 +1421,13 @@ async function jobpost(req, res) {
   const body = getBody(req) || {};
   const title = str(body.title, 120);
   const description = str(body.description, 5000);
-  const required = list(body.required_skills, 20);
-  const nice = list(body.nice_to_have, 20);
-  const level = str(body.experience_level, 20);
+  let required = list(body.required_skills, 20);
+  let nice = list(body.nice_to_have, 20);
+  const level = str(body.experience_level, 20) || "mid";
   const location = str(body.location, 100);
 
-  if (!title || !description || !required.length) throw new UserError(400, "Job needs a title, description, and at least one required skill.");
-  if (!/^(entry|mid|senior|lead)$/.test(level)) throw new UserError(400, "Invalid experience level.");
+  if (!title || !description) throw new UserError(400, "Job needs a title and description.");
+  if (level && !/^(entry|mid|senior|lead)$/.test(level)) throw new UserError(400, "Invalid experience level.");
 
   // Extract Job DNA using Claude: structured capabilities required for this role
   let jobDna = null;
@@ -1444,11 +1444,22 @@ async function jobpost(req, res) {
     if (!r.ok) throw new Error("Claude didn't answer: " + r.status);
     const out = await r.json();
     jobDna = extractJson(out.content[0]?.text || "");
+
+    // If no skills provided by user, use AI-extracted skills
+    if (!required.length && jobDna?.core_skills?.length) {
+      required = list(jobDna.core_skills, 20);
+    }
+    if (!nice.length && jobDna?.nice_to_have?.length) {
+      nice = list(jobDna.nice_to_have, 20);
+    }
   } catch (e) {
     console.error("Job DNA extraction failed:", e.message);
     // Fall back to simple structure if AI fails
     jobDna = { core_skills: required, experience_areas: [], key_responsibilities: [], must_have: required, nice_to_have: nice };
   }
+
+  // Now require at least one skill (from user or AI extraction)
+  if (!required.length) throw new UserError(400, "Couldn't extract any skills. Please add at least one required skill manually.");
 
   // Insert job posting
   const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
