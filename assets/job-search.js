@@ -8,6 +8,8 @@
   let allJobs = [];
   let selectedJob = null;
   let currentSession = null;
+  let candidateSkills = [];
+  let candidateResume = null;
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -59,6 +61,28 @@
       // Load all jobs
       loadAllJobs();
 
+      // Setup resume upload
+      const resumeFile = document.getElementById("resumeFile");
+      if (resumeFile) {
+        resumeFile.addEventListener("change", handleResumeUpload);
+
+        // Drag and drop
+        const resumeSection = document.getElementById("resumeSection");
+        resumeSection.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          resumeSection.classList.add("active");
+        });
+        resumeSection.addEventListener("dragleave", () => resumeSection.classList.remove("active"));
+        resumeSection.addEventListener("drop", (e) => {
+          e.preventDefault();
+          resumeSection.classList.remove("active");
+          if (e.dataTransfer.files.length > 0) {
+            resumeFile.files = e.dataTransfer.files;
+            handleResumeUpload({ target: { files: e.dataTransfer.files } });
+          }
+        });
+      }
+
       // Setup search
       document.getElementById("searchBtn").onclick = performSearch;
       document.getElementById("searchInput").onkeypress = (e) => {
@@ -91,6 +115,71 @@
     }
   }
 
+  async function handleResumeUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById("resumeStatus");
+    statusEl.innerHTML = '<div style="color: var(--ink-2);">📂 Reading file...</div>';
+
+    try {
+      const text = await file.text();
+
+      // Simple skill extraction - split by common delimiters
+      const allSkillsText = text.toLowerCase();
+      const commonSkills = [
+        'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'react', 'angular', 'vue',
+        'node.js', 'express', 'django', 'flask', 'spring', 'sql', 'mongodb', 'postgresql',
+        'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'rest api', 'graphql',
+        'html', 'css', 'bootstrap', 'tailwind', 'webpack', 'npm', 'yarn', 'sass',
+        'agile', 'scrum', 'jira', 'confluence', 'linux', 'windows', 'macos',
+        'communication', 'leadership', 'teamwork', 'problem-solving', 'project management',
+        'data analysis', 'machine learning', 'ai', 'nlp', 'computer vision', 'deep learning',
+        'sales', 'marketing', 'business development', 'customer service', 'negotiation',
+        'financial analysis', 'accounting', 'budgeting', 'forecasting',
+        'project management', 'risk management', 'quality assurance', 'testing'
+      ];
+
+      candidateSkills = commonSkills.filter(skill => {
+        const regex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
+        return regex.test(allSkillsText);
+      });
+
+      candidateResume = text;
+
+      if (candidateSkills.length > 0) {
+        statusEl.innerHTML = `
+          <div class="resume-status ready">
+            ✓ Resume loaded with ${candidateSkills.length} skills detected
+          </div>
+        `;
+        renderResults(allJobs);
+      } else {
+        statusEl.innerHTML = `
+          <div class="resume-status ready">
+            ✓ Resume loaded (tip: include skills in your resume to see match scores)
+          </div>
+        `;
+      }
+    } catch (err) {
+      statusEl.innerHTML = '<div style="color: #ef4444;">✗ Error reading file. Try a text or PDF file.</div>';
+      console.error("Resume upload error:", err);
+    }
+  }
+
+  function calculateMatch(job) {
+    if (candidateSkills.length === 0) return null;
+
+    const jobSkills = (job.required_skills || []).map(s => s.toLowerCase());
+    if (jobSkills.length === 0) return null;
+
+    const matched = jobSkills.filter(skill =>
+      candidateSkills.some(cSkill => skill.includes(cSkill) || cSkill.includes(skill))
+    ).length;
+
+    return Math.round((matched / jobSkills.length) * 100);
+  }
+
   function performSearch() {
     const query = document.getElementById("searchInput").value.trim().toUpperCase();
     if (!query) {
@@ -111,28 +200,42 @@
     const container = document.getElementById("results");
 
     if (!jobs || jobs.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:document.getElementById(\'searchInput\').value=\'\'; loadAllJobs();">View all jobs</a></p></div>';
+      container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:document.getElementById(\'searchInput\').value=\'\'; window.jobSearch.loadAllJobs();">View all jobs</a></p></div>';
       return;
     }
 
-    container.innerHTML = jobs.map(job => `
-      <div class="job-item" onclick="window.jobSearch.selectJob('${job.id}')">
-        <div class="job-item-header">
-          <h3 class="job-item-title">${esc(job.title)}</h3>
-          <span class="job-item-code">${esc(job.company_code)}</span>
+    container.innerHTML = jobs.map(job => {
+      const matchScore = calculateMatch(job);
+      const matchClass = matchScore >= 75 ? 'high' : matchScore >= 50 ? 'medium' : 'low';
+
+      return `
+        <div class="job-item" onclick="window.jobSearch.selectJob('${job.id}')">
+          ${matchScore !== null ? `
+            <div class="job-item-match">
+              <div class="match-score ${matchClass}">${matchScore}%</div>
+              <div class="match-label">
+                <div class="match-label-score">Match Score</div>
+                <div class="match-label-text">${matchScore >= 75 ? 'Excellent fit' : matchScore >= 50 ? 'Good fit' : 'Potential match'}</div>
+              </div>
+            </div>
+          ` : ''}
+          <div class="job-item-header">
+            <h3 class="job-item-title">${esc(job.title)}</h3>
+            <span class="job-item-code">${esc(job.company_code)}</span>
+          </div>
+          <p class="job-item-company">${esc(job.location || "Remote")}${job.remote_ok ? " · Remote OK" : ""}</p>
+          <div class="job-item-meta">
+            <span>${job.experience_level ? job.experience_level.charAt(0).toUpperCase() + job.experience_level.slice(1) : "Experience level"}</span>
+            <span>Posted ${new Date(job.created_at).toLocaleDateString()}</span>
+          </div>
+          <p class="job-item-desc">${esc(job.description.slice(0, 150))}${job.description.length > 150 ? "..." : ""}</p>
+          <div class="job-item-skills">
+            ${(job.required_skills || []).slice(0, 3).map(skill => `<span class="skill-badge">${esc(skill)}</span>`).join("")}
+            ${(job.required_skills || []).length > 3 ? `<span class="skill-badge">+${(job.required_skills || []).length - 3} more</span>` : ""}
+          </div>
         </div>
-        <p class="job-item-company">${esc(job.location || "Remote")}${job.remote_ok ? " · Remote OK" : ""}</p>
-        <div class="job-item-meta">
-          <span>${job.experience_level ? job.experience_level.charAt(0).toUpperCase() + job.experience_level.slice(1) : "Experience level"}</span>
-          <span>Posted ${new Date(job.created_at).toLocaleDateString()}</span>
-        </div>
-        <p class="job-item-desc">${esc(job.description.slice(0, 150))}${job.description.length > 150 ? "..." : ""}</p>
-        <div class="job-item-skills">
-          ${(job.required_skills || []).slice(0, 3).map(skill => `<span class="skill-badge">${esc(skill)}</span>`).join("")}
-          ${(job.required_skills || []).length > 3 ? `<span class="skill-badge">+${(job.required_skills || []).length - 3} more</span>` : ""}
-        </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
   function selectJob(jobId) {
@@ -147,6 +250,61 @@
     requiredContainer.innerHTML = (selectedJob.required_skills || []).map(skill =>
       `<span class="skill-badge">${esc(skill)}</span>`
     ).join("");
+
+    // Show match analysis if resume is uploaded
+    const matchScoreEl = document.getElementById("modalMatchScore");
+    const analysisEl = document.getElementById("modalSkillsAnalysis");
+
+    const matchScore = calculateMatch(selectedJob);
+    if (matchScore !== null) {
+      const matchClass = matchScore >= 75 ? 'high' : matchScore >= 50 ? 'medium' : 'low';
+      matchScoreEl.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: ${matchClass === 'high' ? 'rgba(34, 197, 94, 0.1)' : matchClass === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-radius: 8px; border-left: 4px solid ${matchClass === 'high' ? '#22c55e' : matchClass === 'medium' ? '#f59e0b' : '#ef4444'};">
+          <div style="font-size: 40px; font-weight: 700; color: ${matchClass === 'high' ? '#22c55e' : matchClass === 'medium' ? '#f59e0b' : '#ef4444'};">${matchScore}%</div>
+          <div>
+            <div style="font-weight: 700; color: var(--ink);">Match Score</div>
+            <div style="font-size: 14px; color: var(--ink-2);">${matchScore >= 75 ? 'Excellent fit - you have most required skills' : matchScore >= 50 ? 'Good fit - you have many required skills' : 'Potential match - some skills align with requirements'}</div>
+          </div>
+        </div>
+      `;
+
+      // Show skill analysis
+      const jobSkills = (selectedJob.required_skills || []).map(s => s.toLowerCase());
+      const hasSkills = jobSkills.filter(skill =>
+        candidateSkills.some(cSkill => skill.includes(cSkill) || cSkill.includes(skill))
+      );
+      const missingSkills = jobSkills.filter(skill =>
+        !candidateSkills.some(cSkill => skill.includes(cSkill) || cSkill.includes(skill))
+      );
+
+      if (hasSkills.length > 0 || missingSkills.length > 0) {
+        analysisEl.innerHTML = `
+          <div>
+            <strong style="font-size: 14px; color: var(--ink-2); text-transform: uppercase;">Skill Analysis</strong>
+            ${hasSkills.length > 0 ? `
+              <div style="margin-top: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #22c55e; margin-bottom: 6px;">✓ You have ${hasSkills.length} required skill${hasSkills.length !== 1 ? 's' : ''}:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  ${hasSkills.slice(0, 5).map(s => `<span class="skill-badge" style="background: #22c55e; color: white;">${esc(s)}</span>`).join("")}
+                </div>
+              </div>
+            ` : ''}
+            ${missingSkills.length > 0 ? `
+              <div style="margin-top: 12px;">
+                <div style="font-size: 13px; font-weight: 600; color: #f59e0b; margin-bottom: 6px;">⚡ Skills to develop:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  ${missingSkills.slice(0, 5).map(s => `<span class="skill-badge" style="background: #f59e0b; color: white;">${esc(s)}</span>`).join("")}
+                  ${missingSkills.length > 5 ? `<span class="skill-badge" style="background: #f59e0b; color: white;">+${missingSkills.length - 5} more</span>` : ''}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+    } else {
+      matchScoreEl.innerHTML = '';
+      analysisEl.innerHTML = '';
+    }
 
     document.getElementById("jobModal").classList.add("active");
   }

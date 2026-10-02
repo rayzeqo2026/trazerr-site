@@ -147,6 +147,95 @@
   font-weight: 500;
 }
 
+.resume-section {
+  background: var(--bg-2);
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resume-section:hover {
+  border-color: var(--blue);
+  background: var(--bg-3);
+}
+
+.resume-section.active {
+  border-color: var(--blue);
+  background: var(--blue-light);
+}
+
+.resume-section input[type="file"] {
+  display: none;
+}
+
+.resume-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.resume-status.ready {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.job-item-match {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.match-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+  background: var(--blue);
+}
+
+.match-score.high {
+  background: #22c55e;
+}
+
+.match-score.medium {
+  background: #f59e0b;
+}
+
+.match-score.low {
+  background: #ef4444;
+}
+
+.match-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.match-label-score {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.match-label-text {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -224,7 +313,15 @@
 <main id="main" class="search-page">
   <div class="search-header">
     <h1>Find jobs that match your experience</h1>
-    <p>Search by company code or name to find opportunities where you actually fit.</p>
+    <p>Upload your resume to see how well you fit with each opportunity.</p>
+  </div>
+
+  <div class="resume-section" id="resumeSection" onclick="document.getElementById('resumeFile').click()">
+    <div style="font-size: 32px; margin-bottom: 12px;">📄</div>
+    <h3 style="margin: 0 0 8px;">Upload your resume</h3>
+    <p style="color: var(--ink-2); margin: 0; font-size: 14px;">Click to upload or drag and drop (PDF or text)</p>
+    <input type="file" id="resumeFile" accept=".pdf,.txt,.doc,.docx" />
+    <div id="resumeStatus"></div>
   </div>
 
   <div class="search-form">
@@ -239,6 +336,7 @@
 <div class="modal" id="jobModal">
   <div class="modal-content">
     <button class="modal-close" onclick="closeJobModal()">×</button>
+    <div id="modalMatchScore" style="margin-bottom: 20px;"></div>
     <h2 id="modalJobTitle"></h2>
     <p id="modalJobCompany" style="color: var(--ink-2); margin-bottom: 16px;"></p>
     <p id="modalJobDesc" style="line-height: 1.6; margin-bottom: 20px;"></p>
@@ -247,6 +345,8 @@
       <strong>Required skills:</strong>
       <div id="modalJobRequired" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
     </div>
+
+    <div id="modalSkillsAnalysis" style="margin-bottom: 20px;"></div>
 
     <button class="btn btn-primary" onclick="applyForJob()" style="width: 100%;">Apply with your resume</button>
   </div>
