@@ -64,6 +64,8 @@
       if (!data || !data.session) return showSignIn();
       hideLanding();
       $("empSignOut").hidden = false;
+      const dashboardBtn = $("dashboardBtn");
+      if (dashboardBtn) dashboardBtn.hidden = false;
       await refresh();
     } catch (e) { hideLanding(); getApp().innerHTML = '<p class="status err">The employer area couldn\'t load. Check your connection and try again.</p>'; }
   }

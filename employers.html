@@ -24,10 +24,15 @@
 <body class="emp-page">
 <a class="skip" href="#main">Skip to content</a>
 <header class="emp-head">
-  <div class="wrap">
-    <a class="brand" href="/"><img src="/logo.png" alt="" width="36" height="36">Trazerr</a>
-    <span class="emp-tag">For employers</span>
-    <button class="btn btn-quiet btn-sm" id="empSignOut" type="button" hidden>Sign out</button>
+  <div class="wrap" style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <a class="brand" href="/"><img src="/logo.png" alt="" width="36" height="36">Trazerr</a>
+      <span class="emp-tag">For employers</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <a href="/employer-dashboard.html" class="btn btn-primary btn-sm" id="dashboardBtn" hidden style="text-decoration: none;">Post a Job</a>
+      <button class="btn btn-quiet btn-sm" id="empSignOut" type="button" hidden>Sign out</button>
+    </div>
   </div>
 </header>
 <main id="main" class="wrap emp-main">
