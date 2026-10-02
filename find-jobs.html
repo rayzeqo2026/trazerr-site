@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Find Jobs That Fit · Trazerr</title>
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+.fj-page { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+.fj-header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; margin: -40px -20px 40px; }
+.fj-header h1 { margin: 0; font-size: 36px; font-weight: 800; }
+.fj-header p { margin: 8px 0 0; color: #666; font-size: 16px; }
+.fj-search-box { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 30px; }
+.fj-search-box input { padding: 14px 16px; border: 1px solid #d0d7e0; border-radius: 8px; font-size: 14px; }
+.fj-search-box input::placeholder { color: #999; }
+.fj-search-box button { padding: 14px 28px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.fj-search-box button:hover { background: #0052b3; }
+.fj-filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.fj-filter-chip { padding: 8px 14px; background: #f5f7fa; border: 1px solid #d0d7e0; border-radius: 20px; cursor: pointer; font-size: 13px; }
+.fj-filter-chip.active { background: #0066e0; color: white; border-color: #0066e0; }
+.fj-results { margin-top: 30px; }
+.fj-job { border: 1px solid #d0d7e0; border-radius: 12px; padding: 24px; background: white; margin-bottom: 16px; cursor: pointer; transition: all 0.2s; }
+.fj-job:hover { border-color: #0066e0; box-shadow: 0 4px 12px rgba(0,102,224,0.1); }
+.fj-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.fj-job-info h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+.fj-job-meta { font-size: 14px; color: #666; }
+.fj-match-score { text-align: center; }
+.fj-score-num { font-size: 32px; font-weight: 800; color: #4CAF50; }
+.fj-score-label { font-size: 12px; color: #999; }
+.fj-job-desc { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 12px; }
+.fj-factors { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+.fj-factor { padding: 10px; background: #f5f7fa; border-radius: 6px; font-size: 12px; text-align: center; }
+.fj-factor-name { font-weight: 600; color: #0e1628; margin-bottom: 4px; }
+.fj-factor-score { font-size: 14px; font-weight: 700; color: #4CAF50; }
+.fj-error { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #856404; }
+.fj-info { background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #0c5460; }
+.fj-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
+.fj-modal.open { display: block; }
+.fj-modal-content { background: white; max-width: 700px; margin: 40px auto; border-radius: 12px; padding: 40px; }
+.fj-modal-close { float: right; font-size: 28px; cursor: pointer; background: none; border: none; color: #999; }
+.fj-loading { text-align: center; padding: 40px; color: #999; }
+.fj-pagination { display: flex; gap: 8px; justify-content: center; margin-top: 30px; }
+.fj-pagination button { padding: 8px 12px; border: 1px solid #d0d7e0; border-radius: 6px; background: white; cursor: pointer; }
+.fj-pagination button:hover { border-color: #0066e0; color: #0066e0; }
+.fj-pagination button.active { background: #0066e0; color: white; border-color: #0066e0; }
+</style>
+</head>
+<body>
+
+<div class="fj-header">
+  <div class="fj-page">
+    <h1>Find Jobs That Fit</h1>
+    <p>Live job openings matched to your Career DNA with honest fit scores</p>
+  </div>
+</div>
+
+<div class="fj-page">
+  <div id="error" class="fj-error" style="display: none;"></div>
+  <div id="info" class="fj-info" style="display: none;"></div>
+
+  <div class="fj-search-box">
+    <input type="text" id="jobTitle" placeholder="Job title or keyword (e.g., Sales Manager)">
+    <input type="text" id="location" placeholder="City or location">
+    <button onclick="performSearch()">Search Jobs</button>
+  </div>
+
+  <div class="fj-filters">
+    <button class="fj-filter-chip" data-remote="0" onclick="toggleRemote(this)">All Locations</button>
+    <button class="fj-filter-chip" data-remote="1" onclick="toggleRemote(this)">Remote Only</button>
+  </div>
+
+  <div id="results" class="fj-results"></div>
+  <div id="pagination" class="fj-pagination"></div>
+</div>
+
+<!-- Detail Modal -->
+<div id="modal" class="fj-modal">
+  <div class="fj-modal-content">
+    <button class="fj-modal-close" onclick="closeModal()">&times;</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+let userProfile = null;
+let currentPage = 1;
+let remoteOnly = false;
+
+async function init() {
+  try {
+    const saved = localStorage.getItem('trazerr.profile.v3');
+    console.log('Checking for Career DNA:', !!saved);
+    if (!saved) {
+      showInfo('Please build your Career DNA first on the main page, then return here to search jobs.');
+      showResults('<div class="fj-loading"><p>Waiting for your Career DNA...</p></div>');
+      return;
+    }
+
+    userProfile = JSON.parse(saved);
+    console.log('Career DNA loaded successfully');
+    showInfo('Your Career DNA is loaded. Search for jobs and we'll show you how well they fit your background.');
+  } catch (e) {
+    console.error('Error loading Career DNA:', e);
+    showError('Error loading your Career DNA: ' + e.message);
+  }
+}
+
+function toggleRemote(btn) {
+  const chips = document.querySelectorAll('.fj-filter-chip[data-remote]');
+  chips.forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  remoteOnly = btn.dataset.remote === '1';
+  currentPage = 1;
+  if (document.getElementById('jobTitle').value) performSearch();
+}
+
+async function performSearch() {
+  const jobTitle = document.getElementById('jobTitle').value.trim();
+  const location = document.getElementById('location').value.trim();
+
+  if (!jobTitle) {
+    showError('Please enter a job title or keyword to search.');
+    return;
+  }
+
+  if (!userProfile) {
+    showError('Please build your Career DNA first.');
+    return;
+  }
+
+  currentPage = 1;
+  showResults('<div class="fj-loading"><p>Searching live job market...</p></div>');
+
+  try {
+    let url = '/api/app?action=jobs&q=' + encodeURIComponent(jobTitle);
+    if (location) url += '&where=' + encodeURIComponent(location);
+    if (remoteOnly) url += '&remote=1';
+
+    console.log('Searching jobs:', { jobTitle, location, remoteOnly });
+    const response = await fetch(url);
+    console.log('Search response status:', response.status);
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Search failed:', response.status, text.slice(0, 200));
+      showError('Search failed: Server error (HTTP ' + response.status + ')');
+      return;
+    }
+
+    const data = await response.json();
+    console.log('Search returned', data.jobs?.length || 0, 'jobs');
+
+    if (!data.jobs || data.jobs.length === 0) {
+      showResults('<div class="fj-job"><p>No jobs found. Try a different search term or location.</p></div>');
+      return;
+    }
+
+    await analyzeJobsForUser(data.jobs, data.hasMore);
+  } catch (e) {
+    console.error('Search error:', e);
+    showError('Search failed: ' + e.message);
+  }
+}
+
+async function analyzeJobsForUser(jobs, hasMore) {
+  showResults('<div class="fj-loading"><p>Analyzing ' + jobs.length + ' job(s) against your Career DNA...</p></div>');
+
+  const results = [];
+  for (const job of jobs) {
+    try {
+      const response = await fetch('/api/app?action=match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile: userProfile,
+          job: {
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            description: job.description || ''
+          }
+        })
+      });
+
+      if (!response.ok) {
+        results.push(`
+          <div class="fj-job">
+            <div class="fj-job-header">
+              <div class="fj-job-info">
+                <h3>${job.title}</h3>
+                <div class="fj-job-meta">${job.company} · ${job.location || 'Remote'}</div>
+              </div>
+            </div>
+          </div>
+        `);
+        continue;
+      }
+
+      const data = await response.json();
+      const fit = data.fit;
+      const jobData = JSON.stringify({ title: job.title, company: job.company, location: job.location || 'Remote', description: job.description || '', url: job.url }).replace(/"/g, '&quot;');
+
+      results.push(`
+        <div class="fj-job" onclick="showJobDetail('${jobData}')">
+          <div class="fj-job-header">
+            <div class="fj-job-info">
+              <h3>${job.title}</h3>
+              <div class="fj-job-meta">${job.company} · ${job.location || 'Remote'}</div>
+            </div>
+            <div class="fj-match-score">
+              <div class="fj-score-num">${fit.fitScore}%</div>
+              <div class="fj-score-label">Career Fit</div>
+            </div>
+          </div>
+          <div class="fj-job-desc">${fit.summary}</div>
+          ${fit.factors && fit.factors.length > 0 ? `
+            <div class="fj-factors">
+              ${fit.factors.slice(0, 5).map(f => `
+                <div class="fj-factor">
+                  <div class="fj-factor-name">${f.name}</div>
+                  <div class="fj-factor-score">${f.score}%</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `);
+    } catch (e) {
+      console.error('Error analyzing job:', e);
+    }
+  }
+
+  showResults('<div class="fj-results">' + results.join('') + '</div>');
+
+  if (hasMore) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '<button onclick="performSearch()">Load More Jobs</button>';
+  }
+}
+
+function showJobDetail(jobData) {
+  try {
+    const job = JSON.parse(jobData);
+    const modal = document.getElementById('modal');
+    modal.classList.add('open');
+    document.getElementById('modalContent').innerHTML = '<div class="fj-loading"><p>Loading your fit analysis...</p></div>';
+
+    fetch('/api/app?action=match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profile: userProfile,
+        job: {
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          description: job.description
+        }
+      })
+    }).then(r => r.json()).then(data => {
+      const fit = data.fit;
+      let factors = '';
+      if (fit.factors && fit.factors.length > 0) {
+        factors = '<div style="margin-top: 20px;"><h4>Your Fit Breakdown:</h4>';
+        for (const f of fit.factors) {
+          factors += `
+            <div style="margin-bottom: 12px; padding: 12px; background: #f5f7fa; border-radius: 6px;">
+              <strong>${f.name}: ${f.score}%</strong>
+              <p style="margin: 4px 0 0; font-size: 13px; color: #555;">${f.note}</p>
+            </div>
+          `;
+        }
+        factors += '</div>';
+      }
+
+      let tips = '';
+      if (fit.tips && fit.tips.length > 0) {
+        tips = '<div style="margin-top: 20px;"><h4>Tips to Strengthen Your Application:</h4>';
+        for (const tip of fit.tips) {
+          tips += `<div style="margin-bottom: 8px; padding: 8px; background: #e8f5e9; border-radius: 6px; font-size: 13px;">✓ ${tip}</div>`;
+        }
+        tips += '</div>';
+      }
+
+      document.getElementById('modalContent').innerHTML = `
+        <h2>${job.title}</h2>
+        <p><strong>${job.company}</strong> · ${job.location}</p>
+
+        <div style="background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); border: 2px solid #0066e0; border-radius: 12px; padding: 30px; text-align: center; margin: 20px 0;">
+          <h2 style="margin: 0 0 8px;">Career Fit Score</h2>
+          <div style="font-size: 32px; font-weight: 800; color: #4CAF50;">${fit.fitScore}%</div>
+          <p>${fit.summary}</p>
+        </div>
+
+        ${factors}
+        ${tips}
+
+        ${job.url ? '<p style="margin-top: 20px;"><a href="' + job.url + '" target="_blank" style="color: #0066e0; text-decoration: none; font-weight: 600;">View Full Job Posting →</a></p>' : ''}
+
+        <button onclick="closeModal()" style="margin-top: 20px; padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Close</button>
+      `;
+    }).catch(e => {
+      document.getElementById('modalContent').innerHTML = '<p style="color: #d32f2f;">Error: ' + e.message + '</p><button onclick="closeModal()">Close</button>';
+    });
+  } catch (e) {
+    console.error('Error:', e);
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function showError(msg) {
+  document.getElementById('error').textContent = msg;
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('info').style.display = 'none';
+}
+
+function showInfo(msg) {
+  document.getElementById('info').textContent = msg;
+  document.getElementById('info').style.display = 'block';
+  document.getElementById('error').style.display = 'none';
+}
+
+function showResults(html) {
+  document.getElementById('results').innerHTML = html;
+  document.getElementById('pagination').innerHTML = '';
+}
+
+init();
+
+document.getElementById('jobTitle').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') performSearch();
+});
+
+document.getElementById('location').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') performSearch();
+});
+</script>
+
+</body>
+</html>
