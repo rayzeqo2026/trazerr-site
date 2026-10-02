@@ -286,10 +286,44 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
-// Drag and drop support
+// Initialize all button and upload handlers
 document.addEventListener("DOMContentLoaded", async () => {
-  const uploadArea = document.querySelector(".upload-area");
+  // Extract button click handler
+  const extractBtn = document.getElementById("extractBtn");
+  if (extractBtn) {
+    extractBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("Extract button clicked");
+      extractAndPost();
+    });
+  }
+
+  // Clear button click handler
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearForm();
+    });
+  }
+
+  // File input change handler
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      console.log("File input changed");
+      handleFileSelect(e);
+    });
+  }
+
+  // Upload area click and drag handlers
+  const uploadArea = document.getElementById("uploadArea");
   if (uploadArea) {
+    uploadArea.addEventListener("click", () => {
+      console.log("Upload area clicked");
+      document.getElementById("fileInput").click();
+    });
+
     uploadArea.addEventListener("dragover", (e) => {
       e.preventDefault();
       uploadArea.style.borderColor = "var(--blue)";

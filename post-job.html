@@ -383,21 +383,21 @@
     <div class="form-row full">
       <div class="form-group">
         <label>Attach Job Posting Document (Optional)</label>
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-area" id="uploadArea">
           <div class="upload-icon">📄</div>
           <div class="upload-text">Click to upload or drag & drop</div>
           <div class="upload-hint">PDF, Word (.docx), or text file</div>
-          <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" onchange="handleFileSelect(event)">
+          <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt">
           <div class="file-list" id="fileList"></div>
         </div>
       </div>
     </div>
 
     <div class="button-group">
-      <button class="btn btn-primary" id="extractBtn" onclick="extractAndPost()">
+      <button class="btn btn-primary" id="extractBtn" type="button">
         <span id="btnText">✨ Extract Skills & Post Job</span>
       </button>
-      <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+      <button class="btn btn-secondary" id="clearBtn" type="button">Clear</button>
     </div>
   </div>
 
