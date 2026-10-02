@@ -167,13 +167,7 @@
         });
       });
 
-      // Job form
-      const jobForm = document.getElementById("jobForm");
-      if (jobForm) {
-        jobForm.addEventListener("submit", createJob);
-      } else {
-        showError("jobForm element not found");
-      }
+      // Job form is now on post-job.html, so no need to attach listener here
     } catch (e) {
       showError("setupUI error: " + (e.message || String(e)));
     }
