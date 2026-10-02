@@ -1705,6 +1705,8 @@ async function jobdelete(req, res) {
   if (!jobId) throw new UserError(400, "Job ID required.");
 
   try {
+    console.log("🗑️ [jobdelete] Attempting to delete job:", jobId, "for employer:", session.user.id);
+
     // First verify the job belongs to this employer
     const verifyR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + encodeURIComponent(jobId) + "&select=id,employer_id", {
       headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + session.access_token }
@@ -1715,6 +1717,8 @@ async function jobdelete(req, res) {
     if (!jobs.length) throw new UserError(404, "Job not found.");
     if (jobs[0].employer_id !== session.user.id) throw new UserError(403, "Not your job.");
 
+    console.log("✓ [jobdelete] Job verified, proceeding with deletion");
+
     // Delete the job
     const deleteR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + encodeURIComponent(jobId), {
       method: "DELETE",
@@ -1723,13 +1727,15 @@ async function jobdelete(req, res) {
 
     if (!deleteR.ok) {
       const detail = await deleteR.text().catch(() => "");
+      console.error("❌ [jobdelete] Delete failed with status", deleteR.status, "detail:", detail);
       throw new Error("Delete failed: " + detail);
     }
 
+    console.log("✓ [jobdelete] Job successfully deleted from database:", jobId);
     return res.status(200).json({ deleted: true, id: jobId });
   } catch (e) {
     if (e instanceof UserError) throw e;
-    console.error("Job delete error:", e.message);
+    console.error("❌ [jobdelete] Error:", e.message);
     throw new UserError(502, "Couldn't delete job: " + e.message);
   }
 }
