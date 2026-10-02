@@ -78,8 +78,27 @@
             console.log("ℹ️ Resume fetch error (may not exist yet):", error.message);
           }
 
-          if (record && record.resume) {
-            candidateResume = record.resume;
+          if (record && (record.resume || record.career_dna)) {
+            // Use resume field if available, otherwise extract from career_dna
+            if (record.resume) {
+              candidateResume = record.resume;
+            } else if (record.career_dna) {
+              try {
+                const dnaData = typeof record.career_dna === 'string' ? JSON.parse(record.career_dna) : record.career_dna;
+                candidateResume = [
+                  dnaData.fullName || '',
+                  dnaData.headline || '',
+                  dnaData.description || '',
+                  (dnaData.strengths || []).map(s => typeof s === 'string' ? s : (s.name || s.text || '')).join(' '),
+                  (dnaData.highlights || []).map(h => typeof h === 'string' ? h : (h.text || h.name || '')).join(' '),
+                  (dnaData.potentials || []).map(p => typeof p === 'string' ? p : (p.name || p.text || '')).join(' ')
+                ].filter(Boolean).join(' ');
+                console.log("✓ Extracted resume text from Career DNA");
+              } catch (e) {
+                console.error("Error parsing career_dna:", e);
+                return;
+              }
+            }
             console.log("✓ Saved resume loaded");
 
             // Extract skills from saved resume
