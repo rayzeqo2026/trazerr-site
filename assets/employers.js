@@ -65,7 +65,10 @@
       hideLanding();
       $("empSignOut").hidden = false;
       const dashboardBtn = $("dashboardBtn");
-      if (dashboardBtn) dashboardBtn.hidden = false;
+      if (dashboardBtn) {
+        dashboardBtn.hidden = false;
+        dashboardBtn.onclick = () => { window.location.href = "/employer-dashboard.html"; };
+      }
       await refresh();
     } catch (e) { hideLanding(); getApp().innerHTML = '<p class="status err">The employer area couldn\'t load. Check your connection and try again.</p>'; }
   }
