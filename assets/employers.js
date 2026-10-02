@@ -4,11 +4,14 @@
   const API = "/api/app";
   const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js", SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
   const $ = (id) => document.getElementById(id);
-  const app = $("empApp");
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const arr = (v) => Array.isArray(v) ? v : [];
   const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); } catch (e) { return ""; } };
   let sb = null, me = null, lastSearch = null;
+
+  function getApp() { return $("empApp"); }
+  function hideLanding() { const el = $("empLanding"); if (el) el.style.display = "none"; }
+  function showLanding() { const el = $("empLanding"); if (el) el.style.display = "block"; }
 
   function track(e){ try { navigator.sendBeacon && navigator.sendBeacon(API + "?action=track", new Blob([JSON.stringify({ e })], { type: "application/json" })); } catch (err) {} }
   function setStatus(el, msg, err){ if (!el) return; el.textContent = msg || ""; el.classList.toggle("err", !!err); }
@@ -36,9 +39,10 @@
       if (/access_token=|error_description=/.test(location.hash)) history.replaceState(null, "", location.pathname);
       try { localStorage.removeItem("trazerr.signinReturn"); } catch (e) {}
       if (!data || !data.session) return showSignIn();
+      hideLanding();
       $("empSignOut").hidden = false;
       await refresh();
-    } catch (e) { app.innerHTML = '<p class="status err">The employer area couldn\'t load. Check your connection and try again.</p>'; }
+    } catch (e) { hideLanding(); getApp().innerHTML = '<p class="status err">The employer area couldn\'t load. Check your connection and try again.</p>'; }
   }
   $("empSignOut").onclick = async () => { await sb.auth.signOut().catch(() => {}); $("empSignOut").hidden = true; showSignIn("You're signed out."); };
 
@@ -59,7 +63,8 @@
   }
 
   function showSignIn(note){
-    app.innerHTML = promisesHTML() + '<div class="emp-grid"><section class="emp-card"><h2>Sign in or create an employer account</h2>' +
+    hideLanding();
+    getApp().innerHTML = promisesHTML() + '<div class="emp-grid"><section class="emp-card"><h2>Sign in or create an employer account</h2>' +
       '<p class="hint">Use your work email. We\'ll email you a sign-in link, so there\'s no password. New employers are reviewed by the Trazerr team before they can search, usually within a day.</p>' +
       (note ? '<p class="saved-note">' + esc(note) + "</p>" : "") +
       '<form class="t-field" id="empSignin" novalidate><label for="empEmail">Work email</label><div class="goal-form"><input class="input" id="empEmail" type="email" autocomplete="email" required placeholder="you@company.com"><button class="btn btn-primary" type="submit" id="empSigninBtn">Email me a sign-in link</button></div></form>' +
@@ -85,8 +90,9 @@
   }
 
   async function refresh(){
-    app.innerHTML = '<p class="hint">Loading your account…</p>';
-    try { me = await api("employerme"); } catch (e) { app.innerHTML = '<p class="status err">' + esc(e.message) + "</p>"; return; }
+    hideLanding();
+    getApp().innerHTML = '<p class="hint">Loading your account…</p>';
+    try { me = await api("employerme"); } catch (e) { getApp().innerHTML = '<p class="status err">' + esc(e.message) + "</p>"; return; }
     if (!me.employer) return showJoin();
     if (me.employer.status === "pending") return showWaiting();
     if (me.employer.status === "rejected") { app.innerHTML = '<section class="emp-card"><h2>We couldn\'t approve this account</h2><p class="hint">If you think that\'s a mistake, email <a href="mailto:hello@trazerr.com">hello@trazerr.com</a> from your work address.</p></section>'; return; }
@@ -94,7 +100,8 @@
   }
 
   function showJoin(){
-    app.innerHTML = '<section class="emp-card"><h2>Tell us about your company</h2><p class="hint">Signed in as <b>' + esc(me.email) + '</b>. The Trazerr team reviews each employer before they can search candidates.</p>' +
+    hideLanding();
+    getApp().innerHTML = '<section class="emp-card"><h2>Tell us about your company</h2><p class="hint">Signed in as <b>' + esc(me.email) + '</b>. The Trazerr team reviews each employer before they can search candidates.</p>' +
       '<form id="empJoin" class="emp-form" novalidate>' +
       '<div class="t-field"><label for="jCompany">Company name</label><input class="input" id="jCompany" maxlength="120" required autocomplete="organization"></div>' +
       '<div class="t-field"><label for="jName">Your name</label><input class="input" id="jName" maxlength="100" required autocomplete="name"></div>' +
@@ -111,13 +118,15 @@
     };
   }
   function showWaiting(){
-    app.innerHTML = '<section class="emp-card"><h2>Thanks, ' + esc(me.employer.contactName.split(" ")[0]) + ". We're reviewing " + esc(me.employer.company) + ".</h2>" +
+    hideLanding();
+    getApp().innerHTML = '<section class="emp-card"><h2>Thanks, ' + esc(me.employer.contactName.split(" ")[0]) + ". We're reviewing " + esc(me.employer.company) + ".</h2>" +
       '<p class="hint">You\'ll get an email at <b>' + esc(me.email) + "</b> as soon as you're approved, usually within a day. Then come back here to find candidates.</p></section>" + howItWorks();
   }
 
   function showSearch(){
+    hideLanding();
     const e = me.employer;
-    app.innerHTML = '<section class="emp-card"><h2>Who are you hiring?</h2><p class="hint">' + esc(e.company) + " · signed in as " + esc(me.email) + "</p>" +
+    getApp().innerHTML = '<section class="emp-card"><h2>Who are you hiring?</h2><p class="hint">' + esc(e.company) + " · signed in as " + esc(me.email) + "</p>" +
       '<form id="empSearch" class="emp-form" novalidate>' +
       '<div class="emp-row"><div class="t-field"><label for="sTitle">Job title</label><input class="input" id="sTitle" maxlength="100" required placeholder="e.g. Operations supervisor"></div>' +
       '<div class="t-field"><label for="sLoc">Location</label><input class="input" id="sLoc" maxlength="100" placeholder="City, State"></div></div>' +
@@ -180,6 +189,18 @@
     if (!me.requests.length) { box.innerHTML = '<p class="hint">None yet. Find candidates above, then choose "Ask to talk".</p>'; return; }
     box.innerHTML = '<ul class="acct-alerts">' + me.requests.map(r => "<li><div><b>" + esc(r.headline) + "</b><small>" + esc(r.jobTitle) + " · " + esc(fmtDate(r.createdAt)) + "</small></div><span class=\"emp-state " + esc(r.status) + "\">" +
       (r.status === "accepted" ? "Accepted: " + esc([r.name, r.email].filter(Boolean).join(", ")) : r.status === "declined" ? "Declined" : "Waiting for a reply") + "</span></li>").join("") + "</ul>";
+  }
+
+  // Handle "Add Your Profile" button on the main page
+  const profileBtn = $("empProfileBtn");
+  if (profileBtn) {
+    profileBtn.onclick = () => { hideLanding(); showSignIn(); };
+  }
+
+  // Handle "Sign in here" link
+  const signInLink = $("empSignInLink");
+  if (signInLink) {
+    signInLink.onclick = (e) => { e.preventDefault(); hideLanding(); showSignIn(); };
   }
 
   start();

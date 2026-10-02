@@ -36,13 +36,15 @@
     <p class="lede">Describe the role and Trazerr ranks candidates by the evidence in their experience, with the reasons. Career changers and under-sold talent show up too. Candidates stay anonymous until they agree to talk.</p>
   </section>
 
+  <!-- Employer app container (populated by JavaScript) -->
+  <div id="empApp"></div>
 
-  <!-- Employer Profile Section -->
-  <section class="emp-profile-section" style="margin-top:80px; padding:56px 48px; background:linear-gradient(135deg, rgba(0,102,224,.12) 0%, rgba(224,176,112,.06) 100%); border-radius:16px; text-align:center; border:1px solid rgba(0,102,224,.1); transition:all .3s ease; animation:fadeIn .5s ease-out">
+  <!-- Landing page: only shown before sign in -->
+  <section class="emp-profile-section" id="empLanding" style="margin-top:80px; padding:56px 48px; background:linear-gradient(135deg, rgba(0,102,224,.12) 0%, rgba(224,176,112,.06) 100%); border-radius:16px; text-align:center; border:1px solid rgba(0,102,224,.1); transition:all .3s ease; animation:fadeIn .5s ease-out">
     <h2 style="margin:0 0 16px; font-size:28px; font-weight:700; letter-spacing:-.01em">Ready to find your next hire?</h2>
     <p style="margin:0 0 36px; color:var(--ink-2); font-size:17px; line-height:1.6; max-width:600px; margin-left:auto; margin-right:auto">Create your employer profile to start searching our candidate database and connecting with people whose real experience fits your roles.</p>
     <button class="btn btn-primary" id="empProfileBtn" type="button" style="font-size:16px; padding:14px 32px; margin:0 auto; display:inline-flex">Add Your Profile</button>
-    <p style="margin:28px 0 0; font-size:14px; color:var(--ink-2); line-height:1.5">Already have a profile? <a href="#" style="color:var(--blue); text-decoration:none; font-weight:600; transition:color .2s ease" onmouseover="this.style.color='var(--blue-deep)'" onmouseout="this.style.color='var(--blue)'">Sign in here</a></p>
+    <p style="margin:28px 0 0; font-size:14px; color:var(--ink-2); line-height:1.5">Already have a profile? <a href="#" id="empSignInLink" style="color:var(--blue); text-decoration:none; font-weight:600; transition:color .2s ease" onmouseover="this.style.color='var(--blue-deep)'" onmouseout="this.style.color='var(--blue)'">Sign in here</a></p>
   </section>
 </main>
 <footer class="emp-foot"><div class="wrap"><a href="/">Trazerr for job seekers</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:hello@trazerr.com">hello@trazerr.com</a></div></footer>
