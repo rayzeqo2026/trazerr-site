@@ -154,15 +154,10 @@
       });
 
       // Sidebar navigation
-      document.querySelectorAll(".dash-sidebar nav a").forEach(link => {
-        const section = link.dataset.section;
+      document.querySelectorAll(".dash-sidebar nav a[data-section]").forEach(link => {
         link.addEventListener("click", (e) => {
           e.preventDefault();
-          // Redirect "Post a Job" to new post-job page directly
-          if (section === "create") {
-            window.location.href = "/post-job.html";
-            return;
-          }
+          const section = link.dataset.section;
           showSection(section);
         });
       });
