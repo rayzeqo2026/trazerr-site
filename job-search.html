@@ -3,23 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trazerr Match</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Trazerr Match - Find Your Perfect Role</title>
+<link rel="stylesheet" href="/assets/site.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
 .header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; border-bottom: 1px solid #ddd; }
-.header h1 { max-width: 1200px; margin: 0 auto; font-size: 32px; }
+.header h1 { max-width: 1200px; margin: 0 auto; font-size: 32px; font-weight: 700; }
 .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-.jobs-title { font-size: 20px; margin: 20px 0; font-weight: 600; }
+.jobs-header { font-size: 20px; margin: 30px 0 20px; font-weight: 600; }
 .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.job-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; cursor: pointer; }
-.job-card:hover { border-color: #0066e0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.job-title { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
-.job-meta { font-size: 13px; color: #666; margin: 0 0 10px; }
-.job-desc { font-size: 13px; color: #555; margin: 0 0 10px; line-height: 1.4; }
-.job-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.skill { background: #e8ecf1; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
-.job-match { display: inline-block; background: #4CAF50; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.job-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; }
+.job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.job-title { font-size: 16px; font-weight: 600; margin: 0; }
+.job-company { font-size: 14px; color: #666; margin: 4px 0 0; }
+.job-match { background: #4CAF50; color: white; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.job-desc { font-size: 13px; color: #555; margin: 10px 0; line-height: 1.5; }
+.job-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-tag { background: #e8ecf1; padding: 4px 10px; border-radius: 12px; font-size: 12px; color: #0e1628; }
 </style>
 </head>
 <body>
@@ -29,58 +34,137 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </div>
 
 <div class="container">
-  <div class="jobs-title" id="title">Loading...</div>
-  <div class="jobs-grid" id="jobs"></div>
+  <h2 class="jobs-header">5 Jobs Available</h2>
+
+  <div class="jobs-grid">
+    <!-- Job 1 -->
+    <div class="job-card">
+      <div class="job-header">
+        <div>
+          <div class="job-title">Senior Frontend Engineer</div>
+          <div class="job-company">TechCorp Inc. · San Francisco, CA · 🌐 Remote</div>
+        </div>
+        <div class="job-match" id="match1">0%</div>
+      </div>
+      <div class="job-desc">Build beautiful web applications with React, TypeScript, and modern CSS. 5+ years experience required.</div>
+      <div class="job-skills">
+        <span class="skill-tag">javascript</span>
+        <span class="skill-tag">react</span>
+        <span class="skill-tag">typescript</span>
+        <span class="skill-tag">css</span>
+      </div>
+    </div>
+
+    <!-- Job 2 -->
+    <div class="job-card">
+      <div class="job-header">
+        <div>
+          <div class="job-title">Product Manager</div>
+          <div class="job-company">InnovateLabs · New York, NY · 🌐 Remote</div>
+        </div>
+        <div class="job-match" id="match2">0%</div>
+      </div>
+      <div class="job-desc">Drive product strategy for our AI platform. 3-5 years of PM experience required.</div>
+      <div class="job-skills">
+        <span class="skill-tag">product management</span>
+        <span class="skill-tag">data analysis</span>
+        <span class="skill-tag">communication</span>
+      </div>
+    </div>
+
+    <!-- Job 3 -->
+    <div class="job-card">
+      <div class="job-header">
+        <div>
+          <div class="job-title">Full Stack Engineer</div>
+          <div class="job-company">StartupHub · Remote</div>
+        </div>
+        <div class="job-match" id="match3">0%</div>
+      </div>
+      <div class="job-desc">Build full-stack features with Node.js, React, and PostgreSQL. Own projects from database to UI.</div>
+      <div class="job-skills">
+        <span class="skill-tag">javascript</span>
+        <span class="skill-tag">node.js</span>
+        <span class="skill-tag">react</span>
+        <span class="skill-tag">sql</span>
+      </div>
+    </div>
+
+    <!-- Job 4 -->
+    <div class="job-card">
+      <div class="job-header">
+        <div>
+          <div class="job-title">Data Analyst</div>
+          <div class="job-company">Analytics Pro · Boston, MA</div>
+        </div>
+        <div class="job-match" id="match4">0%</div>
+      </div>
+      <div class="job-desc">Start your data analytics career! We'll train you. Work with SQL, Python, and Tableau.</div>
+      <div class="job-skills">
+        <span class="skill-tag">sql</span>
+        <span class="skill-tag">python</span>
+        <span class="skill-tag">data analysis</span>
+      </div>
+    </div>
+
+    <!-- Job 5 -->
+    <div class="job-card">
+      <div class="job-header">
+        <div>
+          <div class="job-title">DevOps Engineer</div>
+          <div class="job-company">CloudSystems · Seattle, WA · 🌐 Remote</div>
+        </div>
+        <div class="job-match" id="match5">0%</div>
+      </div>
+      <div class="job-desc">Architect and maintain cloud infrastructure on AWS. Design CI/CD pipelines and manage Kubernetes.</div>
+      <div class="job-skills">
+        <span class="skill-tag">aws</span>
+        <span class="skill-tag">docker</span>
+        <span class="skill-tag">kubernetes</span>
+        <span class="skill-tag">python</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// Jobs data
-const jobs = [
-  { id: 1, title: 'Senior Frontend Engineer', company: 'TechCorp', location: 'SF', remote: true, desc: 'Build web apps with React and TypeScript', skills: ['javascript', 'react', 'typescript'] },
-  { id: 2, title: 'Product Manager', company: 'InnovateLabs', location: 'NYC', remote: true, desc: 'Drive product strategy for AI platform', skills: ['product management', 'data analysis'] },
-  { id: 3, title: 'Full Stack Engineer', company: 'StartupHub', location: 'Remote', remote: true, desc: 'Build full-stack features with Node and React', skills: ['javascript', 'node.js', 'react', 'sql'] },
-  { id: 4, title: 'Data Analyst', company: 'Analytics Pro', location: 'Boston', remote: false, desc: 'Start your analytics career - we train!', skills: ['sql', 'python', 'data analysis'] },
-  { id: 5, title: 'DevOps Engineer', company: 'CloudSystems', location: 'Seattle', remote: true, desc: 'Architect AWS infrastructure', skills: ['aws', 'docker', 'kubernetes', 'python'] }
-];
+// Calculate and display match percentages based on user skills
+(function() {
+  try {
+    const jobSkillsList = [
+      ['javascript', 'react', 'typescript', 'css', 'leadership'],
+      ['product management', 'data analysis', 'communication', 'strategy'],
+      ['javascript', 'node.js', 'react', 'sql', 'rest api'],
+      ['sql', 'python', 'data analysis', 'tableau'],
+      ['aws', 'docker', 'kubernetes', 'python', 'ci/cd']
+    ];
 
-// Get skills from localStorage
-let userSkills = [];
-try {
-  const saved = localStorage.getItem('trazerr.skills');
-  if (saved) userSkills = JSON.parse(saved);
-} catch (e) {}
+    let userSkills = [];
+    try {
+      const saved = localStorage.getItem('trazerr.skills');
+      if (saved) userSkills = JSON.parse(saved);
+    } catch (e) {}
 
-// Calculate match
-function getMatch(jobSkills) {
-  if (!userSkills.length) return 0;
-  const matched = jobSkills.filter(s => userSkills.some(u => u.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(u.toLowerCase()))).length;
-  return Math.round(matched / jobSkills.length * 100);
-}
+    function calculateMatch(jobSkills) {
+      if (!userSkills || userSkills.length === 0) return 0;
+      const matched = jobSkills.filter(skill =>
+        userSkills.some(us =>
+          skill.toLowerCase().includes(us.toLowerCase()) ||
+          us.toLowerCase().includes(skill.toLowerCase())
+        )
+      ).length;
+      return Math.round((matched / jobSkills.length) * 100);
+    }
 
-// Render
-function render() {
-  const titleEl = document.getElementById('title');
-  const jobsEl = document.getElementById('jobs');
-
-  titleEl.textContent = jobs.length + ' jobs available';
-
-  jobsEl.innerHTML = jobs.map(job => `
-    <div class="job-card">
-      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-        <div>
-          <div class="job-title">${job.title}</div>
-          <div class="job-meta">${job.company} · ${job.location}${job.remote ? ' · Remote' : ''}</div>
-        </div>
-        <div class="job-match">${getMatch(job.skills)}%</div>
-      </div>
-      <div class="job-desc">${job.desc}</div>
-      <div class="job-skills">${job.skills.map(s => `<span class="skill">${s}</span>`).join('')}</div>
-    </div>
-  `).join('');
-}
-
-// Run immediately
-render();
+    for (let i = 0; i < jobSkillsList.length; i++) {
+      const match = calculateMatch(jobSkillsList[i]);
+      const el = document.getElementById('match' + (i + 1));
+      if (el) el.textContent = match + '%';
+    }
+  } catch (e) {
+    console.error('Error calculating matches:', e);
+  }
+})();
 </script>
 
 </body>
