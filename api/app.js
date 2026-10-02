@@ -1726,9 +1726,10 @@ async function jobdelete(req, res) {
       headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + session.access_token }
     });
 
-    console.log("📥 [jobdelete] DELETE response status:", deleteR.status);
+    console.log("📥 [jobdelete] DELETE response status:", deleteR.status, deleteR.statusText);
 
-    if (!deleteR.ok) {
+    // 200, 201, 204 are all considered success for DELETE
+    if (!deleteR.ok && deleteR.status !== 204) {
       const detail = await deleteR.text().catch(() => "");
       console.error("❌ [jobdelete] Delete failed with status", deleteR.status, "detail:", detail);
       throw new Error("Delete failed: " + detail);
