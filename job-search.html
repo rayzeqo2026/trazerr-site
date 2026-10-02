@@ -760,30 +760,24 @@ function loadData() {
   }
 }
 
-// Load Supabase and fetch jobs
-async function loadJobs() {
-  try {
-    console.log('Loading jobs from Supabase...');
+// Load jobs - try Supabase, fall back to sample jobs immediately
+function loadJobs() {
+  console.log('Loading jobs...');
 
-    // First try to load from Supabase
-    if (!window.supabase) {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js';
-      script.integrity = 'sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok';
-      script.crossOrigin = 'anonymous';
-      script.onload = fetchJobsFromSupabase;
-      script.onerror = () => {
-        console.log('Supabase CDN load failed, using sample jobs');
+  // Check Supabase config, but don't block on it
+  fetch('/api/app?action=authconfig')
+    .then(r => r.ok ? r.json() : null)
+    .then(cfg => {
+      if (cfg && cfg.url && cfg.anonKey) {
+        fetchJobsFromSupabase();
+      } else {
         loadSampleJobs();
-      };
-      document.head.appendChild(script);
-    } else {
-      fetchJobsFromSupabase();
-    }
-  } catch (e) {
-    console.error('Error loading jobs:', e);
-    loadSampleJobs();
-  }
+      }
+    })
+    .catch(() => {
+      console.log('Using sample jobs (Supabase unavailable)');
+      loadSampleJobs();
+    });
 }
 
 async function fetchJobsFromSupabase() {
@@ -1125,7 +1119,17 @@ document.getElementById('tmJobModal').addEventListener('click', (e) => {
 
 // Initialize
 loadData();
+
+// Start loading jobs with a timeout failsafe
 loadJobs();
+
+// If jobs don't load within 5 seconds, force sample jobs
+setTimeout(() => {
+  if (allJobs.length === 0) {
+    console.log('Job loading timeout, using sample jobs');
+    loadSampleJobs();
+  }
+}, 5000);
 </script>
 
 </body>
