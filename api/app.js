@@ -1491,7 +1491,9 @@ async function jobpost(req, res) {
       throw new UserError(502, userMsg, "jobpost: Supabase " + insertR.status + ": " + detail.slice(0, 200));
     }
 
-    const job = await insertR.json();
+    const respText = await insertR.text();
+    console.log("Supabase response:", respText);
+    const job = JSON.parse(respText);
     return res.status(201).json(job);
   } catch (e) {
     if (e instanceof UserError) throw e;
