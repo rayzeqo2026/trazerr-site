@@ -226,30 +226,58 @@
 
       // Setup resume upload
       const resumeFile = document.getElementById("resumeFile");
+      const resumeSection = document.getElementById("resumeSection");
       const searchBtn = document.getElementById("searchBtn");
       const searchInput = document.getElementById("searchInput");
 
       if (resumeFile) {
-        resumeFile.addEventListener("change", handleResumeUpload);
-        console.log("✓ Resume upload handler attached");
+        console.log("📄 Setting up resume upload handlers...");
 
-        // Drag and drop
-        const resumeSection = document.getElementById("resumeSection");
+        // Primary: change event on file input
+        resumeFile.addEventListener("change", (e) => {
+          console.log("🎯 Resume file change event triggered");
+          handleResumeUpload(e);
+        });
+        console.log("✓ Resume change handler attached");
+
+        // Fallback: direct file input click via section
         if (resumeSection) {
+          resumeSection.addEventListener("click", (e) => {
+            console.log("👆 Resume section clicked, opening file picker");
+            e.preventDefault();
+            e.stopPropagation();
+            resumeFile.click();
+          });
+
+          // Also add touchend for mobile
+          resumeSection.addEventListener("touchend", (e) => {
+            console.log("👆 Resume section touched, opening file picker");
+            e.preventDefault();
+            e.stopPropagation();
+            resumeFile.click();
+          });
+
+          // Drag and drop
           resumeSection.addEventListener("dragover", (e) => {
             e.preventDefault();
             resumeSection.classList.add("active");
+            console.log("🎯 Dragover detected");
           });
-          resumeSection.addEventListener("dragleave", () => resumeSection.classList.remove("active"));
+          resumeSection.addEventListener("dragleave", () => {
+            resumeSection.classList.remove("active");
+          });
           resumeSection.addEventListener("drop", (e) => {
             e.preventDefault();
             resumeSection.classList.remove("active");
+            console.log("📥 Files dropped:", e.dataTransfer.files.length);
             if (e.dataTransfer.files.length > 0) {
               handleResumeUpload({ target: { files: e.dataTransfer.files } });
             }
           });
-          console.log("✓ Drag and drop handler attached");
+          console.log("✓ All resume section handlers attached");
         }
+      } else {
+        console.error("❌ Resume file input not found!");
       }
 
       // Setup search button
@@ -377,7 +405,16 @@
 
   async function handleResumeUpload(e) {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.warn("⚠️ No file selected");
+      return;
+    }
+
+    console.log("📤 Resume upload started:", {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
 
     const statusEl = document.getElementById("resumeStatus");
     Toast.info("Reading your resume...", "Processing");
@@ -386,8 +423,14 @@
       // Read file using FileReader for better browser compatibility
       const text = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target.result);
-        reader.onerror = (error) => reject(error);
+        reader.onload = (event) => {
+          console.log("✓ File read successfully:", event.target.result.length, "characters");
+          resolve(event.target.result);
+        };
+        reader.onerror = (error) => {
+          console.error("❌ FileReader error:", error);
+          reject(error);
+        };
         reader.readAsText(file);
       });
 
