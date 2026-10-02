@@ -524,72 +524,76 @@
     // Update modal content and show it
     modalElement.style.display = 'block';
     modalElement.innerHTML = `
-      <div style="max-width: 900px; margin: 0 auto;">
-        <button onclick="document.getElementById('jobModal').style.display='none'" style="
-          background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ink);
-          padding: 0; margin-bottom: 20px;
-        ">← Back</button>
-
-        <div style="
-          background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
-          color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px;
-        ">
-          <h1 style="margin: 0 0 16px; font-size: 28px; font-weight: 800;">${esc(job.title)}</h1>
-          <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px;">
-            <span style="background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px;">${esc(job.company_code)}</span>
-            <span>📍 ${esc(job.location || "Not specified")}</span>
-            <span>🌐 ${job.remote_ok ? "Remote available" : "On-site only"}</span>
-          </div>
+      <div style="position: sticky; top: 0; z-index: 2; background: rgba(244,245,241,.96); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 12px 20px;">
+        <div style="max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 12px;">
+          <button onclick="document.getElementById('jobModal').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink); padding: 0;">← Back</button>
+          <span style="font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${esc(job.title)}</span>
         </div>
+      </div>
 
-        <div style="margin-bottom: 24px;">
-          <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 12px;">About This Role</h2>
-          <p style="color: var(--ink-2); line-height: 1.6; margin: 0;">${esc(job.description || "No description")}</p>
-        </div>
-
-        <div style="padding: 24px; background: linear-gradient(135deg, rgba(0,102,255,0.08) 0%, rgba(0,102,255,0.02) 100%); border-radius: 12px; border-left: 5px solid #0066ff; margin-bottom: 24px;">
-          <h3 style="font-size: 12px; font-weight: 700; color: #0066ff; margin: 0 0 16px;">✓ CORE SKILLS</h3>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            ${coreSkills.map(s => `<span style="display: inline-block; background: #0066ff; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px;">${esc(s)}</span>`).join("")}
-            ${coreSkills.length === 0 ? "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>" : ""}
+      <div style="max-width: 760px; margin: 0 auto; padding: 28px 20px 72px;">
+        <div style="background: linear-gradient(135deg, #001a4d 0%, #003d99 100%); color: white; border-radius: 16px; padding: 26px; border-top: 3px solid #D4AF37; margin-bottom: 32px;">
+          <h1 style="font-family: Georgia, serif; font-size: 32px; line-height: 1.15; margin: 0 0 16px; font-weight: 500;">${esc(job.title)}</h1>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; border-top: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2); padding: 14px 0; font-size: 14px; color: #AEB8CC;">
+            <div><span style="display: block; color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 4px;">Company Code</span><b style="color: white;">${esc(job.company_code)}</b></div>
+            <div><span style="display: block; color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 4px;">Location</span><b style="color: white;">${esc(job.location || "Not specified")}</b></div>
           </div>
-        </div>
-
-        <div style="padding: 24px; background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.02) 100%); border-radius: 12px; border-left: 5px solid #f59e0b; margin-bottom: 24px;">
-          <h3 style="font-size: 12px; font-weight: 700; color: #f59e0b; margin: 0 0 16px;">⭐ REQUIREMENTS</h3>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            ${requirements.map(s => `<span style="display: inline-block; background: #f59e0b; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px;">${esc(s)}</span>`).join("")}
-            ${requirements.length === 0 ? "<p style='color: var(--ink-2); margin: 0;'>No requirements identified</p>" : ""}
-          </div>
-        </div>
-
-        <div style="padding: 24px; background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%); border-radius: 12px; border-left: 5px solid #22c55e; margin-bottom: 24px;">
-          <h3 style="font-size: 12px; font-weight: 700; color: #22c55e; margin: 0 0 16px;">★ NICE TO HAVE</h3>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            ${nice.map(s => `<span style="display: inline-block; background: #22c55e; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px;">${esc(s)}</span>`).join("")}
-            ${nice.length === 0 ? "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>" : ""}
-          </div>
-        </div>
-
-        <div style="padding: 24px; background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.02) 100%); border-radius: 12px; border-left: 5px solid #8b5cf6; margin-bottom: 24px;">
-          <h3 style="font-size: 12px; font-weight: 700; color: #8b5cf6; margin: 0 0 16px;">📊 EXPERIENCE AREAS</h3>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            ${experience.map(s => `<span style="display: inline-block; background: #8b5cf6; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px;">${esc(s)}</span>`).join("")}
-            ${experience.length === 0 ? "<p style='color: var(--ink-2); margin: 0;'>No experience areas identified</p>" : ""}
-          </div>
+          <div style="margin-top: 14px; font-size: 14px; color: #AEB8CC;">📍 ${esc(job.location || "Not specified")} ${job.remote_ok ? "• 🌐 Remote available" : "• On-site only"}</div>
         </div>
 
         <div style="margin-bottom: 32px;">
-          <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 12px;">📋 Key Responsibilities</h2>
-          <ul style="list-style: none; padding: 0; margin: 0;">
-            ${resp.map(r => `<li style="padding: 10px 0; padding-left: 24px; position: relative; font-size: 14px; color: var(--ink);"><span style="position: absolute; left: 0; font-weight: 700; color: var(--blue);">•</span>${esc(r)}</li>`).join("")}
-            ${resp.length === 0 ? "<li style='color: var(--ink-2);'>No responsibilities listed</li>" : ""}
-          </ul>
+          <h2 style="font-size: 18px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin: 0 0 16px;">About This Role</h2>
+          <p style="color: var(--ink-2); line-height: 1.6; margin: 0; font-size: 15px;">${esc(job.description || "No description").split('\n').join('<br>')}</p>
         </div>
 
-        <div style="display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border);">
-          <button onclick="document.getElementById('jobModal').style.display='none'" style="flex: 1; padding: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; font-weight: 600; cursor: pointer;">← Back</button>
-          <button onclick="window.dashboard.deleteJob('${job.id}', '${job.title.replace(/'/g, "\\'")}'); document.getElementById('jobModal').style.display='none';" style="flex: 1; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🗑 Delete Job</button>
+        ${coreSkills.length > 0 ? `
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 13px; font-weight: 700; color: #0066ff; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">✓ Core Skills</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            ${coreSkills.map(s => `<span style="display: inline-block; background: #0066ff; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">${esc(s)}</span>`).join("")}
+          </div>
+        </div>
+        ` : ""}
+
+        ${requirements.length > 0 ? `
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 13px; font-weight: 700; color: #f59e0b; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">⭐ Requirements</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            ${requirements.map(s => `<span style="display: inline-block; background: #f59e0b; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">${esc(s)}</span>`).join("")}
+          </div>
+        </div>
+        ` : ""}
+
+        ${nice.length > 0 ? `
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 13px; font-weight: 700; color: #22c55e; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">★ Nice to Have</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            ${nice.map(s => `<span style="display: inline-block; background: #22c55e; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">${esc(s)}</span>`).join("")}
+          </div>
+        </div>
+        ` : ""}
+
+        ${experience.length > 0 ? `
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 13px; font-weight: 700; color: #8b5cf6; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Experience Areas</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            ${experience.map(s => `<span style="display: inline-block; background: #8b5cf6; color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">${esc(s)}</span>`).join("")}
+          </div>
+        </div>
+        ` : ""}
+
+        ${resp.length > 0 ? `
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin: 0 0 16px;">Key Responsibilities</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            ${resp.map(r => `<li style="display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border-soft); font-size: 15px; color: var(--ink);"><span style="font-weight: 700; color: var(--blue); text-align: center;">•</span><span>${esc(r)}</span></li>`).join("")}
+          </ul>
+        </div>
+        ` : ""}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 32px;">
+          <button onclick="document.getElementById('jobModal').style.display='none'" style="padding: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; font-family: inherit;">← Back</button>
+          <button onclick="window.dashboard.deleteJob('${job.id}', '${job.title.replace(/'/g, "\\'")}'); document.getElementById('jobModal').style.display='none';" style="padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; font-family: inherit;">Delete Job</button>
         </div>
       </div>
     `;
