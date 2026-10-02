@@ -55,7 +55,7 @@
 
   <div class="tm-search-box">
     <input type="text" id="searchInput" placeholder="Search by company code (e.g., WM.1001) or job title...">
-    <button onclick="performSearch()">Search</button>
+    <button onclick="performSearch()">Search Database</button>
   </div>
 
   <div id="results" class="tm-results"></div>
@@ -71,7 +71,6 @@
 
 <script>
 let userProfile = null;
-let allJobs = [];
 
 async function init() {
   try {
@@ -83,7 +82,7 @@ async function init() {
     }
 
     userProfile = JSON.parse(saved);
-    showInfo('Ready to search. Enter a company code (like WM.1001) or job title to find positions.');
+    showInfo('Your Career DNA is loaded. Search the job database by company code (WM.1001) or job title.');
   } catch (e) {
     showError('Error loading your Career DNA: ' + e.message);
   }
@@ -104,109 +103,150 @@ async function performSearch() {
   showResults('<div class="tm-loading"><p>Searching job database...</p></div>');
 
   try {
-    // Search for jobs - this would query your Supabase database
-    // For now, we'll use sample jobs but the backend should return real jobs
-    searchJobsInDatabase(query);
+    const response = await fetch('/api/app?action=jobjsearch&q=' + encodeURIComponent(query));
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({ error: 'Search failed' }));
+      showError(data.error || 'Search failed');
+      return;
+    }
+
+    const data = await response.json();
+    if (!data.jobs || data.jobs.length === 0) {
+      showResults('<div class="tm-job"><p>No jobs found matching "' + query + '". Try another search.</p></div>');
+      return;
+    }
+
+    await analyzeJobsForUser(data.jobs);
   } catch (e) {
     showError('Search failed: ' + e.message);
   }
 }
 
-async function searchJobsInDatabase(query) {
-  try {
-    // In production, this would call an API endpoint to search the job database
-    // For now, show instructions
-    showResults(`
-      <div class="tm-job">
-        <div class="tm-job-header">
-          <div class="tm-job-info">
-            <h3>Job Search Implementation Needed</h3>
-            <div class="tm-job-meta">You searched for: "${query}"</div>
+async function analyzeJobsForUser(jobs) {
+  showResults('<div class="tm-loading"><p>Analyzing ' + jobs.length + ' job(s) against your Career DNA...</p></div>');
+
+  const results = [];
+  for (const job of jobs) {
+    try {
+      const response = await fetch('/api/app?action=match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile: userProfile,
+          job: {
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            description: job.description || ''
+          }
+        })
+      });
+
+      if (!response.ok) {
+        results.push(`
+          <div class="tm-job">
+            <div class="tm-job-header">
+              <div class="tm-job-info">
+                <h3>${job.title}</h3>
+                <div class="tm-job-meta">${job.company} · ${job.location || 'Remote'}</div>
+              </div>
+            </div>
           </div>
+        `);
+        continue;
+      }
+
+      const data = await response.json();
+      const fit = data.fit;
+      const jobData = JSON.stringify({ title: job.title, company: job.company, location: job.location || 'Remote', description: job.description || '', job_id: job.id }).replace(/"/g, '&quot;');
+
+      results.push(`
+        <div class="tm-job" onclick="showJobDetail('${jobData}')">
+          <div class="tm-job-header">
+            <div class="tm-job-info">
+              <h3>${job.title}</h3>
+              <div class="tm-job-meta">${job.company} · ${job.location || 'Remote'}</div>
+            </div>
+            <div class="tm-match-score">
+              <div class="tm-score-num">${fit.fitScore}%</div>
+              <div class="tm-score-label">Career Fit</div>
+            </div>
+          </div>
+          <div class="tm-job-desc">${fit.summary}</div>
+          ${fit.factors && fit.factors.length > 0 ? `
+            <div class="tm-factors">
+              ${fit.factors.slice(0, 5).map(f => `
+                <div class="tm-factor">
+                  <div class="tm-factor-name">${f.name}</div>
+                  <div class="tm-factor-score">${f.score}%</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
-        <div class="tm-job-desc">
-          To complete this feature, we need to:
-          <ol style="text-align: left; margin: 12px 0;">
-            <li>Create a database endpoint to search job_postings by company code or title</li>
-            <li>Return matching jobs posted by employers</li>
-            <li>Match each job against your Career DNA using AI</li>
-            <li>Display results with match scores and detailed candidate certificate</li>
-          </ol>
-          <p><strong>Next step:</strong> Set up the job search API endpoint that queries your Supabase job_postings table.</p>
-        </div>
-      </div>
-    `);
-  } catch (e) {
-    showError('Error: ' + e.message);
+      `);
+    } catch (e) {
+      console.error('Error analyzing job:', e);
+    }
   }
+
+  showResults('<div class="tm-results">' + results.join('') + '</div>');
 }
 
-async function showJobDetail(job) {
-  if (!userProfile) {
-    showError('Career DNA not loaded');
-    return;
-  }
-
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('modalContent').innerHTML = '<div class="tm-loading"><p>Analyzing your fit for this position...</p></div>';
-
+function showJobDetail(jobData) {
   try {
-    // Call the match API to get detailed compatibility analysis
-    const response = await fetch('/api/app?action=match', {
+    const job = JSON.parse(jobData);
+    const modal = document.getElementById('modal');
+    modal.classList.add('open');
+    document.getElementById('modalContent').innerHTML = '<div class="tm-loading"><p>Loading your fit analysis...</p></div>';
+
+    fetch('/api/app?action=match', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         profile: userProfile,
-        job: job
+        job: {
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          description: job.description
+        }
       })
-    });
-
-    if (!response.ok) throw new Error('Match API failed: ' + response.status);
-
-    const data = await response.json();
-    const fit = data.fit;
-
-    // Build candidate certificate
-    let factors = '';
-    if (fit.factors && fit.factors.length > 0) {
-      factors = '<div style="margin-top: 20px;"><h4>Your Fit Breakdown:</h4>';
-      for (const f of fit.factors) {
-        factors += `
-          <div style="margin-bottom: 12px; padding: 12px; background: #f5f7fa; border-radius: 6px;">
-            <strong>${f.name}: ${f.score}%</strong>
-            <p style="margin: 4px 0 0; font-size: 13px; color: #555;">${f.note}</p>
-          </div>
-        `;
+    }).then(r => r.json()).then(data => {
+      const fit = data.fit;
+      let factors = '';
+      if (fit.factors && fit.factors.length > 0) {
+        factors = '<div style="margin-top: 20px;"><h4>Your Fit Breakdown:</h4>';
+        for (const f of fit.factors) {
+          factors += `
+            <div style="margin-bottom: 12px; padding: 12px; background: #f5f7fa; border-radius: 6px;">
+              <strong>${f.name}: ${f.score}%</strong>
+              <p style="margin: 4px 0 0; font-size: 13px; color: #555;">${f.note}</p>
+            </div>
+          `;
+        }
+        factors += '</div>';
       }
-      factors += '</div>';
-    }
 
-    const certificate = `
-      <h2>${job.title}</h2>
-      <p><strong>${job.company}</strong> · ${job.location || 'Remote'}</p>
+      document.getElementById('modalContent').innerHTML = `
+        <h2>${job.title}</h2>
+        <p><strong>${job.company}</strong> · ${job.location}</p>
 
-      <div class="tm-certificate">
-        <h2>Compatibility Score</h2>
-        <div class="tm-score-num">${fit.fitScore}%</div>
-        <p>${fit.summary}</p>
-      </div>
+        <div class="tm-certificate">
+          <h2>Career Fit Score</h2>
+          <div class="tm-score-num">${fit.fitScore}%</div>
+          <p>${fit.summary}</p>
+        </div>
 
-      ${factors}
+        ${factors}
 
-      <div style="margin-top: 20px; padding: 12px; background: #fff3cd; border-radius: 6px;">
-        <p><strong>Summary:</strong> ${fit.summary}</p>
-      </div>
-
-      <button onclick="closeModal()" style="margin-top: 20px; padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
-    `;
-
-    document.getElementById('modalContent').innerHTML = certificate;
+        <button onclick="closeModal()" style="margin-top: 20px; padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+      `;
+    }).catch(e => {
+      document.getElementById('modalContent').innerHTML = '<p style="color: #d32f2f;">Error: ' + e.message + '</p><button onclick="closeModal()">Close</button>';
+    });
   } catch (e) {
-    document.getElementById('modalContent').innerHTML = `
-      <h2>${job.title}</h2>
-      <p style="color: #d32f2f;">Error analyzing fit: ${e.message}</p>
-      <button onclick="closeModal()">Close</button>
-    `;
+    console.error('Error:', e);
   }
 }
 
@@ -215,25 +255,21 @@ function closeModal() {
 }
 
 function showError(msg) {
-  const el = document.getElementById('error');
-  el.textContent = msg;
-  el.style.display = 'block';
+  document.getElementById('error').textContent = msg;
+  document.getElementById('error').style.display = 'block';
 }
 
 function showInfo(msg) {
-  const el = document.getElementById('info');
-  el.textContent = msg;
-  el.style.display = 'block';
+  document.getElementById('info').textContent = msg;
+  document.getElementById('info').style.display = 'block';
 }
 
 function showResults(html) {
   document.getElementById('results').innerHTML = html;
 }
 
-// Initialize
 init();
 
-// Allow Enter key to search
 document.getElementById('searchInput').addEventListener('keypress', function(e) {
   if (e.key === 'Enter') performSearch();
 });

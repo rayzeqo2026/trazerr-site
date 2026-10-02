@@ -1761,6 +1761,47 @@ async function jobdelete(req, res) {
   }
 }
 
+/* ---------------- Search employer jobs ----*/
+async function jobjsearch(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.anon) throw new UserError(503, "Job database not configured.");
+
+  const q = getQuery(req);
+  const query = str(q.q, 100);
+  if (!query) throw new UserError(400, "Enter a company code or job title to search.");
+
+  try {
+    const sb = { url: cfg.url, anonKey: cfg.anon };
+
+    // Search job_postings table by company_code or title
+    // First try exact company_code match
+    let url = sb.url + "/rest/v1/job_postings?select=*&status=eq.open";
+
+    // Try to match company code (e.g., WM.1001)
+    if (query.match(/^[A-Z]{2}\.\d+$/)) {
+      url += "&company_code=eq." + encodeURIComponent(query);
+    } else {
+      // Otherwise search by title or company name
+      url += "&or=(title.ilike.%25" + encodeURIComponent(query) + "%25,company.ilike.%25" + encodeURIComponent(query) + "%25)";
+    }
+
+    url += "&limit=50&order=created_at.desc";
+
+    const r = await fetch(url, {
+      headers: { apikey: cfg.anon, "Accept": "application/json" },
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!r.ok) throw new Error("Database query failed: " + r.status);
+
+    const jobs = await r.json();
+    return res.status(200).json({ jobs: jobs || [] });
+  } catch (e) {
+    if (e instanceof UserError) throw e;
+    throw new UserError(502, "Search failed: " + e.message);
+  }
+}
+
 /* ---------------- Error log and alerts ---------------- */
 // Keeps the newest 200 errors, from the server and from visitors' browsers, for the usage page, and emails
 // an alert when the server fails (at most one an hour). Messages are cut short and email addresses are
@@ -1846,7 +1887,7 @@ async function health(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, jobpost, jobdelete, jobmatch, appAlert };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, jobpost, jobdelete, jobmatch, jobjsearch, appAlert };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
