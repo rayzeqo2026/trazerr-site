@@ -805,7 +805,7 @@
     const searchBtn = document.getElementById("searchBtn");
     const searchInput = document.getElementById("searchInput");
     const modalCloseBtn = document.querySelector(".modal-close");
-    const applyBtn = document.querySelector("button[onclick*='applyForJob']");
+    const applyBtn = document.getElementById("applyBtn");
     const bookmarkBtn = document.getElementById("bookmarkBtn");
 
     if (resumeFile && !resumeFile.hasAttribute("data-listener-attached")) {
