@@ -496,11 +496,13 @@
       if (!notificationEl.parentNode) {
         document.body.insertAdjacentElement("afterbegin", notificationEl);
       }
-      setTimeout(() => {
-        notificationEl.textContent = "";
-      }, 3000);
 
       console.log("✓ Job deleted and verified");
+
+      // Reload page to refresh the job list
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
     } catch (e) {
       console.error("❌ Delete failed:", e);
       showError("Delete failed: " + (e.message || "Unknown error"));
