@@ -350,61 +350,36 @@ async function initAuth() {
 }
 
 async function loadJobDetail() {
+  const jobId = new URLSearchParams(window.location.search).get("id");
+
+  if (!jobId) {
+    showOnPage("❌ No job ID");
+    return;
+  }
+
   try {
-    // Initialize Supabase if not already done
-    if (!sb) {
-      showOnPage("⏳ Initializing...");
-      try {
-        const cfg = await Promise.race([
-          fetch(API + "?action=authconfig").then(r => r.json()),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("Config timeout")), 5000))
-        ]);
-        if (!window.supabase) {
-          await loadScript(SB_LIB, SB_LIB_SRI);
-        }
-        sb = window.supabase.createClient(cfg.url, cfg.anonKey);
-      } catch (e) {
-        showOnPage("❌ Init failed: " + e.message);
-        return;
-      }
-    }
+    showOnPage("📡 Loading...");
 
-    const params = new URLSearchParams(window.location.search);
-    const jobId = params.get("id");
+    const cfg = await fetch(API + "?action=authconfig").then(r => r.json());
+    if (!window.supabase) await loadScript(SB_LIB, SB_LIB_SRI);
 
-    if (!jobId) {
-      showOnPage("❌ No job ID in URL");
-      return;
-    }
+    sb = window.supabase.createClient(cfg.url, cfg.anonKey);
 
-    showOnPage("📡 Fetching...");
-
-    const queryPromise = sb
+    const { data: job, error } = await sb
       .from("job_postings")
       .select("*")
       .eq("id", jobId)
       .single();
 
-    const { data: job, error } = await Promise.race([
-      queryPromise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Query timeout")), 8000))
-    ]);
-
-    if (error) {
-      showOnPage("❌ Query error: " + error.message);
-      return;
-    }
-
-    if (!job) {
-      showOnPage("❌ Job not found");
-      return;
-    }
+    if (error) throw new Error(error.message);
+    if (!job) throw new Error("Not found");
 
     currentJob = job;
     displayJobDetail(job);
     showOnPage("✅ Ready");
+
   } catch (e) {
-    showOnPage("❌ " + (e?.message || "Error"));
+    showOnPage("❌ " + e.message);
   }
 }
 
