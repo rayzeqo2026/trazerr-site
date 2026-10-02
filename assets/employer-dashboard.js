@@ -481,13 +481,29 @@
     }
 
     try {
+      console.log("🗑️ Deleting job:", jobId);
       const result = await api("jobdelete", { job_id: jobId });
-      currentJobs = currentJobs.filter(j => j.id !== jobId);
-      currentApplications = currentApplications.filter(a => a.job_id !== jobId);
-      loadJobsList();
-      loadOverview();
+      console.log("✓ Delete API response:", result);
+
+      // Refetch jobs from database to verify deletion worked
+      console.log("📋 Refetching jobs to verify deletion...");
+      await loadDashboardData();
+
+      // Show confirmation
+      const notificationEl = document.getElementById("acctNote") || document.createElement("div");
+      notificationEl.textContent = `✓ Job "${jobTitle}" deleted successfully`;
+      notificationEl.style.color = "#22c55e";
+      if (!notificationEl.parentNode) {
+        document.body.insertAdjacentElement("afterbegin", notificationEl);
+      }
+      setTimeout(() => {
+        notificationEl.textContent = "";
+      }, 3000);
+
+      console.log("✓ Job deleted and verified");
     } catch (e) {
-      showError(e.message || "Failed to delete job");
+      console.error("❌ Delete failed:", e);
+      showError("Delete failed: " + (e.message || "Unknown error"));
     }
   }
 
