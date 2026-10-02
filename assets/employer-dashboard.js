@@ -138,15 +138,6 @@
       document.getElementById("contactNameField").value = currentEmployer.contact_name;
       document.getElementById("companyCodeField").value = generateCompanyCode(currentEmployer.company);
 
-      // Post job button in overview
-      const postJobBtn = document.getElementById("postJobBtn");
-      if (postJobBtn) {
-        postJobBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          showSection("create");
-        });
-      }
-
       // Sign out
       document.getElementById("signOut").addEventListener("click", async () => {
         await sb.auth.signOut().catch(() => {});
