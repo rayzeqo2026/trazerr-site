@@ -1741,7 +1741,7 @@ async function openAccount(o){
   let rec = acctRecord;
   if (rec === undefined) { openOverlay("Your account", loadingHTML("Loading your account…")); try { rec = await fetchRecord(false); } catch (e) { rec = null; o.note = e.message; } }
   const local = loadSaved();
-  let h = '<span class="flag">Your account</span><h2 class="o-headline">Signed in</h2><p class="greet" style="margin-top:6px">as <b>' + esc(sbUser.email || "") + "</b></p>";
+  let h = '<span class="flag">Your account</span><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2 class="o-headline">Signed in</h2><button class="btn btn-quiet btn-sm" type="button" id="headerSignOutBtn">Sign out</button></div><p class="greet" style="margin-top:6px">as <b>' + esc(sbUser.email || "") + "</b></p>";
   if (o.note) h += '<p class="saved-note">' + esc(o.note) + "</p>";
   // Four tabs keep the panel short: what's saved, employers, job alerts, and account settings.
   const tab = o.tab || (o.startTalent || o.focus === "requests" ? "employers" : "dna");
@@ -1802,7 +1802,9 @@ async function openAccount(o){
       openAccount({ note: "Everything is deleted: your account, your saved Career DNA and your resume, including the copy on this device." });
     } catch (e) { y.disabled = false; y.textContent = "Yes, delete everything"; note.textContent = e.message; }
   };
-  $("signOutBtn").onclick = async () => { await sb.auth.signOut().catch(() => {}); sbUser = null; acctRecord = undefined; paintAcctBtn(); openAccount({ note: "You're signed out. Anything saved on this device stays here until you remove it." }); };
+  const handleSignOut = async () => { await sb.auth.signOut().catch(() => {}); sbUser = null; acctRecord = undefined; paintAcctBtn(); openAccount({ note: "You're signed out. Anything saved on this device stays here until you remove it." }); };
+  $("signOutBtn").onclick = handleSignOut;
+  $("headerSignOutBtn").onclick = handleSignOut;
 }
 /* ---------- talent pool (candidate side) ---------- */
 // Signed-in requests to the server that need to know who is asking.
