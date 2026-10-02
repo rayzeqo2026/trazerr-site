@@ -493,9 +493,8 @@
   /* ========== Helpers ========== */
 
   function showJobModal(job) {
-    // Remove any existing modal first
-    const existing = document.getElementById("jobModal");
-    if (existing) existing.remove();
+    // Remove ALL existing modals first (use querySelectorAll to catch all instances)
+    document.querySelectorAll("[data-job-modal]").forEach(m => m.remove());
 
     const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
     const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
@@ -505,6 +504,7 @@
     const resp = (dna.key_responsibilities || []).filter(Boolean);
 
     const modal = document.createElement("div");
+    modal.setAttribute("data-job-modal", "true");
     modal.id = "jobModal";
     modal.style.cssText = `
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -514,7 +514,7 @@
 
     modal.innerHTML = `
       <div style="max-width: 900px; margin: 0 auto;">
-        <button onclick="document.getElementById('jobModal').remove()" style="
+        <button onclick="document.querySelector('[data-job-modal]').remove()" style="
           background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ink);
           padding: 0; margin-bottom: 20px;
         ">← Back</button>
@@ -577,8 +577,8 @@
         </div>
 
         <div style="display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border);">
-          <button onclick="document.getElementById('jobModal').remove()" style="flex: 1; padding: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; font-weight: 600; cursor: pointer;">← Back</button>
-          <button onclick="window.dashboard.deleteJob('${job.id}', '${job.title.replace(/'/g, "\\'")}'); document.getElementById('jobModal').remove();" style="flex: 1; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🗑 Delete Job</button>
+          <button onclick="document.querySelector('[data-job-modal]').remove()" style="flex: 1; padding: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; font-weight: 600; cursor: pointer;">← Back</button>
+          <button onclick="window.dashboard.deleteJob('${job.id}', '${job.title.replace(/'/g, "\\'")}'); document.querySelector('[data-job-modal]').remove();" style="flex: 1; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🗑 Delete Job</button>
         </div>
       </div>
     `;
