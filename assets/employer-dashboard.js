@@ -158,6 +158,11 @@
         link.addEventListener("click", (e) => {
           e.preventDefault();
           const section = link.dataset.section;
+          // Redirect to new post-job page instead of dashboard form
+          if (section === "create") {
+            window.location.href = "/post-job.html";
+            return;
+          }
           showSection(section);
         });
       });
