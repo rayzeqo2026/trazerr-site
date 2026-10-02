@@ -319,9 +319,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Upload area click and drag handlers
   const uploadArea = document.getElementById("uploadArea");
   if (uploadArea) {
+    uploadArea.style.cursor = "pointer";
     uploadArea.addEventListener("click", () => {
       console.log("Upload area clicked");
-      document.getElementById("fileInput").click();
+      alert("Opening file picker...");
+      const fileInput = document.getElementById("fileInput");
+      if (fileInput) {
+        fileInput.click();
+      } else {
+        alert("Error: File input element not found");
+      }
     });
 
     uploadArea.addEventListener("dragover", (e) => {
