@@ -531,7 +531,7 @@
     if (!container) return;
 
     if (!jobs || jobs.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:void(0);" onclick="document.getElementById(\'searchInput\').value=\'\'; window.jobSearch.performSearch();">View all jobs</a></p></div>';
+      container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:void(0);" onclick="if(window.performSearch) window.performSearch();">View all jobs</a></p></div>';
       updateJobStats([]);
       return;
     }
@@ -572,6 +572,36 @@
         </div>
       `;
     }).join("");
+
+    // Attach click event listeners to job items as fallback
+    setTimeout(() => {
+      const jobItems = container.querySelectorAll(".job-item");
+      jobItems.forEach(item => {
+        if (!item.hasAttribute("data-listener-attached")) {
+          item.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const jobId = item.getAttribute("data-job-id");
+            console.log("🖱️ Job item clicked:", jobId);
+            if (window.selectJob) {
+              window.selectJob(jobId);
+            }
+          });
+          // Also add touchend for mobile
+          item.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const jobId = item.getAttribute("data-job-id");
+            console.log("👆 Job item touched:", jobId);
+            if (window.selectJob) {
+              window.selectJob(jobId);
+            }
+          });
+          item.setAttribute("data-listener-attached", "true");
+          console.log("✓ Job item listener attached:", jobId);
+        }
+      });
+    }, 100);
   }
 
   function toggleBookmark() {
