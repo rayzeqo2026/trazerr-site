@@ -219,6 +219,11 @@ body {
 </style>
 </head>
 <body>
+<div id="debugInfo" style="padding: 20px; background: #fff3cd; border: 1px solid #ffc107; margin: 20px; border-radius: 8px; display: none;">
+  <strong>Debug Info:</strong>
+  <p id="debugText"></p>
+</div>
+
 <div class="detail-container">
   <div style="margin-bottom: 24px;">
     <a href="/employer-dashboard.html" style="color: var(--blue); text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">← Back to Dashboard</a>
@@ -284,6 +289,16 @@ const SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4IT
 let sb = null;
 let currentJob = null;
 
+function showDebug(msg) {
+  console.log(msg);
+  const debugEl = document.getElementById("debugInfo");
+  const debugText = document.getElementById("debugText");
+  if (debugEl && debugText) {
+    debugEl.style.display = "block";
+    debugText.innerHTML += msg + "<br>";
+  }
+}
+
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function loadScript(src, integrity) {
@@ -333,10 +348,11 @@ async function initAuth() {
 
 async function loadJobDetail() {
   try {
+    showDebug("📍 Starting loadJobDetail...");
     const params = new URLSearchParams(window.location.search);
     const jobId = params.get("id");
 
-    console.log("Loading job detail for ID:", jobId);
+    showDebug("🔍 Job ID from URL: " + jobId);
 
     if (!jobId) {
       throw new Error("No job ID provided");
@@ -345,16 +361,19 @@ async function loadJobDetail() {
     // First, try to get job from sessionStorage (passed from dashboard)
     let job = null;
     const stored = sessionStorage.getItem("currentJobDetail");
+    showDebug("📦 Checking sessionStorage... Found: " + (stored ? "YES" : "NO"));
+
     if (stored) {
       try {
         job = JSON.parse(stored);
-        console.log("Job loaded from sessionStorage:", job);
+        showDebug("✅ Job loaded from sessionStorage: " + job.title);
         currentJob = job;
         displayJobDetail(job);
         sessionStorage.removeItem("currentJobDetail");
+        showDebug("✨ Display complete!");
         return;
       } catch (e) {
-        console.warn("Failed to parse stored job data:", e);
+        showDebug("❌ Failed to parse stored job: " + e.message);
       }
     }
 
@@ -458,14 +477,14 @@ async function deleteJobAndReturn() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("Job detail page loaded, initializing auth...");
+  showDebug("🚀 Page loaded, initializing auth...");
   const ok = await initAuth();
-  console.log("Auth result:", ok);
+  showDebug("🔐 Auth result: " + ok);
   if (ok) {
-    console.log("Auth successful, loading job detail...");
-    loadJobDetail();
+    showDebug("✅ Auth successful, loading job detail...");
+    await loadJobDetail();
   } else {
-    console.log("Auth failed");
+    showDebug("❌ Auth failed, redirecting...");
   }
 });
 </script>
