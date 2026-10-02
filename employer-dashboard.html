@@ -342,63 +342,11 @@
         <button class="btn btn-primary" id="postJobBtn" data-action="post-job" style="margin-top: 16px;">Post a New Job</button>
       </section>
 
-      <!-- Create Job Section -->
+      <!-- Create Job Section - Redirects to post-job.html -->
       <section class="dash-section" id="create">
-        <h2>Post a New Job</h2>
-
-        <form class="job-form" id="jobForm">
-          <div class="form-group">
-            <label for="jobTitle">Job Title</label>
-            <input type="text" id="jobTitle" required placeholder="e.g., Senior Product Manager">
-          </div>
-
-          <div class="form-group">
-            <label for="jobDesc">Job Description</label>
-            <textarea id="jobDesc" required placeholder="Describe the role, responsibilities, and what success looks like..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="expLevel">Experience Level</label>
-            <select id="expLevel" required>
-              <option value="">Select level</option>
-              <option value="entry">Entry level</option>
-              <option value="mid">Mid level</option>
-              <option value="senior">Senior level</option>
-              <option value="lead">Lead / Manager</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Required Skills</label>
-            <div class="skill-input-group">
-              <input type="text" id="requiredSkillInput" placeholder="e.g., Node.js" />
-              <button type="button" class="btn btn-primary" onclick="window.dashboard.addSkill('required')">Add</button>
-            </div>
-            <div class="skill-list" id="requiredSkillsList"></div>
-          </div>
-
-          <div class="form-group">
-            <label>Nice to Have Skills</label>
-            <div class="skill-input-group">
-              <input type="text" id="niceSkillInput" placeholder="e.g., AWS" />
-              <button type="button" class="btn btn-primary" onclick="window.dashboard.addSkill('nice')">Add</button>
-            </div>
-            <div class="skill-list" id="niceSkillsList"></div>
-          </div>
-
-          <div class="form-group">
-            <label for="location">Location</label>
-            <input type="text" id="location" placeholder="e.g., New York, NY">
-          </div>
-
-          <div class="form-group">
-            <label>
-              <input type="checkbox" id="remoteOk"> Remote OK
-            </label>
-          </div>
-
-          <button type="submit" class="btn btn-primary">Post Job</button>
-        </form>
+        <h2>Redirecting to job posting...</h2>
+        <p>If not redirected automatically, <a href="/post-job.html">click here</a>.</p>
+        <script>window.location.href = '/post-job.html';</script>
       </section>
 
       <!-- My Jobs Section -->
