@@ -838,6 +838,14 @@
       modalCloseBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        console.log("🔘 Modal close button clicked");
+        closeJobModal();
+      });
+      // Also add touchend for better mobile support
+      modalCloseBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("🔘 Modal close button touched");
         closeJobModal();
       });
       modalCloseBtn.setAttribute("data-listener-attached", "true");
@@ -848,6 +856,14 @@
       applyBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        console.log("🔘 Apply button clicked");
+        applyForJob();
+      });
+      // Also add touchend for better mobile support
+      applyBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("🔘 Apply button touched");
         applyForJob();
       });
       applyBtn.setAttribute("data-listener-attached", "true");
@@ -858,6 +874,14 @@
       bookmarkBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        console.log("🔘 Bookmark button clicked");
+        toggleBookmark();
+      });
+      // Also add touchend for better mobile support
+      bookmarkBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("🔘 Bookmark button touched");
         toggleBookmark();
       });
       bookmarkBtn.setAttribute("data-listener-attached", "true");
