@@ -597,7 +597,7 @@ function showProfile(p){
   const u = $("unsaveBtn"); if (u) u.onclick = () => { removeProfile(); refreshProfileUI(); $("oNote").textContent = "Removed from this device. It stays available until you close this page."; u.remove(); };
   const gf = $("goalForm"); if (gf) gf.onsubmit = (e) => { e.preventDefault(); planPath(p); };
 
-  // Trigger Trazerr Match for real profiles
+  // Trigger Trazerr Match for real profiles - add to overlay
   if (!ex) {
     const commonSkills = [
       'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'react', 'angular', 'vue',
@@ -626,11 +626,99 @@ function showProfile(p){
     });
 
     console.log("✓ Extracted skills from profile for Trazerr Match:", extractedSkills);
+    console.log("📋 Adding Trazerr Match section to overlay");
+
+    // Add Trazerr Match section to the overlay
+    const oBody = $("oBody");
+    if (oBody && window.tmAllJobs) {
+      // Create Trazerr Match HTML for overlay
+      const tmHTML = `
+        <div class="o-sec">
+          <h3>See how you match with live jobs</h3>
+          <p class="hint">Your Career DNA is being used to rank jobs from our database. Here's how you fit with opportunities available right now.</p>
+          <div style="margin: 20px 0;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+              <select id="tmMatchFilterOverlay" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit;">
+                <option value="">All Match Levels</option>
+                <option value="75">Excellent (75%+)</option>
+                <option value="50">Good (50%+)</option>
+              </select>
+              <select id="tmExperienceFilterOverlay" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit;">
+                <option value="">All Levels</option>
+                <option value="entry">Entry</option>
+                <option value="mid">Mid</option>
+                <option value="senior">Senior</option>
+              </select>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; text-align: center; font-size: 13px;">
+              <div><div style="font-size: 20px; font-weight: 700;" id="tmJobsFoundOverlay">0</div>Jobs Found</div>
+              <div><div style="font-size: 20px; font-weight: 700; color: #22c55e;" id="tmStrongMatchesOverlay">0</div>Strong Matches</div>
+              <div><div style="font-size: 20px; font-weight: 700;" id="tmAvgMatchOverlay">0%</div>Avg Match</div>
+            </div>
+            <div id="tmResultsOverlay" style="display: grid; gap: 12px; max-height: 400px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      `;
+      oBody.innerHTML += tmHTML;
+
+      // Populate jobs in overlay
+      const tmResultsOverlay = $("tmResultsOverlay");
+      if (tmResultsOverlay && window.tmAllJobs.length > 0) {
+        console.log("📋 Rendering Trazerr Match jobs in overlay");
+        const jobsHTML = window.tmAllJobs.slice(0, 8).map(job => {
+          const score = calculateTMMatchForOverlay(job, extractedSkills);
+          return `
+            <div style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 12px; cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <h4 style="margin: 0; font-size: 14px; font-weight: 600;">${job.title}</h4>
+                ${score !== null ? `<div style="background: ${score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${score}%</div>` : ''}
+              </div>
+              <p style="margin: 4px 0; font-size: 12px; color: var(--ink-2);">${job.location || 'Remote'}</p>
+              <p style="margin: 0; font-size: 12px; color: var(--ink);">${job.description.slice(0, 100)}...</p>
+            </div>
+          `;
+        }).join("");
+        tmResultsOverlay.innerHTML = jobsHTML;
+
+        // Update stats
+        const totalJobs = window.tmAllJobs.length;
+        const strongMatches = window.tmAllJobs.filter(j => calculateTMMatchForOverlay(j, extractedSkills) >= 75).length;
+        const avgMatch = Math.round(window.tmAllJobs.reduce((sum, j) => sum + (calculateTMMatchForOverlay(j, extractedSkills) || 0), 0) / totalJobs);
+
+        const jobsFoundEl = $("tmJobsFoundOverlay");
+        const strongEl = $("tmStrongMatchesOverlay");
+        const avgEl = $("tmAvgMatchOverlay");
+        if (jobsFoundEl) jobsFoundEl.textContent = totalJobs;
+        if (strongEl) strongEl.textContent = strongMatches;
+        if (avgEl) avgEl.textContent = avgMatch + "%";
+      }
+    }
+
     console.log("📋 Dispatching trazerrResumeProcessed event from showProfile");
     document.dispatchEvent(new CustomEvent("trazerrResumeProcessed", {
       detail: { resume: resumeSrc || { kind: "text", text: p.headline }, skills: extractedSkills }
     }));
   }
+}
+
+function calculateTMMatchForOverlay(job, skills) {
+  if (!skills || skills.length === 0) return null;
+
+  let jobSkills = [];
+  if (Array.isArray(job.required_skills)) {
+    jobSkills = job.required_skills.map(s => typeof s === 'string' ? s.toLowerCase() : (s.name || String(s)).toLowerCase());
+  } else if (typeof job.required_skills === 'string') {
+    try {
+      const parsed = JSON.parse(job.required_skills);
+      jobSkills = Array.isArray(parsed) ? parsed.map(s => typeof s === 'string' ? s.toLowerCase() : (s.name || String(s)).toLowerCase()) : [];
+    } catch (e) {
+      jobSkills = job.required_skills.split(',').map(s => s.toLowerCase().trim());
+    }
+  }
+
+  if (jobSkills.length === 0) return null;
+  const matched = jobSkills.filter(skill => skills.some(cSkill => skill.includes(cSkill) || cSkill.includes(skill))).length;
+  return Math.round((matched / jobSkills.length) * 100);
 }
 function resetForm(){ picked = null; $("file").value = ""; $("fileName").hidden = true; $("paste").value = ""; setStatus($("status"), ""); }
 

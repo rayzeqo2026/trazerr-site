@@ -759,6 +759,27 @@
       console.warn("⚠️ Missing data in event, not showing Trazerr Match");
     }
   });
+
+  // Also check localStorage on page load to trigger TM if profile exists
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      console.log("Page load check - looking for saved profile data...");
+      try {
+        const savedSkills = localStorage.getItem("trazerr.skills");
+        const savedResume = localStorage.getItem("trazerr.resume");
+        if (savedSkills && savedResume) {
+          const skills = JSON.parse(savedSkills);
+          const resume = JSON.parse(savedResume);
+          console.log("Found saved profile and resume in localStorage");
+          console.log("   - Skills:", skills);
+          console.log("   - Triggering showTMResults manually...");
+          originalShowTMResults(resume, skills);
+        }
+      } catch (e) {
+        console.error("Error checking localStorage:", e);
+      }
+    }, 500);
+  });
 </script>
 <script src="/assets/app.js"></script>
 </body>
