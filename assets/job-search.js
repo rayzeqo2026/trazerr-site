@@ -27,8 +27,9 @@
 
   async function initialize() {
     try {
+      console.log("🚀 Initializing job search...");
       const cfg = await fetch(API + "?action=authconfig").then(r => {
-        if (!r.ok) throw new Error();
+        if (!r.ok) throw new Error("Failed to get auth config");
         return r.json();
       });
 
@@ -50,6 +51,7 @@
       }
 
       currentSession = session;
+      console.log("✓ Session loaded:", currentSession?.user?.email || "Not signed in");
 
       if (currentSession) {
         document.getElementById("signInBtn").textContent = "Dashboard";
@@ -59,43 +61,64 @@
       }
 
       // Load all jobs
-      loadAllJobs();
+      console.log("📋 Loading jobs...");
+      await loadAllJobs();
 
       // Setup resume upload
       const resumeFile = document.getElementById("resumeFile");
+      const searchBtn = document.getElementById("searchBtn");
+      const searchInput = document.getElementById("searchInput");
+
       if (resumeFile) {
         resumeFile.addEventListener("change", handleResumeUpload);
+        console.log("✓ Resume upload handler attached");
 
         // Drag and drop
         const resumeSection = document.getElementById("resumeSection");
-        resumeSection.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          resumeSection.classList.add("active");
-        });
-        resumeSection.addEventListener("dragleave", () => resumeSection.classList.remove("active"));
-        resumeSection.addEventListener("drop", (e) => {
-          e.preventDefault();
-          resumeSection.classList.remove("active");
-          if (e.dataTransfer.files.length > 0) {
-            resumeFile.files = e.dataTransfer.files;
-            handleResumeUpload({ target: { files: e.dataTransfer.files } });
-          }
-        });
+        if (resumeSection) {
+          resumeSection.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            resumeSection.classList.add("active");
+          });
+          resumeSection.addEventListener("dragleave", () => resumeSection.classList.remove("active"));
+          resumeSection.addEventListener("drop", (e) => {
+            e.preventDefault();
+            resumeSection.classList.remove("active");
+            if (e.dataTransfer.files.length > 0) {
+              handleResumeUpload({ target: { files: e.dataTransfer.files } });
+            }
+          });
+          console.log("✓ Drag and drop handler attached");
+        }
       }
 
-      // Setup search
-      document.getElementById("searchBtn").onclick = performSearch;
-      document.getElementById("searchInput").onkeypress = (e) => {
-        if (e.key === "Enter") performSearch();
-      };
+      // Setup search button
+      if (searchBtn) {
+        searchBtn.addEventListener("click", performSearch);
+        console.log("✓ Search button handler attached");
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") performSearch();
+        });
+        console.log("✓ Search input handler attached");
+      }
+
+      console.log("✅ Job search initialized successfully");
     } catch (e) {
-      console.error("Failed to initialize:", e);
-      document.getElementById("results").innerHTML = "<p style='color:red;'>Failed to load. <a href='javascript:location.reload()'>Try again</a></p>";
+      console.error("❌ Failed to initialize:", e);
+      const resultsEl = document.getElementById("results");
+      if (resultsEl) {
+        resultsEl.innerHTML = `<div class="empty-state"><p style="color:red;"><strong>Error:</strong> ${esc(e.message)}</p><p><a href="javascript:location.reload()">Reload page to try again</a></p></div>`;
+      }
     }
   }
 
   async function loadAllJobs() {
     try {
+      if (!sb) throw new Error("Supabase not initialized");
+
       const { data, error } = await sb
         .from("job_postings")
         .select("id, employer_id, company_code, title, description, required_skills, nice_to_have, experience_level, location, remote_ok, status, created_at")
@@ -105,13 +128,18 @@
 
       if (error) {
         console.error("Error loading jobs:", error);
-        return;
+        throw error;
       }
 
       allJobs = data || [];
+      console.log(`📊 Loaded ${allJobs.length} jobs`);
       renderResults(allJobs);
     } catch (e) {
       console.error("Failed to load jobs:", e);
+      const container = document.getElementById("results");
+      if (container) {
+        container.innerHTML = `<div class="empty-state"><p style="color:red;">Failed to load jobs: ${esc(e.message)}</p></div>`;
+      }
     }
   }
 
@@ -123,7 +151,13 @@
     statusEl.innerHTML = '<div style="color: var(--ink-2);">📂 Reading file...</div>';
 
     try {
-      const text = await file.text();
+      // Read file using FileReader for better browser compatibility
+      const text = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsText(file);
+      });
 
       // Simple skill extraction - split by common delimiters
       const allSkillsText = text.toLowerCase();
@@ -147,22 +181,25 @@
 
       candidateResume = text;
 
+      console.log(`✓ Resume uploaded - ${candidateSkills.length} skills detected`);
+
       if (candidateSkills.length > 0) {
         statusEl.innerHTML = `
           <div class="resume-status ready">
-            ✓ Resume loaded with ${candidateSkills.length} skills detected
+            ✓ Resume loaded with <strong>${candidateSkills.length} skills</strong> detected
           </div>
         `;
-        renderResults(allJobs);
       } else {
         statusEl.innerHTML = `
           <div class="resume-status ready">
-            ✓ Resume loaded (tip: include skills in your resume to see match scores)
+            ✓ Resume loaded (tip: include known skills to see match scores)
           </div>
         `;
       }
+
+      renderResults(allJobs);
     } catch (err) {
-      statusEl.innerHTML = '<div style="color: #ef4444;">✗ Error reading file. Try a text or PDF file.</div>';
+      statusEl.innerHTML = '<div style="color: #ef4444;">✗ Error reading file. Make sure it\'s a text or PDF file.</div>';
       console.error("Resume upload error:", err);
     }
   }
@@ -181,7 +218,9 @@
   }
 
   function performSearch() {
-    const query = document.getElementById("searchInput").value.trim().toUpperCase();
+    const searchInput = document.getElementById("searchInput");
+    const query = searchInput ? searchInput.value.trim().toUpperCase() : "";
+
     if (!query) {
       renderResults(allJobs);
       return;
@@ -198,6 +237,7 @@
 
   function renderResults(jobs) {
     const container = document.getElementById("results");
+    if (!container) return;
 
     if (!jobs || jobs.length === 0) {
       container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:document.getElementById(\'searchInput\').value=\'\'; window.jobSearch.loadAllJobs();">View all jobs</a></p></div>';
@@ -344,7 +384,7 @@
           job_id: selectedJob.id,
           candidate_id: currentSession.user.id,
           career_dna: careerRecord.career_dna,
-          match_score: 0, // Will be calculated by API
+          match_score: 0,
           status: "new"
         }])
         .select();
@@ -359,7 +399,6 @@
 
       const appId = application[0]?.id;
       if (appId) {
-        // Calculate match score via API
         try {
           const token = currentSession.access_token;
           await fetch(API + "?action=jobmatch", {
@@ -375,7 +414,6 @@
             })
           });
 
-          // Send email alert to employer
           await fetch(API + "?action=appAlert", {
             method: "POST",
             headers: {
@@ -383,7 +421,7 @@
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ application_id: appId })
-          }).catch(() => {}); // Don't fail if email doesn't send
+          }).catch(() => {});
         } catch (e) {
           console.error("Failed to calculate match or send alert:", e);
         }
@@ -391,7 +429,7 @@
 
       alert("Application submitted! The employer will be notified of your match score.");
       closeJobModal();
-      loadAllJobs(); // Refresh to show updated state
+      await loadAllJobs();
     } catch (e) {
       console.error("Failed to apply:", e);
       alert("Failed to submit application: " + (e.message || "Unknown error"));
