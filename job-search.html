@@ -4,35 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Trazerr Match · AI-Powered Job Matching</title>
+<title>Trazerr Match · AI Job Matching</title>
 <link rel="stylesheet" href="/assets/site.css">
 <style>
-.tm-page { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+.tm-page { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
 .tm-header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; margin: -40px -20px 40px; }
 .tm-header h1 { margin: 0; font-size: 36px; font-weight: 800; }
 .tm-header p { margin: 8px 0 0; color: #666; font-size: 16px; }
-.tm-search { display: flex; gap: 12px; margin-bottom: 30px; }
-.tm-search input { flex: 1; padding: 12px; border: 1px solid #d0d7e0; border-radius: 8px; font-size: 14px; }
-.tm-search button { padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-.tm-jobs-list { display: flex; flex-direction: column; gap: 16px; }
-.tm-job-item { border: 1px solid #d0d7e0; border-radius: 12px; padding: 20px; background: white; cursor: pointer; transition: all 0.2s; }
-.tm-job-item:hover { border-color: #0066e0; box-shadow: 0 4px 12px rgba(0,102,224,0.1); }
-.tm-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-.tm-job-title { font-size: 18px; font-weight: 600; margin: 0; }
-.tm-job-company { font-size: 14px; color: #666; margin: 4px 0 0; }
-.tm-fit-score { font-size: 32px; font-weight: 800; color: #4CAF50; text-align: center; }
-.tm-fit-label { font-size: 12px; color: #999; text-align: center; }
-.tm-job-summary { font-size: 14px; color: #555; margin: 12px 0; line-height: 1.5; }
-.tm-factors { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 12px; }
-.tm-factor { padding: 8px 12px; background: #f5f7fa; border-radius: 6px; font-size: 12px; }
-.tm-factor-name { font-weight: 600; color: #0e1628; }
+.tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; }
+.tm-search-box input { flex: 1; padding: 14px 16px; border: 1px solid #d0d7e0; border-radius: 8px; font-size: 14px; }
+.tm-search-box button { padding: 14px 28px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.tm-results { margin-top: 30px; }
+.tm-job { border: 1px solid #d0d7e0; border-radius: 12px; padding: 24px; background: white; margin-bottom: 16px; cursor: pointer; transition: all 0.2s; }
+.tm-job:hover { border-color: #0066e0; box-shadow: 0 4px 12px rgba(0,102,224,0.1); }
+.tm-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.tm-job-info h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+.tm-job-meta { font-size: 14px; color: #666; }
+.tm-match-score { text-align: center; }
+.tm-score-num { font-size: 32px; font-weight: 800; color: #4CAF50; }
+.tm-score-label { font-size: 12px; color: #999; }
+.tm-job-desc { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 12px; }
+.tm-factors { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+.tm-factor { padding: 10px; background: #f5f7fa; border-radius: 6px; font-size: 12px; text-align: center; }
+.tm-factor-name { font-weight: 600; color: #0e1628; margin-bottom: 4px; }
 .tm-factor-score { font-size: 14px; font-weight: 700; color: #4CAF50; }
-.tm-loading { text-align: center; padding: 40px; color: #999; }
 .tm-error { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #856404; }
-.tm-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-.tm-modal.open { display: flex; }
-.tm-modal-content { background: white; border-radius: 12px; padding: 40px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
-.tm-modal-close { float: right; font-size: 24px; cursor: pointer; background: none; border: none; }
+.tm-info { background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #0c5460; }
+.tm-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
+.tm-modal.open { display: block; }
+.tm-modal-content { background: white; max-width: 700px; margin: 40px auto; border-radius: 12px; padding: 40px; }
+.tm-modal-close { float: right; font-size: 28px; cursor: pointer; background: none; border: none; color: #999; }
+.tm-certificate { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); border: 2px solid #0066e0; border-radius: 12px; padding: 30px; text-align: center; margin: 20px 0; }
+.tm-certificate h2 { margin: 0 0 8px; font-size: 24px; }
+.tm-certificate p { margin: 8px 0; font-size: 14px; color: #555; }
+.tm-loading { text-align: center; padding: 40px; color: #999; }
 </style>
 </head>
 <body>
@@ -40,21 +45,20 @@
 <div class="tm-header">
   <div class="tm-page">
     <h1>Trazerr Match</h1>
-    <p>AI-powered job matching based on your Career DNA</p>
+    <p>Find jobs from employers and see your AI-powered compatibility</p>
   </div>
 </div>
 
 <div class="tm-page">
   <div id="error" class="tm-error" style="display: none;"></div>
+  <div id="info" class="tm-info" style="display: none;"></div>
 
-  <div class="tm-search">
-    <input type="text" id="jobSearch" placeholder="Search job title or company...">
-    <button onclick="searchJobs()">Search</button>
+  <div class="tm-search-box">
+    <input type="text" id="searchInput" placeholder="Search by company code (e.g., WM.1001) or job title...">
+    <button onclick="performSearch()">Search</button>
   </div>
 
-  <div id="content" class="tm-loading">
-    <p>Loading your Career DNA and analyzing jobs...</p>
-  </div>
+  <div id="results" class="tm-results"></div>
 </div>
 
 <!-- Detail Modal -->
@@ -67,240 +71,172 @@
 
 <script>
 let userProfile = null;
-let jobs = [];
-let jobMatches = {};
+let allJobs = [];
 
 async function init() {
   try {
-    // Load user's Career DNA from localStorage
     const saved = localStorage.getItem('trazerr.profile.v3');
     if (!saved) {
-      showError('Please build your Career DNA first on the main page.');
+      showInfo('Please build your Career DNA first on the main page, then return here to search jobs.');
+      showResults('<div class="tm-loading"><p>Waiting for your Career DNA...</p></div>');
       return;
     }
 
     userProfile = JSON.parse(saved);
-
-    // Load sample jobs (in production, these would come from your database)
-    loadSampleJobs();
-
-    // Analyze jobs and calculate matches
-    await analyzeJobs();
-
-    renderJobs();
+    showInfo('Ready to search. Enter a company code (like WM.1001) or job title to find positions.');
   } catch (e) {
-    showError('Error loading page: ' + e.message);
+    showError('Error loading your Career DNA: ' + e.message);
   }
 }
 
-function loadSampleJobs() {
-  jobs = [
-    {
-      id: 1,
-      title: 'Senior Frontend Engineer',
-      company: 'TechCorp',
-      location: 'San Francisco, CA',
-      description: 'Lead frontend architecture and mentor junior engineers. Build scalable React applications. 5+ years required with TypeScript and modern CSS.'
-    },
-    {
-      id: 2,
-      title: 'Product Manager',
-      company: 'InnovateLabs',
-      location: 'New York, NY',
-      description: 'Drive product strategy for AI analytics platform. Work with engineering and customers. 3-5 years of product management experience required.'
-    },
-    {
-      id: 3,
-      title: 'Full Stack Engineer',
-      company: 'StartupHub',
-      location: 'Remote',
-      description: 'Build complete features from database to UI. Use Node.js, React, PostgreSQL. Own projects end-to-end.'
-    },
-    {
-      id: 4,
-      title: 'Data Analyst',
-      company: 'Analytics Pro',
-      location: 'Boston, MA',
-      description: 'Start your data career. Learn SQL, Python, Tableau. Analyze business metrics and create dashboards.'
-    },
-    {
-      id: 5,
-      title: 'DevOps Engineer',
-      company: 'CloudSystems',
-      location: 'Seattle, WA',
-      description: 'Architect AWS infrastructure and CI/CD pipelines. Manage Kubernetes clusters. Ensure 99.9% uptime. 5+ years required.'
-    }
-  ];
+async function performSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) {
+    showError('Please enter a company code or job title to search.');
+    return;
+  }
+
+  if (!userProfile) {
+    showError('Please build your Career DNA first.');
+    return;
+  }
+
+  showResults('<div class="tm-loading"><p>Searching job database...</p></div>');
+
+  try {
+    // Search for jobs - this would query your Supabase database
+    // For now, we'll use sample jobs but the backend should return real jobs
+    searchJobsInDatabase(query);
+  } catch (e) {
+    showError('Search failed: ' + e.message);
+  }
 }
 
-async function analyzeJobs() {
-  const content = document.getElementById('content');
-  content.innerHTML = '<div class="tm-loading"><p>Analyzing ' + jobs.length + ' jobs against your Career DNA...</p></div>';
-
-  // Provide fallback matches if API is slow or unavailable
-  const matchPromises = jobs.map(async (job) => {
-    try {
-      console.log('Matching job:', job.title);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-      const response = await fetch('/api/app?action=match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profile: userProfile,
-          job: {
-            title: job.title,
-            company: job.company,
-            location: job.location,
-            description: job.description
-          }
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        jobMatches[job.id] = data.fit;
-        console.log('Match for', job.title, ':', data.fit.fitScore);
-      } else {
-        jobMatches[job.id] = { fitScore: 0, summary: 'Analysis unavailable', factors: [] };
-      }
-    } catch (e) {
-      console.error('Error matching job:', e);
-      jobMatches[job.id] = { fitScore: 0, summary: 'Analysis timed out', factors: [] };
-    }
-  });
-
-  await Promise.all(matchPromises);
+async function searchJobsInDatabase(query) {
+  try {
+    // In production, this would call an API endpoint to search the job database
+    // For now, show instructions
+    showResults(`
+      <div class="tm-job">
+        <div class="tm-job-header">
+          <div class="tm-job-info">
+            <h3>Job Search Implementation Needed</h3>
+            <div class="tm-job-meta">You searched for: "${query}"</div>
+          </div>
+        </div>
+        <div class="tm-job-desc">
+          To complete this feature, we need to:
+          <ol style="text-align: left; margin: 12px 0;">
+            <li>Create a database endpoint to search job_postings by company code or title</li>
+            <li>Return matching jobs posted by employers</li>
+            <li>Match each job against your Career DNA using AI</li>
+            <li>Display results with match scores and detailed candidate certificate</li>
+          </ol>
+          <p><strong>Next step:</strong> Set up the job search API endpoint that queries your Supabase job_postings table.</p>
+        </div>
+      </div>
+    `);
+  } catch (e) {
+    showError('Error: ' + e.message);
+  }
 }
 
-function renderJobs() {
-  const sorted = jobs.sort((a, b) => {
-    const matchA = jobMatches[a.id]?.fitScore || 0;
-    const matchB = jobMatches[b.id]?.fitScore || 0;
-    return matchB - matchA;
-  });
+async function showJobDetail(job) {
+  if (!userProfile) {
+    showError('Career DNA not loaded');
+    return;
+  }
 
-  document.getElementById('content').innerHTML = `
-    <div class="tm-jobs-list">
-      ${sorted.map(job => {
-        const match = jobMatches[job.id] || { fitScore: 0, summary: '', factors: [] };
-        const factors = match.factors || [];
-        return `
-          <div class="tm-job-item" onclick="showDetail(${job.id})">
-            <div class="tm-job-header">
-              <div>
-                <h3 class="tm-job-title">${job.title}</h3>
-                <div class="tm-job-company">${job.company} · ${job.location}</div>
-              </div>
-              <div>
-                <div class="tm-fit-score">${match.fitScore}%</div>
-                <div class="tm-fit-label">Career Fit</div>
-              </div>
-            </div>
-            <div class="tm-job-summary">${match.summary || 'Analyzing...'}</div>
-            ${factors.length > 0 ? `
-              <div class="tm-factors">
-                ${factors.slice(0, 5).map(f => `
-                  <div class="tm-factor">
-                    <div class="tm-factor-name">${f.name}</div>
-                    <div class="tm-factor-score">${f.score}%</div>
-                  </div>
-                `).join('')}
-              </div>
-            ` : ''}
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalContent').innerHTML = '<div class="tm-loading"><p>Analyzing your fit for this position...</p></div>';
+
+  try {
+    // Call the match API to get detailed compatibility analysis
+    const response = await fetch('/api/app?action=match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profile: userProfile,
+        job: job
+      })
+    });
+
+    if (!response.ok) throw new Error('Match API failed: ' + response.status);
+
+    const data = await response.json();
+    const fit = data.fit;
+
+    // Build candidate certificate
+    let factors = '';
+    if (fit.factors && fit.factors.length > 0) {
+      factors = '<div style="margin-top: 20px;"><h4>Your Fit Breakdown:</h4>';
+      for (const f of fit.factors) {
+        factors += `
+          <div style="margin-bottom: 12px; padding: 12px; background: #f5f7fa; border-radius: 6px;">
+            <strong>${f.name}: ${f.score}%</strong>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #555;">${f.note}</p>
           </div>
         `;
-      }).join('')}
-    </div>
-  `;
-}
-
-function showDetail(jobId) {
-  const job = jobs.find(j => j.id === jobId);
-  const match = jobMatches[jobId];
-
-  let html = `
-    <h2>${job.title}</h2>
-    <p><strong>${job.company}</strong> · ${job.location}</p>
-    <h3>Career Fit: ${match.fitScore}%</h3>
-    <p>${match.summary}</p>
-  `;
-
-  if (match.factors && match.factors.length > 0) {
-    html += '<h4>Detailed Factors:</h4>';
-    for (const factor of match.factors) {
-      html += `
-        <div style="margin-bottom: 16px; padding: 12px; background: #f5f7fa; border-radius: 8px;">
-          <strong>${factor.name}: ${factor.score}%</strong>
-          <p style="margin: 8px 0 0; font-size: 13px; color: #555;">${factor.note}</p>
-        </div>
-      `;
+      }
+      factors += '</div>';
     }
+
+    const certificate = `
+      <h2>${job.title}</h2>
+      <p><strong>${job.company}</strong> · ${job.location || 'Remote'}</p>
+
+      <div class="tm-certificate">
+        <h2>Compatibility Score</h2>
+        <div class="tm-score-num">${fit.fitScore}%</div>
+        <p>${fit.summary}</p>
+      </div>
+
+      ${factors}
+
+      <div style="margin-top: 20px; padding: 12px; background: #fff3cd; border-radius: 6px;">
+        <p><strong>Summary:</strong> ${fit.summary}</p>
+      </div>
+
+      <button onclick="closeModal()" style="margin-top: 20px; padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+    `;
+
+    document.getElementById('modalContent').innerHTML = certificate;
+  } catch (e) {
+    document.getElementById('modalContent').innerHTML = `
+      <h2>${job.title}</h2>
+      <p style="color: #d32f2f;">Error analyzing fit: ${e.message}</p>
+      <button onclick="closeModal()">Close</button>
+    `;
   }
-
-  html += `
-    <h4>Job Description:</h4>
-    <p>${job.description}</p>
-    <button onclick="closeModal()" style="padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px;">Close</button>
-  `;
-
-  document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('modal').classList.add('open');
 }
 
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
 }
 
-function searchJobs() {
-  const query = document.getElementById('jobSearch').value.toLowerCase();
-  if (!query) {
-    renderJobs();
-    return;
-  }
-
-  const filtered = jobs.filter(j =>
-    j.title.toLowerCase().includes(query) ||
-    j.company.toLowerCase().includes(query)
-  );
-
-  document.getElementById('content').innerHTML = `
-    <div class="tm-jobs-list">
-      ${filtered.map(job => {
-        const match = jobMatches[job.id] || { fitScore: 0, summary: '' };
-        return `
-          <div class="tm-job-item" onclick="showDetail(${job.id})">
-            <div class="tm-job-header">
-              <div>
-                <h3 class="tm-job-title">${job.title}</h3>
-                <div class="tm-job-company">${job.company} · ${job.location}</div>
-              </div>
-              <div>
-                <div class="tm-fit-score">${match.fitScore}%</div>
-                <div class="tm-fit-label">Career Fit</div>
-              </div>
-            </div>
-            <div class="tm-job-summary">${match.summary || 'Analyzing...'}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-function showError(msg) {
-  document.getElementById('error').textContent = msg;
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('content').innerHTML = '';
+function showInfo(msg) {
+  const el = document.getElementById('info');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function showResults(html) {
+  document.getElementById('results').innerHTML = html;
 }
 
 // Initialize
 init();
+
+// Allow Enter key to search
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') performSearch();
+});
 </script>
 
 </body>
