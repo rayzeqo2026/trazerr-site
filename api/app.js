@@ -1448,40 +1448,52 @@ async function jobpost(req, res) {
       jobDna = extracted;
       required = list(extracted.core_skills, 20);
       nice = list(extracted.nice_to_have, 20);
+      console.log("Job DNA extracted successfully:", { required: required.length, nice: nice.length });
     } else {
-      throw new Error("No skills extracted");
+      console.warn("Job DNA extraction returned invalid format:", extracted);
+      throw new Error("No skills extracted from: " + JSON.stringify(extracted).slice(0, 100));
     }
   } catch (e) {
     console.error("Job DNA extraction failed:", e.message);
     // Minimal fallback - use title as skill if extraction fails completely
+    console.log("Using fallback: title as core skill");
     jobDna = { core_skills: [title], experience_areas: [], key_responsibilities: [], must_have: [title], nice_to_have: [] };
     required = [title];
     nice = [];
   }
 
   // Insert job posting
-  const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
-    method: "POST",
-    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      employer_id: session.user.id,
-      company_code: body.company_code || "AUTO",
-      title,
-      description: description || "(No description provided)",
-      required_skills: required,
-      nice_to_have: nice,
-      experience_level: "mid",
-      location,
-      remote_ok: body.remote_ok === true,
-      job_dna: jobDna,
-      status: "open"
-    })
-  });
+  try {
+    const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
+      method: "POST",
+      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employer_id: session.user.id,
+        company_code: body.company_code || "AUTO",
+        title,
+        description: description || "(No description provided)",
+        required_skills: required,
+        nice_to_have: nice,
+        experience_level: "mid",
+        location,
+        remote_ok: body.remote_ok === true,
+        job_dna: jobDna,
+        status: "open"
+      })
+    });
 
-  if (!insertR.ok) throw new UserError(502, "Couldn't save job.", "jobpost: Supabase " + insertR.status);
-  const job = await insertR.json();
+    if (!insertR.ok) {
+      const detail = await insertR.text().catch(() => "");
+      throw new UserError(502, "Couldn't save job.", "jobpost: Supabase " + insertR.status + ": " + detail.slice(0, 200));
+    }
 
-  return res.status(201).json(job);
+    const job = await insertR.json();
+    return res.status(201).json(job);
+  } catch (e) {
+    if (e instanceof UserError) throw e;
+    console.error("Job posting database error:", e);
+    throw new UserError(502, "Couldn't save job. Please try again.", "jobpost database: " + e.message);
+  }
 }
 
 // Calculate match score between candidate's Career DNA and job requirements
