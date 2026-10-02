@@ -442,12 +442,34 @@ function showProfile(p){
   animateRing("ev", p.evidenceScore);
 
   const body = $("oBody");
-  body.querySelectorAll("[data-findjobs]").forEach(b => b.onclick = () => {
-    const d = p.directions[+b.dataset.findjobs];
+  // Use event delegation for find jobs button
+  const findJobsHandler = (e) => {
+    const button = e.target.closest("[data-findjobs]");
+    if (!button) return;
+
+    const dirIndex = +button.dataset.findjobs;
+    const d = p.directions[dirIndex];
+    console.log("🚀 Find jobs clicked for:", d?.role || "unknown");
+
     closeOverlay();
     // Redirect to dedicated Trazerr Match page with resume already loaded
-    console.log("🚀 Redirecting to Trazerr Match with role:", d.role);
-    window.location.href = "/job-search.html";
+    setTimeout(() => {
+      console.log("➡️ Navigating to Trazerr Match page...");
+      window.location.href = "/job-search.html";
+    }, 100);
+  };
+
+  body.addEventListener("click", findJobsHandler, true);
+
+  // Also attach to existing buttons as fallback
+  body.querySelectorAll("[data-findjobs]").forEach(b => {
+    b.onclick = () => {
+      const d = p.directions[+b.dataset.findjobs];
+      closeOverlay();
+      setTimeout(() => {
+        window.location.href = "/job-search.html";
+      }, 100);
+    };
   });
   body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
   if (!ex) wireFeedback("dna", "");
