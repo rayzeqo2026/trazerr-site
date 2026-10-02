@@ -373,10 +373,10 @@
       return;
     }
 
-    container.innerHTML = filteredJobs.map(job => {
+    container.innerHTML = filteredJobs.map((job, idx) => {
       const appCount = currentApplications.filter(a => a.job_id === job.id).length;
       return `
-        <div class="job-card" data-job-id="${esc(job.id)}">
+        <div class="job-card" data-job-index="${idx}">
           <div class="job-card-header">
             <div class="job-card-clickable" style="cursor: pointer; flex: 1;">
               <h3 class="job-card-title">${esc(job.title)}</h3>
@@ -397,17 +397,21 @@
 
     // Add event listeners to job cards
     container.querySelectorAll(".job-card").forEach(card => {
-      const jobId = card.dataset.jobId;
-      const job = currentJobs.find(j => j.id === jobId);
-      if (!job) return;
+      const idx = parseInt(card.dataset.jobIndex, 10);
+      const job = filteredJobs[idx];
+      if (!job) {
+        console.warn("Job not found at index", idx);
+        return;
+      }
 
       card.querySelector(".job-card-clickable").addEventListener("click", () => {
-        console.log("Clicking job:", jobId);
-        showJobDetail(jobId);
+        console.log("Clicking job:", job.id, job.title);
+        showJobDetail(job.id);
       });
 
       card.querySelector(".job-card-delete").addEventListener("click", () => {
-        deleteJob(jobId, job.title);
+        console.log("Deleting job:", job.id, job.title);
+        deleteJob(job.id, job.title);
       });
     });
   }
