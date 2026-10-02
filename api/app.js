@@ -1426,13 +1426,12 @@ async function jobpost(req, res) {
   const level = str(body.experience_level, 20) || "mid";
   const location = str(body.location, 100);
 
-  if (!title || !description) throw new UserError(400, "Job needs a title and description.");
-  if (level && !/^(entry|mid|senior|lead)$/.test(level)) throw new UserError(400, "Invalid experience level.");
+  if (!title) throw new UserError(400, "Please enter a job title.");
 
-  // Extract Job DNA using Claude: structured capabilities required for this role
+  // Extract Job DNA using Claude - do the AI magic
   let jobDna = null;
   try {
-    const prompt = `Extract the core job requirements from this job posting into a structured format.\n\nJob Title: ${title}\nDescription: ${description}\n\nReturn ONLY valid JSON (no markdown, no code blocks) with this structure:\n{\n  "core_skills": ["skill1", "skill2"],\n  "experience_areas": ["area1", "area2"],\n  "key_responsibilities": ["resp1", "resp2"],\n  "must_have": ["requirement1", "requirement2"],\n  "nice_to_have": ["bonus1", "bonus2"]\n}`;
+    const prompt = `Extract the core job requirements from this job posting.\n\nJob Title: ${title}${description ? "\n\nDescription:\n" + description : ""}\n\nReturn ONLY valid JSON (no markdown) with this structure:\n{\n  "core_skills": ["skill1", "skill2", "skill3"],\n  "experience_areas": ["area1", "area2"],\n  "key_responsibilities": ["resp1", "resp2"],\n  "must_have": ["requirement1", "requirement2"],\n  "nice_to_have": ["bonus1", "bonus2"]\n}`;
 
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -1441,25 +1440,24 @@ async function jobpost(req, res) {
       signal: AbortSignal.timeout(10000)
     });
 
-    if (!r.ok) throw new Error("Claude didn't answer: " + r.status);
+    if (!r.ok) throw new Error("Claude API error: " + r.status);
     const out = await r.json();
-    jobDna = extractJson(out.content[0]?.text || "");
+    const extracted = extractJson(out.content[0]?.text || "");
 
-    // If no skills provided by user, use AI-extracted skills
-    if (!required.length && jobDna?.core_skills?.length) {
-      required = list(jobDna.core_skills, 20);
-    }
-    if (!nice.length && jobDna?.nice_to_have?.length) {
-      nice = list(jobDna.nice_to_have, 20);
+    if (extracted?.core_skills?.length) {
+      jobDna = extracted;
+      required = list(extracted.core_skills, 20);
+      nice = list(extracted.nice_to_have, 20);
+    } else {
+      throw new Error("No skills extracted");
     }
   } catch (e) {
     console.error("Job DNA extraction failed:", e.message);
-    // Fall back to simple structure if AI fails
-    jobDna = { core_skills: required, experience_areas: [], key_responsibilities: [], must_have: required, nice_to_have: nice };
+    // Minimal fallback - use title as skill if extraction fails completely
+    jobDna = { core_skills: [title], experience_areas: [], key_responsibilities: [], must_have: [title], nice_to_have: [] };
+    required = [title];
+    nice = [];
   }
-
-  // Now require at least one skill (from user or AI extraction)
-  if (!required.length) throw new UserError(400, "Couldn't extract any skills. Please add at least one required skill manually.");
 
   // Insert job posting
   const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
@@ -1469,10 +1467,10 @@ async function jobpost(req, res) {
       employer_id: session.user.id,
       company_code: body.company_code || "AUTO",
       title,
-      description,
+      description: description || "(No description provided)",
       required_skills: required,
       nice_to_have: nice,
-      experience_level: level,
+      experience_level: "mid",
       location,
       remote_ok: body.remote_ok === true,
       job_dna: jobDna,
