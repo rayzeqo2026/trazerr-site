@@ -1,5 +1,8 @@
 // Trazerr employer dashboard
 (function(){
+  console.log("Dashboard script loaded");
+  window.dashboardScriptLoaded = true;
+
   const API = "/api/app";
   const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js";
   const SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
@@ -134,6 +137,15 @@
       document.getElementById("companyNameField").value = currentEmployer.company;
       document.getElementById("contactNameField").value = currentEmployer.contact_name;
       document.getElementById("companyCodeField").value = generateCompanyCode(currentEmployer.company);
+
+      // Post job button in overview
+      const postJobBtn = document.getElementById("postJobBtn");
+      if (postJobBtn) {
+        postJobBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          showSection("create");
+        });
+      }
 
       // Sign out
       document.getElementById("signOut").addEventListener("click", async () => {
