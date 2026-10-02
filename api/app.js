@@ -1484,7 +1484,9 @@ async function jobpost(req, res) {
 
     if (!insertR.ok) {
       const detail = await insertR.text().catch(() => "");
-      throw new UserError(502, "Couldn't save job.", "jobpost: Supabase " + insertR.status + ": " + detail.slice(0, 200));
+      console.error("Supabase insert error:", insertR.status, detail);
+      const userMsg = detail.includes("permission denied") ? "Permission denied - table may not exist or RLS is blocking" : detail.includes("violates") ? "Job posting already exists with this code+title" : "Couldn't save job";
+      throw new UserError(502, userMsg, "jobpost: Supabase " + insertR.status + ": " + detail.slice(0, 200));
     }
 
     const job = await insertR.json();

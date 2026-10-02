@@ -259,6 +259,8 @@ async function extractAndPost() {
     if (!r.ok) {
       const errorMsg = job.error || job.message || JSON.stringify(job) || "Failed to post job";
       console.error("API error response:", errorMsg);
+      console.error("Full error details:", job);
+      showError("Error: " + errorMsg);
       throw new Error(errorMsg);
     }
 
