@@ -137,32 +137,40 @@
   }
 
   function showSection(name) {
-    document.querySelectorAll(".dash-section").forEach(s => s.classList.remove("active"));
-    document.getElementById(name).classList.add("active");
+    try {
+      document.querySelectorAll(".dash-section").forEach(s => s.classList.remove("active"));
+      document.getElementById(name).classList.add("active");
 
-    document.querySelectorAll(".dash-sidebar nav a").forEach(a => a.classList.remove("active"));
-    document.querySelector(`[data-section="${name}"]`).classList.add("active");
+      document.querySelectorAll(".dash-sidebar nav a").forEach(a => a.classList.remove("active"));
+      document.querySelector(`[data-section="${name}"]`).classList.add("active");
 
-    if (name === "overview") loadOverview();
-    if (name === "jobs") loadJobsList();
-    if (name === "applications") loadApplicationsList();
+      if (name === "overview") loadOverview();
+      if (name === "jobs") loadJobsList();
+      if (name === "applications") loadApplicationsList();
+    } catch (e) {
+      alert("Error switching section: " + (e.message || e));
+    }
   }
 
   /* ========== Skills Management ========== */
 
   function addSkill(type) {
-    const input = type === "required" ? document.getElementById("requiredSkillInput") : document.getElementById("niceSkillInput");
-    const skillText = input.value.trim();
+    try {
+      const input = type === "required" ? document.getElementById("requiredSkillInput") : document.getElementById("niceSkillInput");
+      const skillText = input.value.trim();
 
-    if (!skillText) return;
+      if (!skillText) return;
 
-    const skills = type === "required" ? requiredSkills : niceSkills;
-    if (!skills.includes(skillText)) {
-      skills.push(skillText);
-      renderSkills(type);
+      const skills = type === "required" ? requiredSkills : niceSkills;
+      if (!skills.includes(skillText)) {
+        skills.push(skillText);
+        renderSkills(type);
+      }
+
+      input.value = "";
+    } catch (e) {
+      alert("Error adding skill: " + (e.message || e));
     }
-
-    input.value = "";
   }
 
   function removeSkill(type, skill) {
@@ -415,5 +423,12 @@
     showAppDetail
   };
 
-  document.addEventListener("DOMContentLoaded", checkAuth);
+  document.addEventListener("DOMContentLoaded", () => {
+    try {
+      checkAuth();
+    } catch (e) {
+      console.error("Dashboard init error:", e);
+      alert("Dashboard error: " + (e.message || e));
+    }
+  });
 })();
