@@ -305,8 +305,10 @@
   function performSearch() {
     const searchInput = document.getElementById("searchInput");
     const query = searchInput ? searchInput.value.trim().toUpperCase() : "";
+    console.log("🔍 Performing search with query:", query || "(all jobs)");
 
     if (!query) {
+      console.log("📊 Showing all", allJobs.length, "jobs");
       renderResults(allJobs);
       return;
     }
@@ -317,6 +319,7 @@
       job.description?.toUpperCase().includes(query)
     );
 
+    console.log("📊 Filtered to", filtered.length, "jobs");
     renderResults(filtered);
   }
 
@@ -325,7 +328,7 @@
     if (!container) return;
 
     if (!jobs || jobs.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:document.getElementById(\'searchInput\').value=\'\'; window.jobSearch.loadAllJobs();">View all jobs</a></p></div>';
+      container.innerHTML = '<div class="empty-state"><p>No jobs found matching your search.</p><p><a href="javascript:void(0);" onclick="document.getElementById(\'searchInput\').value=\'\'; window.jobSearch.performSearch();">View all jobs</a></p></div>';
       return;
     }
 
@@ -334,7 +337,7 @@
       const matchClass = matchScore >= 75 ? 'high' : matchScore >= 50 ? 'medium' : 'low';
 
       return `
-        <div class="job-item" onclick="window.jobSearch.selectJob('${job.id}')">
+        <div class="job-item" data-job-id="${esc(job.id)}">
           ${matchScore !== null ? `
             <div class="job-item-match">
               <div class="match-score ${matchClass}">${matchScore}%</div>
@@ -361,11 +364,24 @@
         </div>
       `;
     }).join("");
+
+    // Attach click handlers to job items using event delegation
+    container.addEventListener("click", (e) => {
+      const jobItem = e.target.closest(".job-item");
+      if (jobItem && jobItem.dataset.jobId) {
+        console.log("📍 Job item clicked:", jobItem.dataset.jobId);
+        selectJob(jobItem.dataset.jobId);
+      }
+    });
   }
 
   function selectJob(jobId) {
+    console.log("🎯 Selecting job:", jobId);
     selectedJob = allJobs.find(j => j.id === jobId);
-    if (!selectedJob) return;
+    if (!selectedJob) {
+      console.error("❌ Job not found:", jobId);
+      return;
+    }
 
     document.getElementById("modalJobTitle").textContent = selectedJob.title;
     document.getElementById("modalJobCompany").textContent = selectedJob.location + (selectedJob.remote_ok ? " · Remote OK" : "");
@@ -431,11 +447,21 @@
       analysisEl.innerHTML = '';
     }
 
-    document.getElementById("jobModal").classList.add("active");
+    const modal = document.getElementById("jobModal");
+    if (modal) {
+      modal.classList.add("active");
+      console.log("✅ Modal opened for job:", selectedJob.title);
+    } else {
+      console.error("❌ Modal element not found!");
+    }
   }
 
   function closeJobModal() {
-    document.getElementById("jobModal").classList.remove("active");
+    const modal = document.getElementById("jobModal");
+    if (modal) {
+      modal.classList.remove("active");
+      console.log("✅ Modal closed");
+    }
     selectedJob = null;
   }
 
