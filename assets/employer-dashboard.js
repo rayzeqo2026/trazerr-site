@@ -153,6 +153,14 @@
         });
       });
 
+      // Search input listener
+      const searchInput = document.getElementById("jobSearchInput");
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          loadJobsList();
+        });
+      }
+
       // Job form is now on post-job.html, so no need to attach listener here
     } catch (e) {
       showError("setupUI error: " + (e.message || String(e)));
@@ -349,19 +357,32 @@
 
   async function loadJobsList() {
     const container = document.getElementById("jobsList");
+    const searchInput = document.getElementById("jobSearchInput");
 
     if (!currentJobs.length) {
       container.innerHTML = "<p style='color: var(--ink-2);'>No job postings yet. <a href='#' onclick='window.dashboard.showSection(\"create\");return false'>Create one</a></p>";
       return;
     }
 
-    container.innerHTML = currentJobs.map(job => {
+    // Filter jobs by search term
+    const searchTerm = (searchInput?.value || "").toLowerCase();
+    const filteredJobs = searchTerm ? currentJobs.filter(j => j.company_code.toLowerCase().includes(searchTerm)) : currentJobs;
+
+    if (!filteredJobs.length) {
+      container.innerHTML = `<p style='color: var(--ink-2);'>No jobs match "${esc(searchTerm)}"</p>`;
+      return;
+    }
+
+    container.innerHTML = filteredJobs.map(job => {
       const appCount = currentApplications.filter(a => a.job_id === job.id).length;
       return `
-        <div class="job-card" onclick="window.dashboard.showJobDetail('${job.id}')">
+        <div class="job-card">
           <div class="job-card-header">
-            <h3 class="job-card-title">${esc(job.title)}</h3>
-            <span class="job-card-code">${esc(job.company_code)}</span>
+            <div onclick="window.dashboard.showJobDetail('${job.id}')" style="cursor: pointer; flex: 1;">
+              <h3 class="job-card-title">${esc(job.title)}</h3>
+              <span class="job-card-code">${esc(job.company_code)}</span>
+            </div>
+            <button onclick="window.dashboard.deleteJob('${job.id}', '${esc(job.title)}')" style="background: #c00; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Delete</button>
           </div>
           <div class="job-card-meta">
             <span>${new Date(job.created_at).toLocaleDateString()}</span>
@@ -432,13 +453,30 @@
     alert(`Match: ${app.match_score}%\n\n${app.match_summary}\n\nGaps: ${gaps}`);
   }
 
+  async function deleteJob(jobId, jobTitle) {
+    if (!confirm(`Are you sure you want to delete "${jobTitle}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const result = await api("jobdelete", { job_id: jobId });
+      currentJobs = currentJobs.filter(j => j.id !== jobId);
+      currentApplications = currentApplications.filter(a => a.job_id !== jobId);
+      loadJobsList();
+      loadOverview();
+    } catch (e) {
+      showError(e.message || "Failed to delete job");
+    }
+  }
+
   /* ========== Helpers ========== */
 
   function generateCompanyCode(companyName) {
-    // Generate code like "WLMD22" from "Wellness Medical"
-    const words = companyName.trim().split(/\s+/);
+    // Generate code like "WM1002" (2 letters + month + day)
+    const words = (companyName || "XX").trim().split(/\s+/);
     let code = words.map(w => w[0].toUpperCase()).join("");
-    if (code.length > 3) code = code.slice(0, 3);
+    if (code.length > 2) code = code.slice(0, 2);
+    while (code.length < 2) code += "X";
 
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -455,7 +493,8 @@
     addSkill,
     removeSkill,
     showJobDetail,
-    showAppDetail
+    showAppDetail,
+    deleteJob
   };
 
   document.addEventListener("DOMContentLoaded", () => {

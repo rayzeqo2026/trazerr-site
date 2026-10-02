@@ -84,7 +84,7 @@ async function getSession(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobmatch: 30, appAlert: 20 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobdelete: 10, jobmatch: 30, appAlert: 20 };
 const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe", "employerme", "myrequests", "adminemployers"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
@@ -1693,6 +1693,47 @@ async function appAlert(req, res) {
   return res.status(200).json({ sent: true });
 }
 
+async function jobdelete(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Accounts aren't switched on yet.");
+
+  const { data: { session } } = await getSession(req);
+  if (!session) throw new UserError(401, "Sign in first.");
+
+  const body = getBody(req) || {};
+  const jobId = str(body.job_id, 36);
+  if (!jobId) throw new UserError(400, "Job ID required.");
+
+  try {
+    // First verify the job belongs to this employer
+    const verifyR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + encodeURIComponent(jobId) + "&select=id,employer_id", {
+      headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + session.access_token }
+    });
+
+    if (!verifyR.ok) throw new Error("Failed to verify job: " + verifyR.status);
+    const jobs = await verifyR.json();
+    if (!jobs.length) throw new UserError(404, "Job not found.");
+    if (jobs[0].employer_id !== session.user.id) throw new UserError(403, "Not your job.");
+
+    // Delete the job
+    const deleteR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + encodeURIComponent(jobId), {
+      method: "DELETE",
+      headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + session.access_token }
+    });
+
+    if (!deleteR.ok) {
+      const detail = await deleteR.text().catch(() => "");
+      throw new Error("Delete failed: " + detail);
+    }
+
+    return res.status(200).json({ deleted: true, id: jobId });
+  } catch (e) {
+    if (e instanceof UserError) throw e;
+    console.error("Job delete error:", e.message);
+    throw new UserError(502, "Couldn't delete job: " + e.message);
+  }
+}
+
 /* ---------------- Error log and alerts ---------------- */
 // Keeps the newest 200 errors, from the server and from visitors' browsers, for the usage page, and emails
 // an alert when the server fails (at most one an hour). Messages are cut short and email addresses are
@@ -1778,7 +1819,7 @@ async function health(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, jobpost, jobmatch, appAlert };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, jobpost, jobdelete, jobmatch, appAlert };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
