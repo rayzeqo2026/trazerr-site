@@ -442,33 +442,14 @@ function showProfile(p){
   animateRing("ev", p.evidenceScore);
 
   const body = $("oBody");
-  // Use event delegation for find jobs button
-  const findJobsHandler = (e) => {
-    const button = e.target.closest("[data-findjobs]");
-    if (!button) return;
-
-    const dirIndex = +button.dataset.findjobs;
-    const d = p.directions[dirIndex];
-    console.log("🚀 Find jobs clicked for:", d?.role || "unknown");
-
-    closeOverlay();
-    // Redirect to dedicated Trazerr Match page with resume already loaded
-    setTimeout(() => {
-      console.log("➡️ Navigating to Trazerr Match page...");
-      window.location.href = "/job-search.html";
-    }, 100);
-  };
-
-  body.addEventListener("click", findJobsHandler, true);
-
-  // Also attach to existing buttons as fallback
+  // Find jobs button - redirect to Trazerr Match with resume loaded
   body.querySelectorAll("[data-findjobs]").forEach(b => {
-    b.onclick = () => {
-      const d = p.directions[+b.dataset.findjobs];
-      closeOverlay();
-      setTimeout(() => {
-        window.location.href = "/job-search.html";
-      }, 100);
+    b.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("🚀 Redirecting to Trazerr Match page...");
+      window.location.href = "/job-search.html";
+      return false;
     };
   });
   body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
