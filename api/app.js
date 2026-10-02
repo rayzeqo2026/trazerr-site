@@ -1481,10 +1481,15 @@ async function jobpost(req, res) {
     };
     console.log("Supabase insert to:", cfg.url + "/rest/v1/job_postings");
     console.log("Payload:", JSON.stringify(payload));
+    console.log("Using JWT token for authenticated insert, employer_id:", session.user.id);
 
     const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
       method: "POST",
-      headers: { apikey: cfg.key, "Content-Type": "application/json" },
+      headers: {
+        apikey: cfg.anon || cfg.key,
+        Authorization: "Bearer " + session.access_token,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(payload)
     });
 
