@@ -1466,23 +1466,26 @@ async function jobpost(req, res) {
 
   // Insert job posting
   try {
+    const payload = {
+      employer_id: session.user.id,
+      company_code: body.company_code || "AUTO",
+      title,
+      description: description || "(No description provided)",
+      required_skills: required,
+      nice_to_have: nice,
+      experience_level: "mid",
+      location,
+      remote_ok: body.remote_ok === true,
+      job_dna: jobDna,
+      status: "open"
+    };
     console.log("Supabase insert to:", cfg.url + "/rest/v1/job_postings");
+    console.log("Payload:", JSON.stringify(payload));
+
     const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
       method: "POST",
       headers: { apikey: cfg.key, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        employer_id: session.user.id,
-        company_code: body.company_code || "AUTO",
-        title,
-        description: description || "(No description provided)",
-        required_skills: required,
-        nice_to_have: nice,
-        experience_level: "mid",
-        location,
-        remote_ok: body.remote_ok === true,
-        job_dna: jobDna,
-        status: "open"
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!insertR.ok) {
