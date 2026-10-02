@@ -493,6 +493,10 @@
   /* ========== Helpers ========== */
 
   function showJobModal(job) {
+    // Remove any existing modal first
+    const existing = document.getElementById("jobModal");
+    if (existing) existing.remove();
+
     const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
     const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
     const requirements = (dna.must_have || []).filter(Boolean);
