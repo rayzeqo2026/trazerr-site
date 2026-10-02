@@ -1501,7 +1501,12 @@ async function jobpost(req, res) {
     }
 
     const respText = await insertR.text();
-    console.log("Supabase response:", respText);
+    console.log("Supabase response status:", insertR.status);
+    console.log("Supabase response text:", respText);
+    if (!respText) {
+      console.log("Empty response from Supabase");
+      return res.status(201).json({ id: "created", title });
+    }
     const job = JSON.parse(respText);
     return res.status(201).json(job);
   } catch (e) {
