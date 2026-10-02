@@ -445,10 +445,9 @@ function showProfile(p){
   body.querySelectorAll("[data-findjobs]").forEach(b => b.onclick = () => {
     const d = p.directions[+b.dataset.findjobs];
     closeOverlay();
-    $("jq").value = d.role;
-    applyHomeLocation(p);
-    $("jobs").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
-    runJobSearch(true);
+    // Redirect to dedicated Trazerr Match page with resume already loaded
+    console.log("🚀 Redirecting to Trazerr Match with role:", d.role);
+    window.location.href = "/job-search.html";
   });
   body.querySelectorAll("[data-tailor]").forEach(b => b.onclick = () => openTailor(p, { role: p.directions[+b.dataset.tailor].role }));
   if (!ex) wireFeedback("dna", "");
