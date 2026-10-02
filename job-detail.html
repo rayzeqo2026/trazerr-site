@@ -342,27 +342,44 @@ async function loadJobDetail() {
       throw new Error("No job ID provided");
     }
 
+    // First, try to get job from sessionStorage (passed from dashboard)
+    let job = null;
+    const stored = sessionStorage.getItem("currentJobDetail");
+    if (stored) {
+      try {
+        job = JSON.parse(stored);
+        console.log("Job loaded from sessionStorage:", job);
+        currentJob = job;
+        displayJobDetail(job);
+        sessionStorage.removeItem("currentJobDetail");
+        return;
+      } catch (e) {
+        console.warn("Failed to parse stored job data:", e);
+      }
+    }
+
+    // If not in sessionStorage, query Supabase
     console.log("Querying Supabase for job...");
-    const { data: job, error } = await sb
+    const { data: supabaseJob, error } = await sb
       .from("job_postings")
       .select("*")
       .eq("id", jobId)
       .single();
 
-    console.log("Query result - error:", error, "job:", job);
+    console.log("Query result - error:", error, "job:", supabaseJob);
 
     if (error) {
       console.error("Supabase error:", error);
       throw new Error("Failed to load job: " + (error.message || JSON.stringify(error)));
     }
 
-    if (!job) {
+    if (!supabaseJob) {
       throw new Error("Job not found in database");
     }
 
-    console.log("Job loaded successfully:", job);
-    currentJob = job;
-    displayJobDetail(job);
+    console.log("Job loaded successfully:", supabaseJob);
+    currentJob = supabaseJob;
+    displayJobDetail(supabaseJob);
   } catch (e) {
     console.error("Failed to load job:", e);
     document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error loading job</h1><p>${esc(e.message)}</p><p style="font-size: 12px; margin-top: 16px; color: var(--ink-2);">Check browser console (F12) for details</p><a href="/employer-dashboard.html" style="color: var(--blue); margin-top: 16px; display: inline-block;">← Go back</a></div>`;

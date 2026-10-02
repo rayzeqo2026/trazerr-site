@@ -408,6 +408,8 @@
         e.preventDefault();
         e.stopPropagation();
         console.log("Clicking job:", job.id, job.title);
+        // Pass job data via sessionStorage to avoid RLS issues
+        sessionStorage.setItem("currentJobDetail", JSON.stringify(job));
         window.location.href = "/job-detail.html?id=" + encodeURIComponent(job.id);
       });
 
