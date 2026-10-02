@@ -448,5 +448,10 @@
   window.closeJobModal = closeJobModal;
   window.applyForJob = applyForJob;
 
-  document.addEventListener("DOMContentLoaded", initialize);
+  // Initialize immediately if DOM is already loaded, otherwise wait for event
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize);
+  } else {
+    initialize();
+  }
 })();
