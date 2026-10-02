@@ -132,28 +132,40 @@ async function initAuth() {
 }
 
 async function extractAndPost() {
-  const desc = document.getElementById("jobDesc").value.trim();
-  const title = document.getElementById("jobTitle").value.trim();
-  const location = document.getElementById("location").value.trim();
-  const remoteOk = document.getElementById("remoteOk").checked;
-  const btn = document.getElementById("extractBtn");
-  const btnText = document.getElementById("btnText");
-
-  if (!desc) {
-    showError("Please paste a job description");
-    return;
-  }
-
-  if (!title) {
-    showError("Please enter a job title");
-    return;
-  }
-
-  btn.disabled = true;
-  btnText.innerHTML = '<span class="loading-spinner"></span> Analyzing with AI...';
-
   try {
+    console.log("extractAndPost called");
+    const desc = document.getElementById("jobDesc").value.trim();
+    const title = document.getElementById("jobTitle").value.trim();
+    const location = document.getElementById("location").value.trim();
+    const remoteOk = document.getElementById("remoteOk").checked;
+    const btn = document.getElementById("extractBtn");
+    const btnText = document.getElementById("btnText");
+
+    console.log("Form values:", { desc: desc.length, title, location, remoteOk });
+
+    if (!desc) {
+      showError("Please paste a job description");
+      return;
+    }
+
+    if (!title) {
+      showError("Please enter a job title");
+      return;
+    }
+
+    if (!btn) {
+      alert("Error: Button element not found");
+      return;
+    }
+
+    btn.disabled = true;
+    btnText.innerHTML = '<span class="loading-spinner"></span> Analyzing with AI...';
+    console.log("Button disabled, starting API call...");
+
+    console.log("Checking session...");
     const { data: { session } } = await sb.auth.getSession();
+    console.log("Session:", session ? "found" : "not found");
+
     if (!session) {
       showError("Session expired. Redirecting...");
       setTimeout(() => window.location.href = "/employers.html", 2000);
@@ -161,9 +173,12 @@ async function extractAndPost() {
     }
 
     const token = session.access_token;
+    console.log("Token found, generating company code...");
     const companyCode = generateCompanyCode(currentEmployer.company);
+    console.log("Company code:", companyCode);
 
     // Call API to extract Job DNA and post job
+    console.log("Calling API...");
     const r = await fetch(API + "?action=jobpost", {
       method: "POST",
       headers: {
@@ -182,8 +197,10 @@ async function extractAndPost() {
       })
     });
 
+    console.log("API response status:", r.status);
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
+      console.error("API error:", err);
       throw new Error(err.error || "Failed to post job");
     }
 
@@ -241,10 +258,15 @@ async function extractAndPost() {
     }, 1500);
 
   } catch (e) {
-    showError(e.message || e);
+    console.error("Error in extractAndPost:", e);
+    showError(e.message || String(e));
   } finally {
-    btn.disabled = false;
-    btnText.innerHTML = "✨ Extract Skills & Post Job";
+    const btn = document.getElementById("extractBtn");
+    const btnText = document.getElementById("btnText");
+    if (btn) {
+      btn.disabled = false;
+      btnText.innerHTML = "✨ Extract Skills & Post Job";
+    }
   }
 }
 
