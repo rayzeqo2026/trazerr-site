@@ -5,808 +5,147 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Trazerr Match · Find Your Perfect Role</title>
-<meta name="description" content="Browse live job openings and see how your resume matches each opportunity. Advanced skill matching with career path recommendations.">
-<meta name="theme-color" content="#FFFFFF">
-<script>(function(){
-  var root=document.documentElement, t="light";
-  try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}
-  root.dataset.theme=t;
-  if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#0E1628";
-  root.dataset.design="1";
-})()</script>
 <link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
 <style>
-* { box-sizing: border-box; }
-
-.tm-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0;
-}
-
+body { margin: 0; padding: 0; }
 .tm-header {
-  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  border-bottom: 1px solid #d0d7e0;
   padding: 40px 20px;
   margin-bottom: 40px;
 }
-
-.tm-header-content {
+.tm-header h1 {
   max-width: 1400px;
   margin: 0 auto;
-}
-
-.tm-header h1 {
   font-size: 36px;
   font-weight: 800;
-  margin: 0 0 8px;
-  color: var(--ink);
+  color: #0e1628;
 }
-
-.tm-header p {
-  font-size: 16px;
-  color: var(--ink-2);
-  margin: 0;
-}
-
 .tm-content {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 32px;
-  padding: 0 20px 40px;
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 20px;
 }
-
-.tm-sidebar {
-  position: sticky;
-  top: 20px;
-  height: fit-content;
-}
-
-.tm-filter-section {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.tm-filter-section h3 {
-  margin: 0 0 16px;
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  letter-spacing: 0.5px;
-}
-
-.tm-filter-section input,
-.tm-filter-section select {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font: inherit;
-  background: var(--bg);
-  color: var(--ink);
-  font-size: 13px;
-}
-
-.tm-filter-section input:focus,
-.tm-filter-section select:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(0, 102, 224, 0.1);
-}
-
-.tm-filter-section button {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 8px;
-  background: var(--blue);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
-
-.tm-filter-section button:hover {
-  background: #0052cc;
-  transform: translateY(-1px);
-}
-
-.tm-stats {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.tm-stat {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-}
-
-.tm-stat-value {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--blue);
-  margin: 0 0 4px;
-}
-
-.tm-stat-label {
-  font-size: 12px;
-  color: var(--ink-2);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  margin: 0;
-}
-
-.tm-main {
-  min-height: 60vh;
-}
-
 .tm-jobs-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
-
 .tm-jobs-header h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 24px;
+  color: #0e1628;
 }
-
-.tm-sort-select {
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font: inherit;
-  background: var(--bg-2);
-  color: var(--ink);
-  cursor: pointer;
-}
-
 .tm-jobs-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
-
 .tm-job-card {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
+  border: 1px solid #d0d7e0;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
+  background: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
 }
-
-.tm-job-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--blue), #0052cc);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-
 .tm-job-card:hover {
-  border-color: var(--blue);
-  box-shadow: 0 8px 24px rgba(0, 102, 224, 0.12);
-  transform: translateY(-4px);
+  border-color: #0066e0;
+  box-shadow: 0 4px 12px rgba(0, 102, 224, 0.1);
+  transform: translateY(-2px);
 }
-
-.tm-job-card:hover::before {
-  transform: scaleX(1);
-}
-
-.tm-job-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
 .tm-job-title {
+  margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
-  color: var(--ink);
-  margin: 0;
+  color: #0e1628;
 }
-
-.tm-match-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  color: white;
-  flex-shrink: 0;
-}
-
-.tm-match-excellent { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.tm-match-good { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.tm-match-fair { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.tm-match-low { background: linear-gradient(135deg, #9ca3af, #6b7280); }
-
 .tm-job-meta {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: var(--ink-2);
-  flex-wrap: wrap;
-}
-
-.tm-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.tm-job-description {
-  color: var(--ink);
   font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 16px;
+  color: #5f6b7c;
+  margin: 0 0 12px;
 }
-
+.tm-job-description {
+  font-size: 14px;
+  color: #5f6b7c;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
 .tm-job-skills {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
-
 .tm-skill-tag {
-  display: inline-block;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 10px;
+  background: #e8ecf1;
+  color: #0e1628;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  color: var(--ink-2);
 }
-
-.tm-job-actions {
-  display: flex;
-  gap: 12px;
-  border-top: 1px solid var(--border);
-  padding-top: 16px;
-}
-
-.tm-job-actions button {
-  flex: 1;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--ink);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
-
-.tm-job-actions button:first-child {
-  background: var(--blue);
+.tm-match-badge {
+  display: inline-block;
+  background: #4CAF50;
   color: white;
-  border-color: var(--blue);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
 }
-
-.tm-job-actions button:first-child:hover {
-  background: #0052cc;
-  box-shadow: 0 2px 8px rgba(0, 102, 224, 0.3);
-}
-
-.tm-job-actions button:last-child {
-  font-size: 16px;
-}
-
-.tm-empty-state {
+.tm-empty {
   text-align: center;
-  padding: 60px 20px;
-}
-
-.tm-empty-state h3 {
-  font-size: 20px;
-  margin: 0 0 8px;
-  color: var(--ink);
-}
-
-.tm-empty-state p {
-  color: var(--ink-2);
-  margin: 0;
-}
-
-.tm-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  overflow-y: auto;
-}
-
-.tm-modal.open {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tm-modal-content {
-  background: var(--bg);
-  border-radius: 16px;
-  max-width: 800px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
   padding: 40px;
-  position: relative;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.tm-modal-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.tm-modal-close:hover {
-  background: var(--border);
-}
-
-.tm-modal-title {
-  font-size: 28px;
-  font-weight: 800;
-  margin: 0 0 8px;
-  color: var(--ink);
-}
-
-.tm-modal-meta {
-  font-size: 14px;
-  color: var(--ink-2);
-  margin: 0 0 24px;
-}
-
-.tm-match-section {
-  background: var(--bg-2);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.tm-match-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.tm-match-score {
-  font-size: 48px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--blue), #0052cc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-}
-
-.tm-skills-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.tm-skill-column h4 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  letter-spacing: 0.3px;
-}
-
-.tm-skill-list {
-  display: grid;
-  gap: 8px;
-}
-
-.tm-skill-item {
-  padding: 10px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tm-skill-match {
-  background: #dffce0;
-  color: #15803d;
-  border-left: 3px solid #22c55e;
-}
-
-.tm-skill-missing {
-  background: #fee2e2;
-  color: #991b1b;
-  border-left: 3px solid #ef4444;
-}
-
-.tm-recommendations {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(0, 102, 224, 0.05));
-  border: 1px solid var(--blue);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.tm-recommendations h4 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.tm-recommendations ol {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--ink);
-}
-
-.tm-recommendations li {
-  margin-bottom: 8px;
-}
-
-.tm-job-full-description {
-  background: var(--bg-2);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--ink);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.tm-modal-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.tm-modal-actions button {
-  padding: 14px 16px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tm-apply-btn {
-  background: linear-gradient(135deg, var(--blue), #0052cc);
-  color: white;
-}
-
-.tm-apply-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 102, 224, 0.3);
-}
-
-.tm-bookmark-btn {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  color: var(--ink);
-}
-
-.tm-bookmark-btn:hover {
-  background: var(--border);
-}
-
-.tm-bookmark-btn.bookmarked {
-  background: #fef3c7;
-  border-color: #f59e0b;
-  color: #92400e;
-}
-
-@media (max-width: 768px) {
-  .tm-content {
-    grid-template-columns: 1fr;
-  }
-
-  .tm-sidebar {
-    position: static;
-  }
-
-  .tm-skills-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .tm-modal-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .tm-header h1 {
-    font-size: 24px;
-  }
+  color: #5f6b7c;
 }
 </style>
 </head>
 <body>
 
-<a class="skip" href="#main">Skip to content</a>
+<div class="tm-header">
+  <h1>Find Your Perfect Role</h1>
+</div>
 
-<header class="site-head">
-  <div class="wrap">
-    <a class="brand" href="/index.html" aria-label="Trazerr home"><img src="/logo.png" alt="" width="40" height="40">Trazerr</a>
-    <nav class="site-nav" aria-label="Main">
-      <a href="/index.html">Career DNA</a>
-      <a href="/job-search.html">Trazerr Match</a>
-      <a href="/employers.html">For employers</a>
-      <a href="/index.html#about">About</a>
-    </nav>
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark theme" title="Switch between light and dark theme">
-      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>
-      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
-    </button>
-    <a class="btn btn-primary" href="/index.html">Back to Career DNA</a>
-  </div>
-</header>
-
-<main id="main">
-  <div class="tm-header">
-    <div class="tm-header-content">
-      <h1>Find Your Perfect Role</h1>
-      <p>Browse live job openings and see exactly how your experience matches each opportunity.</p>
-    </div>
+<div class="tm-content">
+  <div class="tm-jobs-header">
+    <h2 id="jobsTitle">Loading jobs...</h2>
   </div>
 
-  <div class="tm-container">
-    <div class="tm-content">
-      <!-- Sidebar: Filters & Stats -->
-      <aside class="tm-sidebar">
-        <!-- Search -->
-        <div class="tm-filter-section">
-          <h3>Search</h3>
-          <input type="text" id="tmSearchInput" placeholder="Job title, company..." aria-label="Search jobs">
-        </div>
-
-        <!-- Match Level Filter -->
-        <div class="tm-filter-section">
-          <h3>Match Level</h3>
-          <select id="tmMatchFilter">
-            <option value="">All matches</option>
-            <option value="75">Excellent (75%+)</option>
-            <option value="50">Good (50%+)</option>
-            <option value="25">Fair (25%+)</option>
-            <option value="0">Any</option>
-          </select>
-        </div>
-
-        <!-- Experience Level Filter -->
-        <div class="tm-filter-section">
-          <h3>Experience Level</h3>
-          <select id="tmExperienceFilter">
-            <option value="">All levels</option>
-            <option value="entry">Entry Level</option>
-            <option value="mid">Mid Level</option>
-            <option value="senior">Senior</option>
-            <option value="executive">Executive</option>
-          </select>
-        </div>
-
-        <!-- Location Filter -->
-        <div class="tm-filter-section">
-          <h3>Location</h3>
-          <select id="tmLocationFilter">
-            <option value="">All locations</option>
-            <option value="remote">Remote Only</option>
-            <option value="onsite">On-site Only</option>
-          </select>
-        </div>
-
-        <!-- Clear Filters -->
-        <div class="tm-filter-section">
-          <button id="tmClearFilters">Clear All Filters</button>
-        </div>
-
-        <!-- Stats -->
-        <div class="tm-stats">
-          <div class="tm-stat">
-            <div class="tm-stat-value" id="tmTotalJobs">0</div>
-            <p class="tm-stat-label">Jobs Available</p>
-          </div>
-          <div class="tm-stat">
-            <div class="tm-stat-value" id="tmMatchedJobs">0</div>
-            <p class="tm-stat-label">Matched For You</p>
-          </div>
-          <div class="tm-stat">
-            <div class="tm-stat-value" id="tmBookmarkedJobs">0</div>
-            <p class="tm-stat-label">Bookmarked</p>
-          </div>
-          <div class="tm-stat">
-            <div class="tm-stat-value" id="tmAvgMatch">—</div>
-            <p class="tm-stat-label">Your Avg Match</p>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Main: Job Listings -->
-      <div class="tm-main">
-        <div class="tm-jobs-header">
-          <h2 id="tmJobsCount">Loading jobs...</h2>
-          <select id="tmSortSelect" class="tm-sort-select">
-            <option value="match-desc">Best Match</option>
-            <option value="recent">Most Recent</option>
-            <option value="title-asc">Title A-Z</option>
-          </select>
-        </div>
-
-        <div class="tm-jobs-grid" id="tmJobsGrid">
-          <!-- Jobs will be rendered here -->
-        </div>
-
-        <div class="tm-empty-state" id="tmEmptyState" style="display: none;">
-          <h3>No jobs found</h3>
-          <p>Try adjusting your filters or search terms</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
-
-<!-- Job Detail Modal -->
-<div class="tm-modal" id="tmJobModal">
-  <div class="tm-modal-content" id="tmModalContent">
-    <button class="tm-modal-close" id="tmModalClose">&times;</button>
-    <!-- Content injected here -->
+  <div id="jobsContainer" class="tm-jobs-grid"></div>
+  <div id="emptyState" class="tm-empty" style="display: none;">
+    <p>No jobs found. Try adjusting your filters.</p>
   </div>
 </div>
 
-<footer style="margin-top: 80px; padding: 40px 20px; text-align: center; border-top: 1px solid var(--border); color: var(--ink-2); font-size: 13px;">
-  <p style="margin: 0;">Trazerr for job seekers · <a href="/index.html#privacy" style="color: inherit;">Privacy</a> · <a href="/index.html#privacy" style="color: inherit;">Terms</a> · <a href="mailto:hello@trazerr.com" style="color: inherit;">hello@trazerr.com</a></p>
-</footer>
-
-<script src="/assets/toast.js"></script>
 <script>
-// Theme toggle
-const themeToggle = document.getElementById('themeToggle');
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const root = document.documentElement;
-    const isDark = root.dataset.theme === 'dark';
-    const newTheme = isDark ? 'light' : 'dark';
-    root.dataset.theme = newTheme;
-    try { localStorage.setItem('trazerr.theme', newTheme); } catch (e) {}
-  });
-}
-
-// Load data from localStorage
 let allJobs = [];
 let candidateSkills = [];
-let candidateResume = '';
-let bookmarkedJobs = new Set();
 
-function loadData() {
+// Load sample jobs immediately
+function initializePage() {
+  console.log('=== INITIALIZING TRAZERR MATCH ===');
+
+  // Load candidate skills from localStorage
   try {
-    const savedSkills = localStorage.getItem('trazerr.skills');
-    const savedResume = localStorage.getItem('trazerr.resume');
-    const savedBookmarks = localStorage.getItem('trazerr.bookmarks');
-
-    if (savedSkills) candidateSkills = JSON.parse(savedSkills);
-    if (savedResume) candidateResume = typeof savedResume === 'string' ? savedResume : JSON.stringify(savedResume);
-    if (savedBookmarks) bookmarkedJobs = new Set(JSON.parse(savedBookmarks));
-
-    console.log('Loaded candidate skills:', candidateSkills);
-    console.log('Loaded bookmarks:', Array.from(bookmarkedJobs));
+    const saved = localStorage.getItem('trazerr.skills');
+    if (saved) candidateSkills = JSON.parse(saved);
+    console.log('Loaded skills:', candidateSkills);
   } catch (e) {
-    console.error('Error loading data:', e);
+    console.error('Error loading skills:', e);
   }
-}
 
-// Load jobs - use sample jobs (Supabase requires environment config)
-function loadJobs() {
-  console.log('Loading sample jobs...');
+  // Load sample jobs
   loadSampleJobs();
 }
 
-async function fetchJobsFromSupabase() {
-  try {
-    const configResp = await fetch('/api/app?action=authconfig');
-    if (!configResp.ok) {
-      console.log('Supabase not configured (', configResp.status, '), using sample jobs');
-      loadSampleJobs();
-      return;
-    }
-
-    const cfg = await configResp.json();
-    if (!cfg || !cfg.url || !cfg.anonKey) {
-      console.log('Supabase config incomplete, using sample jobs');
-      loadSampleJobs();
-      return;
-    }
-
-    const sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { persistSession: false } });
-
-    const { data, error } = await sb
-      .from('job_postings')
-      .select('*')
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (error || !data || data.length === 0) {
-      console.log('No jobs from database, using sample jobs');
-      loadSampleJobs();
-    } else {
-      allJobs = data;
-      console.log('Loaded', allJobs.length, 'jobs from Supabase');
-      renderJobs();
-    }
-  } catch (e) {
-    console.error('Supabase fetch error:', e);
-    loadSampleJobs();
-  }
-}
-
 function loadSampleJobs() {
-  console.log('loadSampleJobs() called');
+  console.log('Loading sample jobs...');
+
   allJobs = [
     {
       id: 'job-1',
@@ -814,11 +153,8 @@ function loadSampleJobs() {
       company: 'TechCorp Inc.',
       location: 'San Francisco, CA',
       remote_ok: true,
-      experience_level: 'senior',
-      description: 'Join our frontend team to build beautiful, scalable web applications using React, TypeScript, and modern CSS. We\'re looking for someone with 5+ years of experience who can lead architecture decisions and mentor junior engineers.',
-      required_skills: ['javascript', 'react', 'typescript', 'css', 'leadership'],
-      status: 'open',
-      created_at: new Date().toISOString()
+      description: 'Build beautiful web applications with React and TypeScript. 5+ years required.',
+      required_skills: ['javascript', 'react', 'typescript', 'css', 'leadership']
     },
     {
       id: 'job-2',
@@ -826,11 +162,8 @@ function loadSampleJobs() {
       company: 'InnovateLabs',
       location: 'New York, NY',
       remote_ok: true,
-      experience_level: 'mid',
-      description: 'Drive the vision and strategy for our AI-powered analytics platform. You\'ll work with engineering, design, and customers to ship features that matter. 3-5 years of PM experience required.',
-      required_skills: ['product management', 'data analysis', 'communication', 'strategy'],
-      status: 'open',
-      created_at: new Date().toISOString()
+      description: 'Drive product strategy for our AI platform. 3-5 years PM experience required.',
+      required_skills: ['product management', 'data analysis', 'communication', 'strategy']
     },
     {
       id: 'job-3',
@@ -838,11 +171,8 @@ function loadSampleJobs() {
       company: 'StartupHub',
       location: 'Remote',
       remote_ok: true,
-      experience_level: 'mid',
-      description: 'Build full-stack features for our SaaS platform. We use Node.js, React, and PostgreSQL. You\'ll own projects from database design through UI, working in a small agile team.',
-      required_skills: ['javascript', 'node.js', 'react', 'sql', 'rest api'],
-      status: 'open',
-      created_at: new Date().toISOString()
+      description: 'Build full-stack features with Node.js, React, and PostgreSQL.',
+      required_skills: ['javascript', 'node.js', 'react', 'sql', 'rest api']
     },
     {
       id: 'job-4',
@@ -850,11 +180,8 @@ function loadSampleJobs() {
       company: 'Analytics Pro',
       location: 'Boston, MA',
       remote_ok: false,
-      experience_level: 'entry',
-      description: 'Start your career in data analytics! You\'ll work with SQL, Python, and Tableau to analyze business metrics and create dashboards. No experience required; we\'ll train you.',
-      required_skills: ['sql', 'python', 'data analysis', 'analytical thinking'],
-      status: 'open',
-      created_at: new Date().toISOString()
+      description: 'Start your data analytics career. We will train you!',
+      required_skills: ['sql', 'python', 'data analysis', 'tableau']
     },
     {
       id: 'job-5',
@@ -862,266 +189,98 @@ function loadSampleJobs() {
       company: 'CloudSystems',
       location: 'Seattle, WA',
       remote_ok: true,
-      experience_level: 'senior',
-      description: 'Architect and maintain our cloud infrastructure on AWS. You\'ll design CI/CD pipelines, manage Kubernetes clusters, and ensure 99.9% uptime. 5+ years required.',
-      required_skills: ['aws', 'docker', 'kubernetes', 'python', 'ci/cd'],
-      status: 'open',
-      created_at: new Date().toISOString()
+      description: 'Architect cloud infrastructure on AWS. 5+ years required.',
+      required_skills: ['aws', 'docker', 'kubernetes', 'python', 'ci/cd']
     }
   ];
 
-  console.log('Loaded', allJobs.length, 'sample jobs');
+  console.log('Sample jobs loaded:', allJobs.length);
   renderJobs();
 }
 
 function calculateMatch(job) {
-  if (candidateSkills.length === 0) return 0;
+  if (!candidateSkills || candidateSkills.length === 0) return 0;
 
-  let jobSkills = [];
-  if (Array.isArray(job.required_skills)) {
-    jobSkills = job.required_skills.map(s => typeof s === 'string' ? s.toLowerCase() : (s.name || String(s)).toLowerCase());
-  } else if (typeof job.required_skills === 'string') {
+  let jobSkills = job.required_skills || [];
+  if (typeof jobSkills === 'string') {
     try {
-      const parsed = JSON.parse(job.required_skills);
-      jobSkills = Array.isArray(parsed) ? parsed.map(s => typeof s === 'string' ? s.toLowerCase() : String(s).toLowerCase()) : [];
-    } catch (e) {
-      jobSkills = job.required_skills.split(',').map(s => s.toLowerCase().trim());
+      jobSkills = JSON.parse(jobSkills);
+    } catch {
+      jobSkills = jobSkills.split(',').map(s => s.trim());
     }
   }
 
+  if (!Array.isArray(jobSkills)) jobSkills = [];
   if (jobSkills.length === 0) return 0;
 
   const matched = jobSkills.filter(skill =>
-    candidateSkills.some(cs => skill.includes(cs) || cs.includes(skill))
+    candidateSkills.some(cs =>
+      skill.toLowerCase().includes(cs.toLowerCase()) ||
+      cs.toLowerCase().includes(skill.toLowerCase())
+    )
   ).length;
 
   return Math.round((matched / jobSkills.length) * 100);
 }
 
-function filterJobs() {
-  const searchText = document.getElementById('tmSearchInput').value.toLowerCase();
-  const matchLevel = parseInt(document.getElementById('tmMatchFilter').value) || 0;
-  const expLevel = document.getElementById('tmExperienceFilter').value;
-  const location = document.getElementById('tmLocationFilter').value;
-
-  return allJobs.filter(job => {
-    const match = calculateMatch(job);
-    if (match < matchLevel) return false;
-    if (expLevel && job.experience_level !== expLevel) return false;
-    if (location === 'remote' && !job.remote_ok) return false;
-    if (location === 'onsite' && job.remote_ok) return false;
-    if (searchText && !job.title.toLowerCase().includes(searchText) && !job.company.toLowerCase().includes(searchText)) return false;
-    return true;
-  });
-}
-
 function renderJobs() {
-  console.log('renderJobs() called, allJobs:', allJobs.length);
-  const filtered = filterJobs();
-  const sorted = filtered.sort((a, b) => {
-    const sortBy = document.getElementById('tmSortSelect').value;
-    if (sortBy === 'match-desc') return calculateMatch(b) - calculateMatch(a);
-    if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at);
-    if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
-    return 0;
-  });
+  console.log('Rendering jobs...');
 
-  const grid = document.getElementById('tmJobsGrid');
-  const emptyState = document.getElementById('tmEmptyState');
+  const container = document.getElementById('jobsContainer');
+  const emptyState = document.getElementById('emptyState');
+  const title = document.getElementById('jobsTitle');
 
-  if (sorted.length === 0) {
-    grid.innerHTML = '';
+  if (allJobs.length === 0) {
+    container.innerHTML = '';
     emptyState.style.display = 'block';
+    title.textContent = 'No jobs available';
     return;
   }
 
   emptyState.style.display = 'none';
-  grid.innerHTML = sorted.map(job => {
+  title.textContent = allJobs.length + ' job' + (allJobs.length !== 1 ? 's' : '') + ' available';
+
+  container.innerHTML = allJobs.map(job => {
     const match = calculateMatch(job);
-    const matchClass = match >= 75 ? 'excellent' : match >= 50 ? 'good' : match >= 25 ? 'fair' : 'low';
-    const isBookmarked = bookmarkedJobs.has(job.id);
+    const skillsHtml = (job.required_skills || [])
+      .slice(0, 5)
+      .map(s => `<span class="tm-skill-tag">${s}</span>`)
+      .join('');
 
     return `
-      <div class="tm-job-card" onclick="showJobDetail('${job.id}')">
-        <div class="tm-job-header">
+      <div class="tm-job-card" onclick="showDetails('${job.id}')">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
           <div>
             <h3 class="tm-job-title">${job.title}</h3>
-            <div class="tm-job-meta">
-              <span class="tm-meta-item">${job.company}</span>
-              <span class="tm-meta-item">${job.location}</span>
-              ${job.remote_ok ? '<span class="tm-meta-item">🌐 Remote OK</span>' : ''}
-            </div>
+            <div class="tm-job-meta">${job.company} · ${job.location}${job.remote_ok ? ' · 🌐 Remote' : ''}</div>
           </div>
-          <div class="tm-match-badge tm-match-${matchClass}">${match}%</div>
+          <div class="tm-match-badge">${match}%</div>
         </div>
-        <p class="tm-job-description">${job.description.slice(0, 120)}...</p>
-        <div class="tm-job-skills">
-          ${(Array.isArray(job.required_skills) ? job.required_skills : [])
-            .slice(0, 5)
-            .map(skill => `<span class="tm-skill-tag">${skill}</span>`)
-            .join('')}
-        </div>
-        <div class="tm-job-actions">
-          <button onclick="event.stopPropagation(); applyForJob('${job.id}')">View & Apply</button>
-          <button onclick="event.stopPropagation(); toggleBookmark('${job.id}')" class="tm-bookmark-btn ${isBookmarked ? 'bookmarked' : ''}">⭐</button>
-        </div>
+        <p class="tm-job-description">${job.description.substring(0, 100)}...</p>
+        <div class="tm-job-skills">${skillsHtml}</div>
       </div>
     `;
   }).join('');
 
-  updateStats();
+  console.log('Rendered', allJobs.length, 'jobs');
 }
 
-function showJobDetail(jobId) {
+function showDetails(jobId) {
   const job = allJobs.find(j => j.id === jobId);
   if (!job) return;
 
-  const match = calculateMatch(job);
-  let jobSkills = [];
-  if (Array.isArray(job.required_skills)) {
-    jobSkills = job.required_skills.map(s => typeof s === 'string' ? s : (s.name || String(s)));
-  } else if (typeof job.required_skills === 'string') {
-    try {
-      const parsed = JSON.parse(job.required_skills);
-      jobSkills = Array.isArray(parsed) ? parsed.map(s => typeof s === 'string' ? s : String(s)) : [];
-    } catch (e) {
-      jobSkills = job.required_skills.split(',').map(s => s.trim());
-    }
-  }
-
-  const matched = jobSkills.filter(skill =>
-    candidateSkills.some(cs => skill.toLowerCase().includes(cs) || cs.includes(skill.toLowerCase()))
-  );
-  const missing = jobSkills.filter(skill => !matched.includes(skill));
-  const isBookmarked = bookmarkedJobs.has(jobId);
-
-  const modalContent = `
-    <h2 class="tm-modal-title">${job.title}</h2>
-    <p class="tm-modal-meta">${job.company} · ${job.location}${job.remote_ok ? ' · Remote OK' : ''}</p>
-
-    <div class="tm-match-section">
-      <div class="tm-match-header">
-        <h3 class="tm-match-score">${match}%</h3>
-        <p style="font-size: 14px; color: var(--ink-2); margin: 0;">Match Score</p>
-      </div>
-      <div class="tm-skills-grid">
-        <div class="tm-skill-column">
-          <h4>Skills You Have (${matched.length})</h4>
-          <div class="tm-skill-list">
-            ${matched.length > 0 ? matched.map(skill => `<div class="tm-skill-item tm-skill-match">✓ ${skill}</div>`).join('') : '<p style="font-size: 13px; color: var(--ink-2);">No matching skills yet</p>'}
-          </div>
-        </div>
-        <div class="tm-skill-column">
-          <h4>Skills Missing (${missing.length})</h4>
-          <div class="tm-skill-list">
-            ${missing.length > 0 ? missing.map(skill => `<div class="tm-skill-item tm-skill-missing">✗ ${skill}</div>`).join('') : '<p style="font-size: 13px; color: var(--ink-2);">You have all skills!</p>'}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="tm-recommendations">
-      <h4>How to Improve Your Fit</h4>
-      <ol>
-        <li>Build experience with ${missing.slice(0, 2).map(s => '<strong>' + s + '</strong>').join(' and ')}</li>
-        <li>Look for projects combining your current skills with the missing ones</li>
-        <li>Take online courses or certifications in key missing areas</li>
-        <li>Highlight transferable skills in your resume</li>
-        <li>Network with professionals in this role to learn requirements firsthand</li>
-      </ol>
-    </div>
-
-    <div>
-      <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Full Job Description</h4>
-      <div class="tm-job-full-description">${job.description}</div>
-    </div>
-
-    <div class="tm-modal-actions">
-      <button class="tm-apply-btn" onclick="applyForJob('${jobId}'); closeModal();">Apply to This Role</button>
-      <button class="tm-bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark('${jobId}');">
-        ${isBookmarked ? '✓ Bookmarked' : 'Bookmark Job'}
-      </button>
-    </div>
-  `;
-
-  document.getElementById('tmModalContent').innerHTML = modalContent;
-  document.getElementById('tmJobModal').classList.add('open');
+  alert(`${job.title} at ${job.company}\n\n${job.description}`);
 }
 
-function closeModal() {
-  document.getElementById('tmJobModal').classList.remove('open');
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializePage);
+
+// Also initialize immediately in case DOMContentLoaded already fired
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePage);
+} else {
+  initializePage();
 }
-
-function applyForJob(jobId) {
-  const job = allJobs.find(j => j.id === jobId);
-  if (!job) return;
-
-  alert(`You clicked Apply for ${job.title} at ${job.company}.\n\nIn a production app, this would send your profile and resume to the employer.`);
-  console.log('Applied for job:', jobId);
-}
-
-function toggleBookmark(jobId) {
-  if (bookmarkedJobs.has(jobId)) {
-    bookmarkedJobs.delete(jobId);
-  } else {
-    bookmarkedJobs.add(jobId);
-  }
-  try {
-    localStorage.setItem('trazerr.bookmarks', JSON.stringify(Array.from(bookmarkedJobs)));
-  } catch (e) {}
-
-  renderJobs();
-}
-
-function updateStats() {
-  const filtered = filterJobs();
-  const matched = filtered.filter(j => calculateMatch(j) > 0);
-  const avgMatch = matched.length > 0
-    ? Math.round(matched.reduce((sum, j) => sum + calculateMatch(j), 0) / matched.length)
-    : 0;
-
-  document.getElementById('tmTotalJobs').textContent = allJobs.length;
-  document.getElementById('tmMatchedJobs').textContent = matched.length;
-  document.getElementById('tmBookmarkedJobs').textContent = bookmarkedJobs.size;
-  document.getElementById('tmAvgMatch').textContent = avgMatch + '%';
-  document.getElementById('tmJobsCount').textContent = filtered.length + ' job' + (filtered.length !== 1 ? 's' : '');
-}
-
-// Event listeners
-document.getElementById('tmSearchInput').addEventListener('input', renderJobs);
-document.getElementById('tmMatchFilter').addEventListener('change', renderJobs);
-document.getElementById('tmExperienceFilter').addEventListener('change', renderJobs);
-document.getElementById('tmLocationFilter').addEventListener('change', renderJobs);
-document.getElementById('tmSortSelect').addEventListener('change', renderJobs);
-document.getElementById('tmClearFilters').addEventListener('click', () => {
-  document.getElementById('tmSearchInput').value = '';
-  document.getElementById('tmMatchFilter').value = '';
-  document.getElementById('tmExperienceFilter').value = '';
-  document.getElementById('tmLocationFilter').value = '';
-  renderJobs();
-});
-document.getElementById('tmModalClose').addEventListener('click', closeModal);
-document.getElementById('tmJobModal').addEventListener('click', (e) => {
-  if (e.target.id === 'tmJobModal') closeModal();
-});
-
-// Initialize
-console.log('Initializing Trazerr Match page...');
-loadData();
-console.log('Data loaded, attempting to load jobs...');
-
-// Load jobs immediately (no async waiting)
-loadJobs();
-
-// Emergency fallback - if nothing happened after 100ms, force render
-setTimeout(() => {
-  if (allJobs.length === 0) {
-    console.warn('Emergency fallback: forcing sample jobs');
-    loadSampleJobs();
-  } else {
-    console.log('Jobs already loaded:', allJobs.length);
-  }
-}, 100);
 </script>
 
 </body>
