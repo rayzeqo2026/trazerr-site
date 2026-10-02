@@ -75,15 +75,19 @@ let userProfile = null;
 async function init() {
   try {
     const saved = localStorage.getItem('trazerr.profile.v3');
+    console.log('Checking for Career DNA in localStorage:', !!saved);
     if (!saved) {
       showInfo('Please build your Career DNA first on the main page, then return here to search jobs.');
       showResults('<div class="tm-loading"><p>Waiting for your Career DNA...</p></div>');
+      console.log('Career DNA not found in localStorage. Available keys:', Object.keys(localStorage));
       return;
     }
 
     userProfile = JSON.parse(saved);
+    console.log('Career DNA loaded successfully');
     showInfo('Your Career DNA is loaded. Search the job database by company code (WM.1001) or job title.');
   } catch (e) {
+    console.error('Error loading Career DNA:', e);
     showError('Error loading your Career DNA: ' + e.message);
   }
 }
@@ -103,14 +107,26 @@ async function performSearch() {
   showResults('<div class="tm-loading"><p>Searching job database...</p></div>');
 
   try {
-    const response = await fetch('/api/app?action=jobjsearch&q=' + encodeURIComponent(query));
+    const url = '/api/app?action=jobjsearch&q=' + encodeURIComponent(query);
+    console.log('Searching for:', query, 'URL:', url);
+    const response = await fetch(url);
+    console.log('Search response status:', response.status);
+
     if (!response.ok) {
-      const data = await response.json().catch(() => ({ error: 'Search failed' }));
-      showError(data.error || 'Search failed');
+      const text = await response.text();
+      console.error('Search failed with status', response.status, ':', text.slice(0, 500));
+      try {
+        const data = JSON.parse(text);
+        showError(data.error || 'Search failed (HTTP ' + response.status + ')');
+      } catch {
+        showError('Search failed: Server error (HTTP ' + response.status + ')');
+      }
       return;
     }
 
     const data = await response.json();
+    console.log('Search returned', data.jobs?.length || 0, 'jobs');
+
     if (!data.jobs || data.jobs.length === 0) {
       showResults('<div class="tm-job"><p>No jobs found matching "' + query + '". Try another search.</p></div>');
       return;
@@ -118,6 +134,7 @@ async function performSearch() {
 
     await analyzeJobsForUser(data.jobs);
   } catch (e) {
+    console.error('Search error:', e);
     showError('Search failed: ' + e.message);
   }
 }
