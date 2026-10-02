@@ -1466,9 +1466,10 @@ async function jobpost(req, res) {
 
   // Insert job posting
   try {
+    console.log("Supabase insert to:", cfg.url + "/rest/v1/job_postings");
     const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
       method: "POST",
-      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" },
+      headers: { apikey: cfg.key, "Content-Type": "application/json" },
       body: JSON.stringify({
         employer_id: session.user.id,
         company_code: body.company_code || "AUTO",
