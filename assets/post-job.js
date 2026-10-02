@@ -202,12 +202,7 @@ async function extractAndPost() {
 
     console.log("Form values:", { desc: desc.length, title, location, remoteOk, hasFile: !!selectedFile });
 
-    // Job description is required unless a file is uploaded
-    if (!desc && !selectedFile) {
-      showError("Please paste a job description or upload a PDF");
-      return;
-    }
-
+    // Only title is required - description is optional, AI will extract from whatever we have
     if (!title) {
       showError("Please enter a job title");
       return;
@@ -258,18 +253,21 @@ async function extractAndPost() {
     });
 
     console.log("API response status:", r.status);
+    const job = await r.json();
+    console.log("API response body:", JSON.stringify(job));
+
     if (!r.ok) {
-      const err = await r.json().catch(() => ({}));
-      console.error("API error response:", err);
-      console.error("API error full:", JSON.stringify(err));
-      const errorMsg = err.error || err.message || JSON.stringify(err) || "Failed to post job";
+      const errorMsg = job.error || job.message || JSON.stringify(job) || "Failed to post job";
+      console.error("API error response:", errorMsg);
       throw new Error(errorMsg);
     }
 
-    const job = await r.json();
+    // Show extracted skills - try both job_dna and top-level fields
+    const jobDna = job.job_dna || {};
+    const requiredSkills = job.required_skills || jobDna.core_skills || jobDna.must_have || [];
+    const niceToHave = job.nice_to_have || jobDna.nice_to_have || [];
+    console.log("Skills extracted:", { requiredSkills, niceToHave, jobDna });
 
-    // Show extracted skills
-    const skills = job.job_dna || {};
     let html = `<div class="skills-display">
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
         <div>
@@ -279,28 +277,28 @@ async function extractAndPost() {
         <div class="company-badge">${escapeHtml(companyCode)}</div>
       </div>`;
 
-    if (skills.required_skills && skills.required_skills.length) {
+    if (requiredSkills && requiredSkills.length) {
       html += `<div class="skills-section">
         <div class="skills-title">✓ Required Skills</div>`;
-      skills.required_skills.forEach(s => {
+      requiredSkills.forEach(s => {
         html += `<span class="skill-tag">${escapeHtml(s)}</span>`;
       });
       html += `</div>`;
     }
 
-    if (skills.nice_to_have && skills.nice_to_have.length) {
+    if (niceToHave && niceToHave.length) {
       html += `<div class="skills-section">
         <div class="skills-title">★ Nice to Have</div>`;
-      skills.nice_to_have.forEach(s => {
+      niceToHave.forEach(s => {
         html += `<span class="skill-tag">${escapeHtml(s)}</span>`;
       });
       html += `</div>`;
     }
 
-    if (skills.experience_level) {
+    if (job.experience_level) {
       html += `<div class="skills-section">
         <div class="skills-title">📊 Experience Level</div>
-        <span class="skill-tag">${escapeHtml(skills.experience_level)}</span>
+        <span class="skill-tag">${escapeHtml(job.experience_level)}</span>
       </div>`;
     }
 
