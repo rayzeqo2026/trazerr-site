@@ -422,17 +422,35 @@
         console.warn("⚠️ Could not save resume to localStorage:", e);
       }
 
+      // Update resume section to show it's loaded
+      const resumeSection = document.getElementById("resumeSection");
+      if (resumeSection) {
+        resumeSection.style.pointerEvents = "none";
+        resumeSection.style.opacity = "0.7";
+        resumeSection.style.cursor = "default";
+
+        const heading = resumeSection.querySelector("h3");
+        const description = resumeSection.querySelector("p");
+
+        if (heading) heading.textContent = "✓ Resume Already Loaded";
+        if (description) description.textContent = `${candidateSkills.length} skills detected • Ready to match with jobs`;
+
+        console.log("✓ Resume section updated to show loaded state");
+      }
+
       if (candidateSkills.length > 0) {
         statusEl.innerHTML = `
           <div class="resume-status ready">
-            ✓ Resume loaded with <strong>${candidateSkills.length} skills</strong> detected
+            <strong>✓ Resume Connected</strong><br>
+            Using your resume with <strong>${candidateSkills.length} skills</strong> detected
           </div>
         `;
         Toast.success(`Detected ${candidateSkills.length} skills from your resume`, "Resume loaded");
       } else {
         statusEl.innerHTML = `
           <div class="resume-status ready">
-            ✓ Resume loaded (tip: include known skills to see match scores)
+            <strong>✓ Resume Connected</strong><br>
+            Resume loaded (tip: include known skills to see match scores)
           </div>
         `;
         Toast.info("Include known skills in your resume to see match scores", "Resume loaded");
