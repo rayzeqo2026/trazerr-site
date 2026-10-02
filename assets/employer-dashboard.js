@@ -506,11 +506,23 @@
     const modal = document.createElement("div");
     modal.setAttribute("data-job-modal", "true");
     modal.id = "jobModal";
+
+    // Use computed background color to ensure it's opaque
+    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() ||
+                    (document.documentElement.dataset.theme === 'dark' ? '#0E1628' : '#FFFFFF');
+
     modal.style.cssText = `
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: var(--bg); z-index: 10000; overflow-y: auto;
-      padding: 20px;
+      background: ${bgColor}; z-index: 10001; overflow-y: auto;
+      padding: 20px; margin: 0;
     `;
+
+    // Close modal when clicking outside content
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
 
     modal.innerHTML = `
       <div style="max-width: 900px; margin: 0 auto;">
