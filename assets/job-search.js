@@ -67,12 +67,16 @@
       // Load user's saved resume if signed in
       if (currentSession) {
         try {
-          console.log("📄 Loading saved resume...");
+          console.log("📄 Loading saved resume for user:", currentSession.user.id);
           const { data: record, error } = await sb
             .from("career_records")
             .select("resume, career_dna")
             .eq("user_id", currentSession.user.id)
             .single();
+
+          if (error) {
+            console.log("ℹ️ Resume fetch error (may not exist yet):", error.message);
+          }
 
           if (record && record.resume) {
             candidateResume = record.resume;
@@ -116,10 +120,14 @@
 
             // Re-render with match scores
             renderResults(allJobs);
+          } else {
+            console.log("ℹ️ No saved resume found in career_records");
           }
         } catch (e) {
-          console.log("No saved resume yet, showing upload option");
+          console.log("ℹ️ No saved resume yet, showing upload option:", e.message);
         }
+      } else {
+        console.log("ℹ️ User not signed in - resume upload required for match scores");
       }
 
       // Setup resume upload
