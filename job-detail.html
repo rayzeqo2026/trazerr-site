@@ -348,59 +348,29 @@ async function initAuth() {
 
 async function loadJobDetail() {
   try {
-    showDebug("📍 Starting loadJobDetail...");
+    showDebug("📍 Fetching job from Supabase...");
     const params = new URLSearchParams(window.location.search);
     const jobId = params.get("id");
 
-    showDebug("🔍 Job ID from URL: " + jobId);
-
     if (!jobId) {
-      throw new Error("No job ID provided");
+      throw new Error("No job ID in URL");
     }
 
-    // First, try to get job from sessionStorage (passed from dashboard)
-    let job = null;
-    const stored = sessionStorage.getItem("currentJobDetail");
-    showDebug("📦 Checking sessionStorage... Found: " + (stored ? "YES" : "NO"));
-
-    if (stored) {
-      try {
-        job = JSON.parse(stored);
-        showDebug("✅ Job loaded from sessionStorage: " + job.title);
-        currentJob = job;
-        displayJobDetail(job);
-        sessionStorage.removeItem("currentJobDetail");
-        showDebug("✨ Display complete!");
-        return;
-      } catch (e) {
-        showDebug("❌ Failed to parse stored job: " + e.message);
-      }
-    }
-
-    // If not in sessionStorage, query Supabase
-    console.log("Querying Supabase for job...");
-    const { data: supabaseJob, error } = await sb
+    const { data: job, error } = await sb
       .from("job_postings")
       .select("*")
       .eq("id", jobId)
       .single();
 
-    console.log("Query result - error:", error, "job:", supabaseJob);
-
     if (error) {
-      console.error("Supabase error:", error);
-      throw new Error("Failed to load job: " + (error.message || JSON.stringify(error)));
+      throw new Error("Job not found: " + error.message);
     }
 
-    if (!supabaseJob) {
-      throw new Error("Job not found in database");
-    }
-
-    console.log("Job loaded successfully:", supabaseJob);
-    currentJob = supabaseJob;
-    displayJobDetail(supabaseJob);
+    currentJob = job;
+    showDebug("✅ Job loaded: " + job.title);
+    displayJobDetail(job);
   } catch (e) {
-    console.error("Failed to load job:", e);
+    console.error("Error loading job:", e);
     document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error loading job</h1><p>${esc(e.message)}</p><p style="font-size: 12px; margin-top: 16px; color: var(--ink-2);">Check browser console (F12) for details</p><a href="/employer-dashboard.html" style="color: var(--blue); margin-top: 16px; display: inline-block;">← Go back</a></div>`;
   }
 }
@@ -504,43 +474,11 @@ async function deleteJobAndReturn() {
   }
 }
 
-function loadFromSessionStorage() {
-  try {
-    const stored = sessionStorage.getItem("currentJobDetail");
-    if (!stored) {
-      showDebug("📦 No job data in sessionStorage");
-      return false;
-    }
-
-    showDebug("✅ SessionStorage data found");
-    const job = JSON.parse(stored);
-    showDebug("✓ Job parsed: " + job.title);
-
-    displayJobDetail(job);
-    sessionStorage.removeItem("currentJobDetail");
-    showDebug("✨ Job loaded from sessionStorage!");
-    currentJob = job;
-    return true;
-  } catch (e) {
-    showDebug("❌ SessionStorage error: " + e.message);
-    console.error("SessionStorage error:", e);
-    return false;
-  }
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
-  showDebug("🚀 Page loaded, initializing...");
+  showDebug("🚀 Page loaded");
 
-  // First, try to load from sessionStorage (passed from dashboard)
-  const loaded = loadFromSessionStorage();
-
-  // Then initialize auth
   const ok = await initAuth();
-  showDebug("🔐 Auth result: " + ok);
-
-  // If we didn't load from sessionStorage and auth succeeded, try Supabase
-  if (!loaded && ok) {
-    showDebug("📡 Loading job detail from Supabase...");
+  if (ok) {
     await loadJobDetail();
   }
 });

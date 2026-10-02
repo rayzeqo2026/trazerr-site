@@ -410,17 +410,7 @@
       card.querySelector(".job-card-clickable").addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🔗 Clicking job:", job.id, job.title);
-        try {
-          const jobStr = JSON.stringify(job);
-          console.log("📦 Serialized job (" + jobStr.length + " bytes)");
-          sessionStorage.setItem("currentJobDetail", jobStr);
-          console.log("✅ SessionStorage set. Reading back:", !!sessionStorage.getItem("currentJobDetail"));
-          window.location.href = "/job-detail.html?id=" + encodeURIComponent(job.id);
-        } catch (err) {
-          console.error("❌ Error setting sessionStorage:", err);
-          alert("Error: Could not save job data. Check browser storage limits.");
-        }
+        window.location.href = "/job-detail.html?id=" + encodeURIComponent(job.id);
       });
 
       card.querySelector(".job-card-delete").addEventListener("click", () => {
