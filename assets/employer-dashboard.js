@@ -155,16 +155,17 @@
 
       // Sidebar navigation
       document.querySelectorAll(".dash-sidebar nav a").forEach(link => {
-        link.addEventListener("click", (e) => {
-          e.preventDefault();
-          const section = link.dataset.section;
-          // Redirect to new post-job page instead of dashboard form
-          if (section === "create") {
-            window.location.href = "/post-job.html";
-            return;
-          }
-          showSection(section);
-        });
+        const section = link.dataset.section;
+        // Redirect "Post a Job" to new post-job page directly
+        if (section === "create") {
+          link.href = "/post-job.html";
+          link.onclick = null;
+        } else {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            showSection(section);
+          });
+        }
       });
 
       // Job form is now on post-job.html, so no need to attach listener here
