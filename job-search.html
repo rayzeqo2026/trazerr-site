@@ -2,169 +2,296 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<title>Trazerr Match - Find Your Perfect Role</title>
+<title>Trazerr Match · AI-Powered Job Matching</title>
 <link rel="stylesheet" href="/assets/site.css">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
-.header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; border-bottom: 1px solid #ddd; }
-.header h1 { max-width: 1200px; margin: 0 auto; font-size: 32px; font-weight: 700; }
-.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-.jobs-header { font-size: 20px; margin: 30px 0 20px; font-weight: 600; }
-.jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.job-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; }
-.job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-.job-title { font-size: 16px; font-weight: 600; margin: 0; }
-.job-company { font-size: 14px; color: #666; margin: 4px 0 0; }
-.job-match { background: #4CAF50; color: white; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
-.job-desc { font-size: 13px; color: #555; margin: 10px 0; line-height: 1.5; }
-.job-skills { display: flex; flex-wrap: wrap; gap: 6px; }
-.skill-tag { background: #e8ecf1; padding: 4px 10px; border-radius: 12px; font-size: 12px; color: #0e1628; }
+.tm-page { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+.tm-header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; margin: -40px -20px 40px; }
+.tm-header h1 { margin: 0; font-size: 36px; font-weight: 800; }
+.tm-header p { margin: 8px 0 0; color: #666; font-size: 16px; }
+.tm-search { display: flex; gap: 12px; margin-bottom: 30px; }
+.tm-search input { flex: 1; padding: 12px; border: 1px solid #d0d7e0; border-radius: 8px; font-size: 14px; }
+.tm-search button { padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.tm-jobs-list { display: flex; flex-direction: column; gap: 16px; }
+.tm-job-item { border: 1px solid #d0d7e0; border-radius: 12px; padding: 20px; background: white; cursor: pointer; transition: all 0.2s; }
+.tm-job-item:hover { border-color: #0066e0; box-shadow: 0 4px 12px rgba(0,102,224,0.1); }
+.tm-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.tm-job-title { font-size: 18px; font-weight: 600; margin: 0; }
+.tm-job-company { font-size: 14px; color: #666; margin: 4px 0 0; }
+.tm-fit-score { font-size: 32px; font-weight: 800; color: #4CAF50; text-align: center; }
+.tm-fit-label { font-size: 12px; color: #999; text-align: center; }
+.tm-job-summary { font-size: 14px; color: #555; margin: 12px 0; line-height: 1.5; }
+.tm-factors { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 12px; }
+.tm-factor { padding: 8px 12px; background: #f5f7fa; border-radius: 6px; font-size: 12px; }
+.tm-factor-name { font-weight: 600; color: #0e1628; }
+.tm-factor-score { font-size: 14px; font-weight: 700; color: #4CAF50; }
+.tm-loading { text-align: center; padding: 40px; color: #999; }
+.tm-error { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #856404; }
+.tm-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+.tm-modal.open { display: flex; }
+.tm-modal-content { background: white; border-radius: 12px; padding: 40px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+.tm-modal-close { float: right; font-size: 24px; cursor: pointer; background: none; border: none; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>Find Your Perfect Role</h1>
+<div class="tm-header">
+  <div class="tm-page">
+    <h1>Trazerr Match</h1>
+    <p>AI-powered job matching based on your Career DNA</p>
+  </div>
 </div>
 
-<div class="container">
-  <h2 class="jobs-header">5 Jobs Available</h2>
+<div class="tm-page">
+  <div id="error" class="tm-error" style="display: none;"></div>
 
-  <div class="jobs-grid">
-    <!-- Job 1 -->
-    <div class="job-card">
-      <div class="job-header">
-        <div>
-          <div class="job-title">Senior Frontend Engineer</div>
-          <div class="job-company">TechCorp Inc. · San Francisco, CA · 🌐 Remote</div>
-        </div>
-        <div class="job-match" id="match1">0%</div>
-      </div>
-      <div class="job-desc">Build beautiful web applications with React, TypeScript, and modern CSS. 5+ years experience required.</div>
-      <div class="job-skills">
-        <span class="skill-tag">javascript</span>
-        <span class="skill-tag">react</span>
-        <span class="skill-tag">typescript</span>
-        <span class="skill-tag">css</span>
-      </div>
-    </div>
+  <div class="tm-search">
+    <input type="text" id="jobSearch" placeholder="Search job title or company...">
+    <button onclick="searchJobs()">Search</button>
+  </div>
 
-    <!-- Job 2 -->
-    <div class="job-card">
-      <div class="job-header">
-        <div>
-          <div class="job-title">Product Manager</div>
-          <div class="job-company">InnovateLabs · New York, NY · 🌐 Remote</div>
-        </div>
-        <div class="job-match" id="match2">0%</div>
-      </div>
-      <div class="job-desc">Drive product strategy for our AI platform. 3-5 years of PM experience required.</div>
-      <div class="job-skills">
-        <span class="skill-tag">product management</span>
-        <span class="skill-tag">data analysis</span>
-        <span class="skill-tag">communication</span>
-      </div>
-    </div>
+  <div id="content" class="tm-loading">
+    <p>Loading your Career DNA and analyzing jobs...</p>
+  </div>
+</div>
 
-    <!-- Job 3 -->
-    <div class="job-card">
-      <div class="job-header">
-        <div>
-          <div class="job-title">Full Stack Engineer</div>
-          <div class="job-company">StartupHub · Remote</div>
-        </div>
-        <div class="job-match" id="match3">0%</div>
-      </div>
-      <div class="job-desc">Build full-stack features with Node.js, React, and PostgreSQL. Own projects from database to UI.</div>
-      <div class="job-skills">
-        <span class="skill-tag">javascript</span>
-        <span class="skill-tag">node.js</span>
-        <span class="skill-tag">react</span>
-        <span class="skill-tag">sql</span>
-      </div>
-    </div>
-
-    <!-- Job 4 -->
-    <div class="job-card">
-      <div class="job-header">
-        <div>
-          <div class="job-title">Data Analyst</div>
-          <div class="job-company">Analytics Pro · Boston, MA</div>
-        </div>
-        <div class="job-match" id="match4">0%</div>
-      </div>
-      <div class="job-desc">Start your data analytics career! We'll train you. Work with SQL, Python, and Tableau.</div>
-      <div class="job-skills">
-        <span class="skill-tag">sql</span>
-        <span class="skill-tag">python</span>
-        <span class="skill-tag">data analysis</span>
-      </div>
-    </div>
-
-    <!-- Job 5 -->
-    <div class="job-card">
-      <div class="job-header">
-        <div>
-          <div class="job-title">DevOps Engineer</div>
-          <div class="job-company">CloudSystems · Seattle, WA · 🌐 Remote</div>
-        </div>
-        <div class="job-match" id="match5">0%</div>
-      </div>
-      <div class="job-desc">Architect and maintain cloud infrastructure on AWS. Design CI/CD pipelines and manage Kubernetes.</div>
-      <div class="job-skills">
-        <span class="skill-tag">aws</span>
-        <span class="skill-tag">docker</span>
-        <span class="skill-tag">kubernetes</span>
-        <span class="skill-tag">python</span>
-      </div>
-    </div>
+<!-- Detail Modal -->
+<div id="modal" class="tm-modal">
+  <div class="tm-modal-content">
+    <button class="tm-modal-close" onclick="closeModal()">&times;</button>
+    <div id="modalContent"></div>
   </div>
 </div>
 
 <script>
-// Calculate and display match percentages based on user skills
-(function() {
+let userProfile = null;
+let jobs = [];
+let jobMatches = {};
+
+async function init() {
   try {
-    const jobSkillsList = [
-      ['javascript', 'react', 'typescript', 'css', 'leadership'],
-      ['product management', 'data analysis', 'communication', 'strategy'],
-      ['javascript', 'node.js', 'react', 'sql', 'rest api'],
-      ['sql', 'python', 'data analysis', 'tableau'],
-      ['aws', 'docker', 'kubernetes', 'python', 'ci/cd']
-    ];
-
-    let userSkills = [];
-    try {
-      const saved = localStorage.getItem('trazerr.skills');
-      if (saved) userSkills = JSON.parse(saved);
-    } catch (e) {}
-
-    function calculateMatch(jobSkills) {
-      if (!userSkills || userSkills.length === 0) return 0;
-      const matched = jobSkills.filter(skill =>
-        userSkills.some(us =>
-          skill.toLowerCase().includes(us.toLowerCase()) ||
-          us.toLowerCase().includes(skill.toLowerCase())
-        )
-      ).length;
-      return Math.round((matched / jobSkills.length) * 100);
+    // Load user's Career DNA from localStorage
+    const saved = localStorage.getItem('trazerr.profile.v3');
+    if (!saved) {
+      showError('Please build your Career DNA first on the main page.');
+      return;
     }
 
-    for (let i = 0; i < jobSkillsList.length; i++) {
-      const match = calculateMatch(jobSkillsList[i]);
-      const el = document.getElementById('match' + (i + 1));
-      if (el) el.textContent = match + '%';
-    }
+    userProfile = JSON.parse(saved);
+
+    // Load sample jobs (in production, these would come from your database)
+    loadSampleJobs();
+
+    // Analyze jobs and calculate matches
+    await analyzeJobs();
+
+    renderJobs();
   } catch (e) {
-    console.error('Error calculating matches:', e);
+    showError('Error loading page: ' + e.message);
   }
-})();
+}
+
+function loadSampleJobs() {
+  jobs = [
+    {
+      id: 1,
+      title: 'Senior Frontend Engineer',
+      company: 'TechCorp',
+      location: 'San Francisco, CA',
+      description: 'Lead frontend architecture and mentor junior engineers. Build scalable React applications. 5+ years required with TypeScript and modern CSS.'
+    },
+    {
+      id: 2,
+      title: 'Product Manager',
+      company: 'InnovateLabs',
+      location: 'New York, NY',
+      description: 'Drive product strategy for AI analytics platform. Work with engineering and customers. 3-5 years of product management experience required.'
+    },
+    {
+      id: 3,
+      title: 'Full Stack Engineer',
+      company: 'StartupHub',
+      location: 'Remote',
+      description: 'Build complete features from database to UI. Use Node.js, React, PostgreSQL. Own projects end-to-end.'
+    },
+    {
+      id: 4,
+      title: 'Data Analyst',
+      company: 'Analytics Pro',
+      location: 'Boston, MA',
+      description: 'Start your data career. Learn SQL, Python, Tableau. Analyze business metrics and create dashboards.'
+    },
+    {
+      id: 5,
+      title: 'DevOps Engineer',
+      company: 'CloudSystems',
+      location: 'Seattle, WA',
+      description: 'Architect AWS infrastructure and CI/CD pipelines. Manage Kubernetes clusters. Ensure 99.9% uptime. 5+ years required.'
+    }
+  ];
+}
+
+async function analyzeJobs() {
+  const content = document.getElementById('content');
+  content.innerHTML = '<div class="tm-loading"><p>Analyzing ' + jobs.length + ' jobs against your Career DNA...</p></div>';
+
+  for (const job of jobs) {
+    try {
+      console.log('Matching job:', job.title);
+      const response = await fetch('/api/app?action=match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile: userProfile,
+          job: {
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            description: job.description
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        jobMatches[job.id] = data.fit;
+        console.log('Match for', job.title, ':', data.fit.fitScore);
+      } else {
+        console.error('Match failed for', job.title);
+        jobMatches[job.id] = { fitScore: 0, summary: 'Analysis failed', factors: [] };
+      }
+    } catch (e) {
+      console.error('Error matching job:', e);
+      jobMatches[job.id] = { fitScore: 0, summary: 'Error: ' + e.message, factors: [] };
+    }
+  }
+}
+
+function renderJobs() {
+  const sorted = jobs.sort((a, b) => {
+    const matchA = jobMatches[a.id]?.fitScore || 0;
+    const matchB = jobMatches[b.id]?.fitScore || 0;
+    return matchB - matchA;
+  });
+
+  document.getElementById('content').innerHTML = `
+    <div class="tm-jobs-list">
+      ${sorted.map(job => {
+        const match = jobMatches[job.id] || { fitScore: 0, summary: '', factors: [] };
+        const factors = match.factors || [];
+        return `
+          <div class="tm-job-item" onclick="showDetail(${job.id})">
+            <div class="tm-job-header">
+              <div>
+                <h3 class="tm-job-title">${job.title}</h3>
+                <div class="tm-job-company">${job.company} · ${job.location}</div>
+              </div>
+              <div>
+                <div class="tm-fit-score">${match.fitScore}%</div>
+                <div class="tm-fit-label">Career Fit</div>
+              </div>
+            </div>
+            <div class="tm-job-summary">${match.summary || 'Analyzing...'}</div>
+            ${factors.length > 0 ? `
+              <div class="tm-factors">
+                ${factors.slice(0, 5).map(f => `
+                  <div class="tm-factor">
+                    <div class="tm-factor-name">${f.name}</div>
+                    <div class="tm-factor-score">${f.score}%</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function showDetail(jobId) {
+  const job = jobs.find(j => j.id === jobId);
+  const match = jobMatches[jobId];
+
+  let html = `
+    <h2>${job.title}</h2>
+    <p><strong>${job.company}</strong> · ${job.location}</p>
+    <h3>Career Fit: ${match.fitScore}%</h3>
+    <p>${match.summary}</p>
+  `;
+
+  if (match.factors && match.factors.length > 0) {
+    html += '<h4>Detailed Factors:</h4>';
+    for (const factor of match.factors) {
+      html += `
+        <div style="margin-bottom: 16px; padding: 12px; background: #f5f7fa; border-radius: 8px;">
+          <strong>${factor.name}: ${factor.score}%</strong>
+          <p style="margin: 8px 0 0; font-size: 13px; color: #555;">${factor.note}</p>
+        </div>
+      `;
+    }
+  }
+
+  html += `
+    <h4>Job Description:</h4>
+    <p>${job.description}</p>
+    <button onclick="closeModal()" style="padding: 12px 24px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px;">Close</button>
+  `;
+
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function searchJobs() {
+  const query = document.getElementById('jobSearch').value.toLowerCase();
+  if (!query) {
+    renderJobs();
+    return;
+  }
+
+  const filtered = jobs.filter(j =>
+    j.title.toLowerCase().includes(query) ||
+    j.company.toLowerCase().includes(query)
+  );
+
+  document.getElementById('content').innerHTML = `
+    <div class="tm-jobs-list">
+      ${filtered.map(job => {
+        const match = jobMatches[job.id] || { fitScore: 0, summary: '' };
+        return `
+          <div class="tm-job-item" onclick="showDetail(${job.id})">
+            <div class="tm-job-header">
+              <div>
+                <h3 class="tm-job-title">${job.title}</h3>
+                <div class="tm-job-company">${job.company} · ${job.location}</div>
+              </div>
+              <div>
+                <div class="tm-fit-score">${match.fitScore}%</div>
+                <div class="tm-fit-label">Career Fit</div>
+              </div>
+            </div>
+            <div class="tm-job-summary">${match.summary || 'Analyzing...'}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function showError(msg) {
+  document.getElementById('error').textContent = msg;
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('content').innerHTML = '';
+}
+
+// Initialize
+init();
 </script>
 
 </body>
