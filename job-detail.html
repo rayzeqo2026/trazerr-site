@@ -285,8 +285,6 @@ body {
 </div>
 
 <script>
-document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h2>🔄 Initializing...</h2><p>Please wait while we load your job details.</p></div>' + document.body.innerHTML;
-
 const API = "/api/app";
 const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js";
 const SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
@@ -477,18 +475,17 @@ async function deleteJobAndReturn() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    showOnPage("🔐 Authenticating...");
-    const ok = await initAuth();
-
-    if (!ok) {
-      showOnPage("❌ Authentication failed - redirecting to login...");
-      return;
-    }
-
     showOnPage("📡 Loading job details...");
+
+    // Load job details first (RLS allows public open jobs without auth)
     await loadJobDetail();
+
+    // Auth can happen in background for delete functionality
+    showOnPage("✅ Ready");
+    await initAuth().catch(() => {});
+
   } catch (e) {
-    showOnPage("❌ Fatal error: " + e.message);
+    showOnPage("❌ Error: " + (e?.message || "Unknown error"));
   }
 });
 </script>
