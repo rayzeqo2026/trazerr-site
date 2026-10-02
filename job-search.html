@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Find Jobs · Trazerr</title>
+<meta name="description" content="Search for jobs and see how your experience matches. Apply and get instant feedback on fit.">
+<meta name="theme-color" content="#FFFFFF">
+<script>(function(){
+  var root=document.documentElement, t="light";
+  try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}
+  root.dataset.theme=t;
+  if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#0E1628";
+  root.dataset.design="1";
+})()</script>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+.search-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.search-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.search-header h1 {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.search-header p {
+  font-size: 16px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.search-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.search-form input {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.search-form input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-light);
+}
+
+.search-form button {
+  padding: 12px 24px;
+}
+
+.job-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.job-item {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.job-item:hover {
+  border-color: var(--blue);
+  box-shadow: 0 4px 12px rgba(0, 102, 224, 0.08);
+}
+
+.job-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.job-item-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.job-item-code {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: var(--blue);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.job-item-company {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin-bottom: 12px;
+}
+
+.job-item-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 12px;
+}
+
+.job-item-desc {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.job-item-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--blue-light);
+  color: var(--blue);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-2);
+}
+
+.empty-state p {
+  margin: 12px 0;
+}
+
+/* Modal for job details and application */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--bg);
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+
+.modal-close:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="emp-head">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/logo.png" alt="" width="36" height="36">Trazerr</a>
+    <button class="btn btn-quiet btn-sm" id="signInBtn" type="button">Sign in</button>
+  </div>
+</header>
+
+<main id="main" class="search-page">
+  <div class="search-header">
+    <h1>Find jobs that match your experience</h1>
+    <p>Search by company code or name to find opportunities where you actually fit.</p>
+  </div>
+
+  <div class="search-form">
+    <input type="text" id="searchInput" placeholder="e.g., Wellness Medical or WLMD" />
+    <button class="btn btn-primary" id="searchBtn">Search</button>
+  </div>
+
+  <div id="results" class="job-grid"></div>
+</main>
+
+<!-- Job Detail Modal -->
+<div class="modal" id="jobModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeJobModal()">×</button>
+    <h2 id="modalJobTitle"></h2>
+    <p id="modalJobCompany" style="color: var(--ink-2); margin-bottom: 16px;"></p>
+    <p id="modalJobDesc" style="line-height: 1.6; margin-bottom: 20px;"></p>
+
+    <div style="margin-bottom: 20px;">
+      <strong>Required skills:</strong>
+      <div id="modalJobRequired" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="applyForJob()" style="width: 100%;">Apply with your resume</button>
+  </div>
+</div>
+
+<footer class="emp-foot"><div class="wrap"><a href="/">Trazerr for job seekers</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:hello@trazerr.com">hello@trazerr.com</a></div></footer>
+
+<script src="/assets/job-search.js"></script>
+</body>
+</html>

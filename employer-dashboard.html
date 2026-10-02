@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard · Trazerr for employers</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Manage job postings and find candidates whose experience matches your requirements.">
+<meta name="theme-color" content="#FFFFFF">
+<script>(function(){
+  var root=document.documentElement, t="light";
+  try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}
+  root.dataset.theme=t;
+  if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#0E1628";
+  root.dataset.design="1";
+})()</script>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+/* Dashboard specific styles */
+.dash-container {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0;
+  height: 100vh;
+  background: var(--bg);
+}
+
+.dash-sidebar {
+  background: var(--bg-2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+.dash-sidebar nav a {
+  display: block;
+  padding: 12px 20px;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.dash-sidebar nav a:hover {
+  background: var(--bg-3);
+  color: var(--ink);
+}
+
+.dash-sidebar nav a.active {
+  background: var(--blue-light);
+  color: var(--blue);
+  border-left-color: var(--blue);
+}
+
+.dash-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-header {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dash-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.dash-section {
+  display: none;
+}
+
+.dash-section.active {
+  display: block;
+}
+
+/* Job form */
+.job-form {
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  background: var(--bg);
+  color: var(--ink);
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-light);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.skill-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.skill-input-group input {
+  flex: 1;
+}
+
+.skill-input-group button {
+  flex-shrink: 0;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--blue-light);
+  color: var(--blue);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.skill-tag button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Job list */
+.job-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.job-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 4px 12px rgba(0, 102, 224, 0.08);
+}
+
+.job-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.job-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.job-card-code {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-light);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.job-card-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.job-card-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.job-card-status.open {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.job-card-status.closed {
+  background: rgba(107, 114, 128, 0.1);
+  color: rgb(107, 114, 128);
+}
+
+/* Application list */
+.app-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.app-card:hover {
+  border-color: var(--blue);
+  background: var(--bg-3);
+}
+
+.app-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.app-card-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.match-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--blue);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.app-card-summary {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .dash-container {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-sidebar {
+    display: none;
+  }
+}
+</style>
+</head>
+<body>
+<div class="dash-container">
+  <aside class="dash-sidebar">
+    <nav id="sidebarNav">
+      <a href="#" data-section="overview" class="active">Overview</a>
+      <a href="#" data-section="jobs">My Jobs</a>
+      <a href="#" data-section="create">Post a Job</a>
+      <a href="#" data-section="applications">Applications</a>
+      <a href="#" data-section="profile">Company Profile</a>
+    </nav>
+  </aside>
+
+  <div class="dash-main">
+    <header class="dash-header">
+      <div>
+        <h1 style="margin: 0; font-size: 20px;">Trazerr Employer Dashboard</h1>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span id="companyName" style="font-size: 14px; color: var(--ink-2);"></span>
+        <button class="btn btn-quiet btn-sm" id="signOut">Sign out</button>
+      </div>
+    </header>
+
+    <main class="dash-content">
+      <!-- Overview Section -->
+      <section class="dash-section active" id="overview">
+        <h2>Welcome to your Trazerr dashboard</h2>
+        <p style="color: var(--ink-2);">Manage your job postings and review candidates.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 24px 0;">
+          <div class="sheet" style="padding: 16px;">
+            <div style="font-size: 28px; font-weight: 700; color: var(--blue);" id="overviewActiveJobs">0</div>
+            <div style="font-size: 13px; color: var(--ink-2); margin-top: 4px;">Active job postings</div>
+          </div>
+          <div class="sheet" style="padding: 16px;">
+            <div style="font-size: 28px; font-weight: 700; color: var(--blue);" id="overviewNewApps">0</div>
+            <div style="font-size: 13px; color: var(--ink-2); margin-top: 4px;">New applications</div>
+          </div>
+          <div class="sheet" style="padding: 16px;">
+            <div style="font-size: 28px; font-weight: 700; color: var(--blue);" id="overviewAvgMatch">—</div>
+            <div style="font-size: 13px; color: var(--ink-2); margin-top: 4px;">Avg match score</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="window.dashboard.showSection('create')" style="margin-top: 16px;">Post a New Job</button>
+      </section>
+
+      <!-- Create Job Section -->
+      <section class="dash-section" id="create">
+        <h2>Post a New Job</h2>
+
+        <form class="job-form" id="jobForm">
+          <div class="form-group">
+            <label for="jobTitle">Job Title</label>
+            <input type="text" id="jobTitle" required placeholder="e.g., Senior Product Manager">
+          </div>
+
+          <div class="form-group">
+            <label for="jobDesc">Job Description</label>
+            <textarea id="jobDesc" required placeholder="Describe the role, responsibilities, and what success looks like..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="expLevel">Experience Level</label>
+            <select id="expLevel" required>
+              <option value="">Select level</option>
+              <option value="entry">Entry level</option>
+              <option value="mid">Mid level</option>
+              <option value="senior">Senior level</option>
+              <option value="lead">Lead / Manager</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Required Skills</label>
+            <div class="skill-input-group">
+              <input type="text" id="requiredSkillInput" placeholder="e.g., Node.js" />
+              <button type="button" class="btn btn-primary" onclick="window.dashboard.addSkill('required')">Add</button>
+            </div>
+            <div class="skill-list" id="requiredSkillsList"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Nice to Have Skills</label>
+            <div class="skill-input-group">
+              <input type="text" id="niceSkillInput" placeholder="e.g., AWS" />
+              <button type="button" class="btn btn-primary" onclick="window.dashboard.addSkill('nice')">Add</button>
+            </div>
+            <div class="skill-list" id="niceSkillsList"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" placeholder="e.g., New York, NY">
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="remoteOk"> Remote OK
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Post Job</button>
+        </form>
+      </section>
+
+      <!-- My Jobs Section -->
+      <section class="dash-section" id="jobs">
+        <h2>My Job Postings</h2>
+        <div id="jobsList" style="margin-top: 16px;"></div>
+      </section>
+
+      <!-- Applications Section -->
+      <section class="dash-section" id="applications">
+        <h2>Applications</h2>
+        <div id="applicationsList" style="margin-top: 16px;"></div>
+      </section>
+
+      <!-- Profile Section -->
+      <section class="dash-section" id="profile">
+        <h2>Company Profile</h2>
+        <div class="sheet" style="max-width: 600px; padding: 20px;">
+          <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" id="companyNameField" disabled>
+          </div>
+          <div class="form-group">
+            <label>Contact Name</label>
+            <input type="text" id="contactNameField" disabled>
+          </div>
+          <div class="form-group">
+            <label>Company Code</label>
+            <input type="text" id="companyCodeField" disabled>
+          </div>
+          <p style="color: var(--ink-2); font-size: 13px; margin-top: 16px;">Your company code is shared with candidates to find your job postings.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="/assets/employer-dashboard.js"></script>
+</body>
+</html>
