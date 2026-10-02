@@ -1182,11 +1182,46 @@ function renderTailored(){
     $("oNote").textContent = "Downloaded. It opens in Word or Google Docs." + left();
   };
   $("tPdf").onclick = () => {
-    const w = window.open("", "_blank");
-    if (!w) { $("oNote").textContent = "Your browser blocked the print window. Allow pop-ups for this site, or use Download Word file."; return; }
-    w.document.write(resumeDocHTML(r)); w.document.close(); w.focus();
-    setTimeout(() => w.print(), 400);
-    $("oNote").textContent = "Choose \"Save as PDF\" in the print window." + left();
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const maxWidth = pageWidth - (margin * 2);
+      let yPosition = margin;
+      const lineHeight = 5;
+      const pageBreakThreshold = pageHeight - 20;
+
+      // Get resume text and format it
+      const resumeText = resumeText(r);
+      const lines = doc.splitTextToSize(resumeText, maxWidth);
+
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+
+      lines.forEach((line) => {
+        if (yPosition > pageBreakThreshold) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.text(line, margin, yPosition);
+        yPosition += lineHeight;
+      });
+
+      // Save the PDF
+      const filename = fileBase.replace(/[^\w .-]/g, "") + ".pdf";
+      doc.save(filename);
+      $("oNote").textContent = "Downloaded." + left();
+    } catch (e) {
+      console.error("PDF generation error:", e);
+      // Fallback to print dialog
+      const w = window.open("", "_blank");
+      if (!w) { $("oNote").textContent = "Your browser blocked the print window. Allow pop-ups for this site, or use Download Word file."; return; }
+      w.document.write(resumeDocHTML(r)); w.document.close(); w.focus();
+      setTimeout(() => w.print(), 400);
+      $("oNote").textContent = "Choose \"Save as PDF\" in the print window." + left();
+    }
   };
   $("tCopy").onclick = async () => {
     const text = resumeText(r);
