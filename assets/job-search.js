@@ -75,7 +75,18 @@
             .single();
 
           if (error) {
-            console.log("ℹ️ Resume fetch error (may not exist yet):", error.message);
+            console.warn("⚠️ Resume fetch error:", error.message);
+          }
+
+          if (record) {
+            console.log("✓ Career record found", {
+              hasResume: !!record.resume,
+              hasCareerDna: !!record.career_dna,
+              resumeLength: record.resume?.length || 0,
+              dnalength: record.career_dna ? String(record.career_dna).length : 0
+            });
+          } else {
+            console.warn("⚠️ No career record found for user");
           }
 
           if (record && (record.resume || record.career_dna)) {
@@ -126,21 +137,28 @@
             // Hide resume upload section and show status
             const resumeSection = document.getElementById("resumeSection");
             const statusEl = document.getElementById("resumeStatus");
+            console.log("🔍 Resume section element:", resumeSection ? "found" : "NOT FOUND");
+            console.log("🔍 Resume status element:", statusEl ? "found" : "NOT FOUND");
+
             if (resumeSection) {
               resumeSection.style.display = "none";
+              console.log("✓ Resume upload section hidden");
+
               if (statusEl) {
                 statusEl.innerHTML = `
                   <div class="resume-status ready">
                     ✓ Using saved resume with <strong>${candidateSkills.length} skills</strong> detected
                   </div>
                 `;
+                console.log("✓ Resume status updated");
               }
             }
 
             // Re-render with match scores
             renderResults(allJobs);
+            console.log("✓ Results re-rendered with match scores");
           } else {
-            console.log("ℹ️ No saved resume found in career_records");
+            console.warn("⚠️ No saved resume found in career_records");
           }
         } catch (e) {
           console.log("ℹ️ No saved resume yet, showing upload option:", e.message);
