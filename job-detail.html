@@ -476,6 +476,61 @@ async function deleteJobAndReturn() {
   }
 }
 
+// Try to load job immediately from sessionStorage without waiting for auth
+(function() {
+  try {
+    const stored = sessionStorage.getItem("currentJobDetail");
+    if (stored) {
+      const job = JSON.parse(stored);
+      console.log("Loading from sessionStorage:", job);
+
+      // Populate immediately
+      document.getElementById("jobTitle").textContent = job.title;
+      document.getElementById("jobCode").textContent = job.company_code;
+      document.getElementById("jobLocation").textContent = job.location || "Not specified";
+      document.getElementById("jobRemote").textContent = job.remote_ok ? "Remote available" : "On-site only";
+      document.getElementById("jobDescription").textContent = job.description || "No description provided";
+
+      const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
+
+      // Core skills
+      const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
+      document.getElementById("coreSkills").innerHTML = coreSkills.length
+        ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+        : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
+
+      // Requirements
+      const requirements = (dna.must_have || []).filter(Boolean);
+      document.getElementById("requirements").innerHTML = requirements.length
+        ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+        : "<p style='color: var(--ink-2); margin: 0;'>No requirements identified</p>";
+
+      // Nice to have
+      const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
+      document.getElementById("niceToHave").innerHTML = nice.length
+        ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+        : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
+
+      // Experience areas
+      const experience = (dna.experience_areas || []).filter(Boolean);
+      document.getElementById("experienceAreas").innerHTML = experience.length
+        ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+        : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
+
+      // Responsibilities
+      const resp = (dna.key_responsibilities || []).filter(Boolean);
+      document.getElementById("responsibilities").innerHTML = resp.length
+        ? resp.map(r => `<li>${esc(r)}</li>`).join("")
+        : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
+
+      sessionStorage.removeItem("currentJobDetail");
+      console.log("Job detail loaded successfully!");
+    }
+  } catch (e) {
+    console.error("Error loading job from sessionStorage:", e);
+  }
+})();
+
 document.addEventListener("DOMContentLoaded", async () => {
   showDebug("🚀 Page loaded, initializing auth...");
   const ok = await initAuth();
