@@ -760,24 +760,10 @@ function loadData() {
   }
 }
 
-// Load jobs - try Supabase, fall back to sample jobs immediately
+// Load jobs - use sample jobs (Supabase requires environment config)
 function loadJobs() {
-  console.log('Loading jobs...');
-
-  // Check Supabase config, but don't block on it
-  fetch('/api/app?action=authconfig')
-    .then(r => r.ok ? r.json() : null)
-    .then(cfg => {
-      if (cfg && cfg.url && cfg.anonKey) {
-        fetchJobsFromSupabase();
-      } else {
-        loadSampleJobs();
-      }
-    })
-    .catch(() => {
-      console.log('Using sample jobs (Supabase unavailable)');
-      loadSampleJobs();
-    });
+  console.log('Loading sample jobs...');
+  loadSampleJobs();
 }
 
 async function fetchJobsFromSupabase() {
