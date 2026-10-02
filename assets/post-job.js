@@ -335,7 +335,7 @@ async function extractAndPost() {
 function generateCompanyCode(companyName) {
   const words = companyName.trim().split(/\s+/);
   let code = words.map(w => w[0].toUpperCase()).join("");
-  if (code.length > 3) code = code.slice(0, 3);
+  if (code.length > 2) code = code.slice(0, 2);
 
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
