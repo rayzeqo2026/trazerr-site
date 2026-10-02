@@ -544,7 +544,7 @@
       const isBookmarked = bookmarkedJobs.includes(job.id);
 
       return `
-        <div class="job-item" data-job-id="${esc(job.id)}" style="position: relative; cursor: pointer;" onclick="window.jobSearch && window.jobSearch.selectJob('${esc(job.id)}')">
+        <div class="job-item" data-job-id="${esc(job.id)}" style="position: relative; cursor: pointer;" onclick="if(window.selectJob) window.selectJob('${esc(job.id)}'); return false;">
           ${isBookmarked ? '<div style="position: absolute; top: 12px; right: 12px; color: #ef4444; font-size: 20px;">♥</div>' : ''}
           ${matchScore !== null ? `
             <div class="job-item-match">
@@ -781,6 +781,14 @@
   }
 
   // Export global API
+  // Export all functions to global scope for direct access
+  window.selectJob = selectJob;
+  window.closeJobModal = closeJobModal;
+  window.applyForJob = applyForJob;
+  window.performSearch = performSearch;
+  window.toggleBookmark = toggleBookmark;
+  window.loadAllJobs = loadAllJobs;
+
   window.jobSearch = {
     selectJob,
     closeJobModal: closeJobModal,
@@ -789,8 +797,7 @@
     loadAllJobs
   };
 
-  window.closeJobModal = closeJobModal;
-  window.applyForJob = applyForJob;
+  console.log("✅ Job Search functions exported to window:", Object.keys(window).filter(k => k.match(/selectJob|performSearch|closeJobModal|applyForJob|toggleBookmark|loadAllJobs/)));
 
   // Attach event listeners even if initialization fails
   function setupEventListeners() {
