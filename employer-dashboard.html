@@ -383,6 +383,77 @@
   </div>
 </div>
 
+<!-- Job Detail Modal -->
+<div id="jobDetailModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+  <div style="max-width: 700px; margin: 20px auto; background: var(--bg); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+    <!-- Modal Header -->
+    <div style="padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2 id="modalJobTitle" style="margin: 0 0 8px; font-size: 24px; color: var(--ink);">Job Title</h2>
+        <span id="modalJobCode" style="display: inline-block; background: var(--blue-light); color: var(--blue); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;">CODE</span>
+      </div>
+      <button onclick="window.dashboard.closeJobDetail()" style="background: none; border: none; font-size: 28px; color: var(--ink-2); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>
+    </div>
+
+    <!-- Modal Content -->
+    <div style="padding: 32px; max-height: calc(100vh - 200px); overflow-y: auto;">
+      <!-- Job Description -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--ink);">Job Description</h3>
+        <p id="modalJobDescription" style="margin: 0; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap;"></p>
+      </div>
+
+      <!-- Location & Remote -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px;">
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px;">Location</div>
+          <div id="modalJobLocation" style="color: var(--ink);">Not specified</div>
+        </div>
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px;">Remote OK</div>
+          <div id="modalJobRemote" style="color: var(--ink);">No</div>
+        </div>
+      </div>
+
+      <!-- Core Skills -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--ink);">✓ Core Skills Required</h3>
+        <div id="modalCoreSkills" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <!-- Must Have -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--ink);">⭐ Must Have</h3>
+        <div id="modalMustHave" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <!-- Nice to Have -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--ink);">★ Nice to Have</h3>
+        <div id="modalNiceToHave" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <!-- Experience Areas -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--ink);">📊 Experience Areas</h3>
+        <div id="modalExperienceAreas" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <!-- Key Responsibilities -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--ink);">📋 Key Responsibilities</h3>
+        <ul id="modalResponsibilities" style="margin: 0; padding-left: 20px; color: var(--ink-2); line-height: 1.8;"></ul>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="padding: 20px 32px; border-top: 1px solid var(--border); background: var(--bg-2); display: flex; gap: 12px;">
+      <button onclick="window.dashboard.closeJobDetail()" class="btn btn-quiet" style="flex: 1;">Close</button>
+      <button onclick="window.dashboard.deleteJobFromModal()" class="btn" style="flex: 1; background: #c00; color: white; border-color: #c00;">Delete Job</button>
+    </div>
+  </div>
+</div>
+
 <script src="/assets/employer-dashboard.js"></script>
 </body>
 </html>
