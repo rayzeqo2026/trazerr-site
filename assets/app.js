@@ -627,73 +627,58 @@ function showProfile(p){
 
     console.log("✓ Extracted skills from profile for Trazerr Match:", extractedSkills);
     console.log("📋 Adding Trazerr Match section to overlay");
-
-    // Add Trazerr Match section to the overlay
-    const oBody = $("oBody");
-    if (oBody && window.tmAllJobs) {
-      // Create Trazerr Match HTML for overlay
+    
+    // Wait for jobs to load, then add Trazerr Match to overlay
+    const addTrazerrMatchToOverlay = () => {
+      const oBody = $("oBody");
+      if (!oBody) {
+        setTimeout(addTrazerrMatchToOverlay, 500);
+        return;
+      }
+      
+      if (!window.tmAllJobs || window.tmAllJobs.length === 0) {
+        console.log("   Jobs not loaded yet, retrying...");
+        setTimeout(addTrazerrMatchToOverlay, 500);
+        return;
+      }
+      
+      console.log("Jobs loaded! Rendering " + window.tmAllJobs.length + " jobs in overlay");
+      
       const tmHTML = `
-        <div class="o-sec">
+        <div class="o-sec" style="border-top: 1px solid var(--border); margin-top: 20px; padding-top: 20px;">
           <h3>See how you match with live jobs</h3>
-          <p class="hint">Your Career DNA is being used to rank jobs from our database. Here's how you fit with opportunities available right now.</p>
-          <div style="margin: 20px 0;">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
-              <select id="tmMatchFilterOverlay" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit;">
-                <option value="">All Match Levels</option>
-                <option value="75">Excellent (75%+)</option>
-                <option value="50">Good (50%+)</option>
-              </select>
-              <select id="tmExperienceFilterOverlay" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit;">
-                <option value="">All Levels</option>
-                <option value="entry">Entry</option>
-                <option value="mid">Mid</option>
-                <option value="senior">Senior</option>
-              </select>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; text-align: center; font-size: 13px;">
-              <div><div style="font-size: 20px; font-weight: 700;" id="tmJobsFoundOverlay">0</div>Jobs Found</div>
-              <div><div style="font-size: 20px; font-weight: 700; color: #22c55e;" id="tmStrongMatchesOverlay">0</div>Strong Matches</div>
-              <div><div style="font-size: 20px; font-weight: 700;" id="tmAvgMatchOverlay">0%</div>Avg Match</div>
-            </div>
-            <div id="tmResultsOverlay" style="display: grid; gap: 12px; max-height: 400px; overflow-y: auto;"></div>
-          </div>
+          <p class="hint">Click any job to see detailed fit analysis with missing skills and recommendations.</p>
+          <div style="display: grid; gap: 12px; margin-top: 16px;" id="tmJobsListOverlay"></div>
         </div>
       `;
-      oBody.innerHTML += tmHTML;
-
-      // Populate jobs in overlay
-      const tmResultsOverlay = $("tmResultsOverlay");
-      if (tmResultsOverlay && window.tmAllJobs.length > 0) {
-        console.log("📋 Rendering Trazerr Match jobs in overlay");
-        const jobsHTML = window.tmAllJobs.slice(0, 8).map(job => {
+      
+      if (!$("tmJobsListOverlay")) {
+        oBody.innerHTML += tmHTML;
+      }
+      
+      const jobsList = $("tmJobsListOverlay");
+      if (jobsList && window.tmAllJobs.length > 0) {
+        const jobsHTML = window.tmAllJobs.slice(0, 10).map(job => {
           const score = calculateTMMatchForOverlay(job, extractedSkills);
           return `
-            <div style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 12px; cursor: pointer;">
-              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                <h4 style="margin: 0; font-size: 14px; font-weight: 600;">${job.title}</h4>
-                ${score !== null ? `<div style="background: ${score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${score}%</div>` : ''}
+            <div style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; cursor: pointer;" onclick="if(window.showJobFitAnalysis) window.showJobFitAnalysis(this); return false;">
+              <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                <div style="flex: 1;">
+                  <h4 style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--ink);">${job.title}</h4>
+                  <p style="margin: 0 0 8px; font-size: 12px; color: var(--ink-2);">${job.location || 'Remote'}</p>
+                  <p style="margin: 0; font-size: 13px; color: var(--ink); line-height: 1.4;">${job.description.slice(0, 80)}...</p>
+                </div>
+                ${score !== null ? `<div style="background: ${score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 6px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; min-width: 50px; text-align: center;">${score}%</div>` : '<div style="padding: 6px 10px; font-size: 13px;">N/A</div>'}
               </div>
-              <p style="margin: 4px 0; font-size: 12px; color: var(--ink-2);">${job.location || 'Remote'}</p>
-              <p style="margin: 0; font-size: 12px; color: var(--ink);">${job.description.slice(0, 100)}...</p>
             </div>
           `;
         }).join("");
-        tmResultsOverlay.innerHTML = jobsHTML;
-
-        // Update stats
-        const totalJobs = window.tmAllJobs.length;
-        const strongMatches = window.tmAllJobs.filter(j => calculateTMMatchForOverlay(j, extractedSkills) >= 75).length;
-        const avgMatch = Math.round(window.tmAllJobs.reduce((sum, j) => sum + (calculateTMMatchForOverlay(j, extractedSkills) || 0), 0) / totalJobs);
-
-        const jobsFoundEl = $("tmJobsFoundOverlay");
-        const strongEl = $("tmStrongMatchesOverlay");
-        const avgEl = $("tmAvgMatchOverlay");
-        if (jobsFoundEl) jobsFoundEl.textContent = totalJobs;
-        if (strongEl) strongEl.textContent = strongMatches;
-        if (avgEl) avgEl.textContent = avgMatch + "%";
+        jobsList.innerHTML = jobsHTML;
       }
-    }
-
+    };
+    
+    addTrazerrMatchToOverlay();
+    
     console.log("📋 Dispatching trazerrResumeProcessed event from showProfile");
     document.dispatchEvent(new CustomEvent("trazerrResumeProcessed", {
       detail: { resume: resumeSrc || { kind: "text", text: p.headline }, skills: extractedSkills }
@@ -720,6 +705,78 @@ function calculateTMMatchForOverlay(job, skills) {
   const matched = jobSkills.filter(skill => skills.some(cSkill => skill.includes(cSkill) || cSkill.includes(skill))).length;
   return Math.round((matched / jobSkills.length) * 100);
 }
+window.showJobFitAnalysis = function(element) {
+  // Get job data from the clicked element
+  const jobCard = element.closest('[data-job]');
+  const jobDataStr = jobCard ? jobCard.dataset.job : null;
+  if (!jobDataStr) return;
+  
+  try {
+    const jobData = JSON.parse(decodeURIComponent(jobDataStr));
+    const candidateSkills = window.currentCandidateSkills || [];
+    
+    let jobSkills = [];
+    if (Array.isArray(jobData.required_skills)) {
+      jobSkills = jobData.required_skills.map(s => typeof s === 'string' ? s : (s.name || String(s)));
+    } else if (typeof jobData.required_skills === 'string') {
+      try {
+        const parsed = JSON.parse(jobData.required_skills);
+        jobSkills = Array.isArray(parsed) ? parsed.map(s => typeof s === 'string' ? s : (s.name || String(s))) : [jobData.required_skills];
+      } catch (e) {
+        jobSkills = jobData.required_skills.split(',').map(s => s.trim());
+      }
+    }
+    
+    const matchedSkills = jobSkills.filter(skill => candidateSkills.some(cs => skill.toLowerCase().includes(cs) || cs.includes(skill.toLowerCase())));
+    const missingSkills = jobSkills.filter(skill => !matchedSkills.includes(skill));
+    const matchScore = jobSkills.length > 0 ? Math.round((matchedSkills.length / jobSkills.length) * 100) : 0;
+    
+    const fitHTML = `
+      <div style="padding: 0;">
+        <div style="margin-bottom: 24px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">${jobData.title}</h2>
+          <p style="margin: 0 0 12px; color: var(--ink-2);">${jobData.location || 'Remote'}</p>
+          <div style="display: inline-block; background: ${matchScore >= 75 ? '#22c55e' : matchScore >= 50 ? '#f59e0b' : '#ef4444'}; color: white; padding: 8px 14px; border-radius: 6px; font-size: 16px; font-weight: 700;">
+            ${matchScore}% Match
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h3 style="margin: 0 0 12px; font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--ink-2);">Skills You Have</h3>
+          <div style="display: grid; gap: 8px;">
+            ${matchedSkills.map(skill => `<div style="padding: 8px 12px; background: #dffce0; border-left: 3px solid #22c55e; border-radius: 4px; font-size: 13px;"><span style="color: #22c55e; font-weight: 600;">✓</span> ${skill}</div>`).join('')}
+            ${matchedSkills.length === 0 ? '<p style="color: var(--ink-2); font-size: 13px;">No matching skills detected yet</p>' : ''}
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h3 style="margin: 0 0 12px; font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--ink-2);">Skills Missing</h3>
+          <div style="display: grid; gap: 8px;">
+            ${missingSkills.map(skill => `<div style="padding: 8px 12px; background: #fee2e2; border-left: 3px solid #ef4444; border-radius: 4px; font-size: 13px;"><span style="color: #ef4444; font-weight: 600;">✗</span> ${skill}</div>`).join('')}
+            ${missingSkills.length === 0 ? '<p style="color: var(--ink-2); font-size: 13px;">You have all required skills!</p>' : ''}
+          </div>
+        </div>
+        
+        <div style="background: var(--bg-2); padding: 14px; border-radius: 6px; margin-bottom: 20px;">
+          <h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 600;">How to improve your fit:</h3>
+          <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
+            <li>Gain experience with ${missingSkills.slice(0, 2).join(' and ')}</li>
+            <li>Highlight how your current skills transfer to this role</li>
+            <li>Take courses or certifications in the missing areas</li>
+            <li>Look for projects that combine your skills with the required ones</li>
+          </ul>
+        </div>
+        
+        <p style="margin: 0; font-size: 12px; color: var(--ink-2);">${jobData.description.slice(0, 200)}...</p>
+      </div>
+    `;
+    
+    openOverlay(jobData.title, fitHTML);
+  } catch (e) {
+    console.error("Error showing job fit analysis:", e);
+  }
+};
+
 function resetForm(){ picked = null; $("file").value = ""; $("fileName").hidden = true; $("paste").value = ""; setStatus($("status"), ""); }
 
 /* ---------- Career DNA card ---------- */
