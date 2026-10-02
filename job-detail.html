@@ -351,26 +351,39 @@ async function loadJobDetail() {
     showDebug("📍 Fetching job from Supabase...");
     const params = new URLSearchParams(window.location.search);
     const jobId = params.get("id");
+    showDebug("🔍 Job ID from URL: " + (jobId || "MISSING"));
 
     if (!jobId) {
       throw new Error("No job ID in URL");
     }
 
+    showDebug("🔐 Checking auth...");
+    const { data: { session } } = await sb.auth.getSession();
+    showDebug("👤 User: " + (session?.user?.email || "NOT LOGGED IN"));
+
+    showDebug("📡 Querying Supabase...");
     const { data: job, error } = await sb
       .from("job_postings")
       .select("*")
       .eq("id", jobId)
       .single();
 
+    showDebug("📊 Query result - error: " + (error ? error.message : "none") + ", data: " + (job ? "YES" : "NO"));
+
     if (error) {
-      throw new Error("Job not found: " + error.message);
+      throw new Error("Supabase query failed: " + error.message + " (code: " + error.code + ")");
     }
 
-    currentJob = job;
+    if (!job) {
+      throw new Error("Job not found in database");
+    }
+
     showDebug("✅ Job loaded: " + job.title);
+    currentJob = job;
     displayJobDetail(job);
   } catch (e) {
     console.error("Error loading job:", e);
+    showDebug("❌ ERROR: " + e.message);
     document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error loading job</h1><p>${esc(e.message)}</p><p style="font-size: 12px; margin-top: 16px; color: var(--ink-2);">Check browser console (F12) for details</p><a href="/employer-dashboard.html" style="color: var(--blue); margin-top: 16px; display: inline-block;">← Go back</a></div>`;
   }
 }
