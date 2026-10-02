@@ -4,17 +4,18 @@ const SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4IT
 
 let sb = null;
 let currentEmployer = null;
+let selectedFile = null;
 
 function showError(msg) {
   const el = document.getElementById("errorMsg");
-  el.textContent = msg;
+  el.innerHTML = "⚠️ " + msg;
   el.style.display = "block";
   document.getElementById("successMsg").style.display = "none";
 }
 
 function showSuccess(msg) {
   const el = document.getElementById("successMsg");
-  el.textContent = msg;
+  el.innerHTML = "✓ " + msg;
   el.style.display = "block";
   document.getElementById("errorMsg").style.display = "none";
 }
@@ -29,6 +30,53 @@ function loadScript(src, integrity) {
     s.onerror = rej;
     document.head.appendChild(s);
   });
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'text/plain'];
+  if (!validTypes.includes(file.type)) {
+    showError("Please upload a PDF, Word, or text file");
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    showError("File must be less than 10MB");
+    return;
+  }
+
+  selectedFile = file;
+  updateFileList();
+  document.getElementById("errorMsg").style.display = "none";
+}
+
+function updateFileList() {
+  const list = document.getElementById("fileList");
+  if (!selectedFile) {
+    list.innerHTML = "";
+    return;
+  }
+
+  list.innerHTML = `
+    <div class="file-tag">
+      📄 ${escapeHtml(selectedFile.name)}
+      <button type="button" onclick="selectedFile=null; updateFileList();">×</button>
+    </div>
+  `;
+}
+
+function clearForm() {
+  document.getElementById("jobDesc").value = "";
+  document.getElementById("jobTitle").value = "";
+  document.getElementById("location").value = "";
+  document.getElementById("remoteOk").checked = false;
+  selectedFile = null;
+  updateFileList();
+  document.getElementById("skillsDisplay").innerHTML = "";
+  document.getElementById("errorMsg").style.display = "none";
+  document.getElementById("successMsg").style.display = "none";
 }
 
 async function initAuth() {
@@ -71,7 +119,7 @@ async function initAuth() {
     }
 
     if (employer.status !== "approved") {
-      showError("Your employer profile is not yet approved.");
+      showError("Your employer profile is not yet approved. Please wait for admin approval.");
       return false;
     }
 
@@ -89,6 +137,7 @@ async function extractAndPost() {
   const location = document.getElementById("location").value.trim();
   const remoteOk = document.getElementById("remoteOk").checked;
   const btn = document.getElementById("extractBtn");
+  const btnText = document.getElementById("btnText");
 
   if (!desc) {
     showError("Please paste a job description");
@@ -101,7 +150,7 @@ async function extractAndPost() {
   }
 
   btn.disabled = true;
-  btn.textContent = "Analyzing with AI...";
+  btnText.innerHTML = '<span class="loading-spinner"></span> Analyzing with AI...';
 
   try {
     const { data: { session } } = await sb.auth.getSession();
@@ -128,7 +177,8 @@ async function extractAndPost() {
         location,
         remote_ok: remoteOk,
         required_skills: [],
-        nice_to_have: []
+        nice_to_have: [],
+        document_name: selectedFile ? selectedFile.name : null
       })
     });
 
@@ -142,11 +192,17 @@ async function extractAndPost() {
     // Show extracted skills
     const skills = job.job_dna || {};
     let html = `<div class="skills-display">
-      <h3 style="margin-top: 0;">AI Extracted Skills</h3>
-      <p style="color: var(--ink-2); font-size: 13px; margin: 0 0 12px;">Here are the skills identified in your job description:</p>`;
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+        <div>
+          <h3 style="margin: 0 0 8px; font-size: 18px;">🎯 AI-Extracted Skills</h3>
+          <p style="color: var(--ink-2); font-size: 13px; margin: 0;">Here's what we found in your job description:</p>
+        </div>
+        <div class="company-badge">${escapeHtml(companyCode)}</div>
+      </div>`;
 
     if (skills.required_skills && skills.required_skills.length) {
-      html += `<div><strong>Required:</strong><br>`;
+      html += `<div class="skills-section">
+        <div class="skills-title">✓ Required Skills</div>`;
       skills.required_skills.forEach(s => {
         html += `<span class="skill-tag">${escapeHtml(s)}</span>`;
       });
@@ -154,35 +210,41 @@ async function extractAndPost() {
     }
 
     if (skills.nice_to_have && skills.nice_to_have.length) {
-      html += `<div style="margin-top: 12px;"><strong>Nice to Have:</strong><br>`;
+      html += `<div class="skills-section">
+        <div class="skills-title">★ Nice to Have</div>`;
       skills.nice_to_have.forEach(s => {
         html += `<span class="skill-tag">${escapeHtml(s)}</span>`;
       });
       html += `</div>`;
     }
 
-    html += `<p style="margin-top: 12px; color: var(--ink-2); font-size: 13px;">
-      ✓ Job posted successfully!<br>
-      Company code: <strong>${escapeHtml(companyCode)}</strong><br>
-      Candidates can now search and apply using this code.
-    </p></div>`;
+    if (skills.experience_level) {
+      html += `<div class="skills-section">
+        <div class="skills-title">📊 Experience Level</div>
+        <span class="skill-tag">${escapeHtml(skills.experience_level)}</span>
+      </div>`;
+    }
+
+    html += `<div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
+      <p style="margin: 0; color: var(--ink-2); font-size: 13px;">
+        <strong>Job posted successfully!</strong><br>
+        Candidates can search for jobs using the company code <strong>${escapeHtml(companyCode)}</strong>
+      </p>
+    </div></div>`;
 
     document.getElementById("skillsDisplay").innerHTML = html;
-    showSuccess("✓ Job posted successfully! Candidates can now search and apply.");
+    showSuccess("✨ Perfect! Your job has been posted. Candidates can now search and apply.");
 
-    // Clear form
+    // Clear form after 1.5 seconds
     setTimeout(() => {
-      document.getElementById("jobDesc").value = "";
-      document.getElementById("jobTitle").value = "";
-      document.getElementById("location").value = "";
-      document.getElementById("remoteOk").checked = false;
-    }, 1000);
+      clearForm();
+    }, 1500);
 
   } catch (e) {
-    showError("Error: " + (e.message || e));
+    showError(e.message || e);
   } finally {
     btn.disabled = false;
-    btn.textContent = "Extract Skills & Post Job";
+    btnText.innerHTML = "✨ Extract Skills & Post Job";
   }
 }
 
@@ -202,8 +264,34 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
-// Initialize on page load
+// Drag and drop support
 document.addEventListener("DOMContentLoaded", async () => {
+  const uploadArea = document.querySelector(".upload-area");
+  if (uploadArea) {
+    uploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = "var(--blue)";
+      uploadArea.style.background = "rgba(0, 102, 224, 0.08)";
+    });
+
+    uploadArea.addEventListener("dragleave", () => {
+      uploadArea.style.borderColor = "var(--border)";
+      uploadArea.style.background = "rgba(0, 102, 224, 0.02)";
+    });
+
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = "var(--border)";
+      uploadArea.style.background = "rgba(0, 102, 224, 0.02)";
+
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        document.getElementById("fileInput").files = files;
+        handleFileSelect({ target: { files } });
+      }
+    });
+  }
+
   const ok = await initAuth();
   if (!ok) {
     document.getElementById("extractBtn").disabled = true;
