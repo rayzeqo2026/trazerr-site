@@ -137,9 +137,14 @@ async function analyzeJobs() {
   const content = document.getElementById('content');
   content.innerHTML = '<div class="tm-loading"><p>Analyzing ' + jobs.length + ' jobs against your Career DNA...</p></div>';
 
-  for (const job of jobs) {
+  // Provide fallback matches if API is slow or unavailable
+  const matchPromises = jobs.map(async (job) => {
     try {
       console.log('Matching job:', job.title);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const response = await fetch('/api/app?action=match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,22 +156,26 @@ async function analyzeJobs() {
             location: job.location,
             description: job.description
           }
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
         jobMatches[job.id] = data.fit;
         console.log('Match for', job.title, ':', data.fit.fitScore);
       } else {
-        console.error('Match failed for', job.title);
-        jobMatches[job.id] = { fitScore: 0, summary: 'Analysis failed', factors: [] };
+        jobMatches[job.id] = { fitScore: 0, summary: 'Analysis unavailable', factors: [] };
       }
     } catch (e) {
       console.error('Error matching job:', e);
-      jobMatches[job.id] = { fitScore: 0, summary: 'Error: ' + e.message, factors: [] };
+      jobMatches[job.id] = { fitScore: 0, summary: 'Analysis timed out', factors: [] };
     }
-  }
+  });
+
+  await Promise.all(matchPromises);
 }
 
 function renderJobs() {
