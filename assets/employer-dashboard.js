@@ -83,14 +83,20 @@
         .eq("user_id", session.user.id)
         .single();
 
-      if (error || !employer) {
-        console.error("No employer profile found");
-        window.location.href = "/employers.html";
+      if (error) {
+        console.error("Employer profile query error:", error);
+        document.body.innerHTML = "<main style='padding: 32px'><p style='color:red;'><b>Error:</b> " + esc(error.message) + "</p><p>Make sure your employer profile exists in Supabase.</p><p><a href='/employers.html'>Go back</a></p></main>";
+        return null;
+      }
+
+      if (!employer) {
+        console.error("No employer profile found for user:", session.user.id);
+        document.body.innerHTML = "<main style='padding: 32px'><p style='color:red;'><b>No employer profile found.</b></p><p>Please create a profile on the employers page first.</p><p><a href='/employers.html'>Create profile</a></p></main>";
         return null;
       }
 
       if (employer.status !== "approved") {
-        document.body.innerHTML = "<main style='padding: 32px'><h1>Waiting for approval</h1><p>Your employer profile is pending admin approval. We'll email you once it's ready.</p><p><a href='/'>Go home</a></p></main>";
+        document.body.innerHTML = "<main style='padding: 32px'><h1>Waiting for approval</h1><p>Your employer profile status: <b>" + esc(employer.status) + "</b></p><p>Your employer profile is pending admin approval. We'll email you once it's ready.</p><p><a href='/employers.html'>Go back</a></p></main>";
         return null;
       }
 
