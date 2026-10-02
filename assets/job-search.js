@@ -804,25 +804,64 @@
     const resumeFile = document.getElementById("resumeFile");
     const searchBtn = document.getElementById("searchBtn");
     const searchInput = document.getElementById("searchInput");
+    const modalCloseBtn = document.querySelector(".modal-close");
+    const applyBtn = document.querySelector("button[onclick*='applyForJob']");
+    const bookmarkBtn = document.getElementById("bookmarkBtn");
 
     if (resumeFile && !resumeFile.hasAttribute("data-listener-attached")) {
       resumeFile.addEventListener("change", handleResumeUpload);
       resumeFile.setAttribute("data-listener-attached", "true");
-      console.log("✓ Resume upload handler attached (fallback)");
+      console.log("✓ Resume upload handler attached");
     }
 
     if (searchBtn && !searchBtn.hasAttribute("data-listener-attached")) {
-      searchBtn.addEventListener("click", performSearch);
+      searchBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        performSearch();
+      });
       searchBtn.setAttribute("data-listener-attached", "true");
-      console.log("✓ Search button handler attached (fallback)");
+      console.log("✓ Search button handler attached");
     }
 
     if (searchInput && !searchInput.hasAttribute("data-listener-attached")) {
       searchInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") performSearch();
+        if (e.key === "Enter") {
+          e.preventDefault();
+          performSearch();
+        }
       });
       searchInput.setAttribute("data-listener-attached", "true");
-      console.log("✓ Search input handler attached (fallback)");
+      console.log("✓ Search input handler attached");
+    }
+
+    if (modalCloseBtn && !modalCloseBtn.hasAttribute("data-listener-attached")) {
+      modalCloseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeJobModal();
+      });
+      modalCloseBtn.setAttribute("data-listener-attached", "true");
+      console.log("✓ Modal close button handler attached");
+    }
+
+    if (applyBtn && !applyBtn.hasAttribute("data-listener-attached")) {
+      applyBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        applyForJob();
+      });
+      applyBtn.setAttribute("data-listener-attached", "true");
+      console.log("✓ Apply button handler attached");
+    }
+
+    if (bookmarkBtn && !bookmarkBtn.hasAttribute("data-listener-attached")) {
+      bookmarkBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleBookmark();
+      });
+      bookmarkBtn.setAttribute("data-listener-attached", "true");
+      console.log("✓ Bookmark button handler attached");
     }
 
     // Keyboard navigation for modal
@@ -832,6 +871,8 @@
         closeJobModal();
       }
     });
+
+    console.log("✅ All event listeners attached");
   }
 
   // Initialize immediately if DOM is already loaded, otherwise wait for event
