@@ -135,20 +135,31 @@
 
             console.log(`✓ Extracted ${candidateSkills.length} skills from saved resume`);
 
-            // Hide resume upload section and show status
+            // Update resume section to show it's loaded
             const resumeSection = document.getElementById("resumeSection");
             const statusEl = document.getElementById("resumeStatus");
             console.log("🔍 Resume section element:", resumeSection ? "found" : "NOT FOUND");
             console.log("🔍 Resume status element:", statusEl ? "found" : "NOT FOUND");
 
             if (resumeSection) {
-              resumeSection.style.display = "none";
-              console.log("✓ Resume upload section hidden");
+              // Update the section to show resume is loaded instead of upload prompt
+              resumeSection.style.pointerEvents = "none";
+              resumeSection.style.opacity = "0.7";
+              resumeSection.style.cursor = "default";
+
+              const heading = resumeSection.querySelector("h3");
+              const description = resumeSection.querySelector("p");
+
+              if (heading) heading.textContent = "✓ Resume Already Loaded";
+              if (description) description.textContent = `${candidateSkills.length} skills detected • Ready to match with jobs`;
+
+              console.log("✓ Resume section updated to show loaded state");
 
               if (statusEl) {
                 statusEl.innerHTML = `
                   <div class="resume-status ready">
-                    ✓ Using saved resume with <strong>${candidateSkills.length} skills</strong> detected
+                    <strong>✓ Resume Connected</strong><br>
+                    Using your saved resume with <strong>${candidateSkills.length} skills</strong> detected
                   </div>
                 `;
                 console.log("✓ Resume status updated");
