@@ -314,6 +314,37 @@ if ($("analyzeBtn")) $("analyzeBtn").addEventListener("click", async () => {
     showProfile(p);
     window.Seqlay?.finish(true);
 
+    // Extract skills and trigger Trazerr Match section
+    const allSkillsText = payload.toLowerCase();
+    const commonSkills = [
+      'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'react', 'angular', 'vue',
+      'node.js', 'express', 'django', 'flask', 'spring', 'sql', 'mongodb', 'postgresql',
+      'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'rest api', 'graphql',
+      'html', 'css', 'bootstrap', 'tailwind', 'webpack', 'npm', 'yarn', 'sass',
+      'agile', 'scrum', 'jira', 'confluence', 'linux', 'windows', 'macos',
+      'communication', 'leadership', 'teamwork', 'problem-solving', 'project management',
+      'data analysis', 'machine learning', 'ai', 'nlp', 'computer vision', 'deep learning',
+      'sales', 'marketing', 'business development', 'customer service', 'negotiation',
+      'financial analysis', 'accounting', 'budgeting', 'forecasting',
+      'project management', 'risk management', 'quality assurance', 'testing'
+    ];
+
+    const extractedSkills = commonSkills.filter(skill => {
+      const regex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
+      return regex.test(allSkillsText);
+    });
+
+    // Save to localStorage and dispatch event
+    try {
+      localStorage.setItem("trazerr.resume", payload);
+      localStorage.setItem("trazerr.skills", JSON.stringify(extractedSkills));
+    } catch (e) {}
+
+    // Dispatch custom event for Trazerr Match
+    document.dispatchEvent(new CustomEvent("trazerrResumeProcessed", {
+      detail: { resume: payload, skills: extractedSkills }
+    }));
+
     if (applyHomeLocation(p) && p.directions.length && !$("jq").value.trim()) { $("jq").value = p.directions[0].role; runJobSearch(true); }
   } catch (e) {
     track("dna_failed");
