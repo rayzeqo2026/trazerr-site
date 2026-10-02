@@ -76,6 +76,17 @@ textarea{min-height:120px; resize:vertical; line-height:1.5}
 .site-head.on-dark .site-nav a:hover{color:#fff; background:rgba(255,255,255,.1); transform:translateY(-2px)}
 @media (max-width:1100px){ .site-nav{gap:16px} .site-nav a{font-size:14px; padding:5px 10px; margin:-5px -10px} }
 
+/* Mobile navigation */
+.mobile-nav{display:none}
+@media (max-width:820px){
+  .mobile-nav{display:flex; position:fixed; bottom:0; left:0; right:0; z-index:19; background:var(--surface); border-top:1px solid var(--line-soft); padding:12px 0 max(12px, env(safe-area-inset-bottom, 0px)); gap:0; justify-content:center; flex-wrap:nowrap; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 -4px 12px rgba(21,32,58,.1)}
+  .mobile-nav-item{display:flex; align-items:center; justify-content:center; gap:6px; padding:12px 16px; text-decoration:none; color:var(--ink-2); font-size:14px; font-weight:500; transition:all .2s ease; flex:1; text-align:center; border-radius:8px; position:relative}
+  .mobile-nav-item:hover{color:var(--ink); background:var(--paper)}
+  .mobile-nav-item.active{color:var(--blue); background:var(--blue-soft)}
+  .mobile-nav-item.active::after{content:""; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:calc(100% - 8px); height:2px; background:var(--blue); border-radius:1px}
+  body{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 56px)}
+}
+
 /* Hero */
 /* The hero sits on the Career DNA image. Its left side is empty dark space, so the copy goes there,
    and the upload window floats in the bottom-right corner. It slides up under the sticky header. */
