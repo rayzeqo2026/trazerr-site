@@ -406,43 +406,71 @@ async function loadJobDetail() {
 }
 
 function displayJobDetail(job) {
-  const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
+  try {
+    showDebug("📄 displayJobDetail called with job: " + (job?.title || "NO TITLE"));
 
-  document.getElementById("jobTitle").textContent = job.title;
-  document.getElementById("jobCode").textContent = job.company_code;
-  document.getElementById("jobLocation").textContent = job.location || "Not specified";
-  document.getElementById("jobRemote").textContent = job.remote_ok ? "Remote available" : "On-site only";
-  document.getElementById("jobDescription").textContent = job.description || "No description provided";
+    // Safely get elements
+    const titleEl = document.getElementById("jobTitle");
+    const codeEl = document.getElementById("jobCode");
+    const locEl = document.getElementById("jobLocation");
+    const remoteEl = document.getElementById("jobRemote");
+    const descEl = document.getElementById("jobDescription");
 
-  // Core skills
-  const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
-  document.getElementById("coreSkills").innerHTML = coreSkills.length
-    ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-    : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
+    if (!titleEl) {
+      showDebug("❌ jobTitle element not found!");
+      throw new Error("jobTitle element not found in DOM");
+    }
 
-  // Requirements
-  const requirements = (dna.must_have || []).filter(Boolean);
-  document.getElementById("requirements").innerHTML = requirements.length
-    ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-    : "<p style='color: var(--ink-2); margin: 0;'>No specific requirements identified</p>";
+    const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
+    showDebug("✓ Parsed job_dna: " + (Object.keys(dna).join(", ") || "empty"));
 
-  // Nice to have
-  const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
-  document.getElementById("niceToHave").innerHTML = nice.length
-    ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-    : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
+    titleEl.textContent = job.title;
+    codeEl.textContent = job.company_code;
+    locEl.textContent = job.location || "Not specified";
+    remoteEl.textContent = job.remote_ok ? "Remote available" : "On-site only";
+    descEl.textContent = job.description || "No description provided";
+    showDebug("✓ Header fields populated");
 
-  // Experience areas
-  const experience = (dna.experience_areas || []).filter(Boolean);
-  document.getElementById("experienceAreas").innerHTML = experience.length
-    ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-    : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
+    // Core skills
+    const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
+    document.getElementById("coreSkills").innerHTML = coreSkills.length
+      ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+      : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
+    showDebug("✓ Core skills (" + coreSkills.length + ")");
 
-  // Responsibilities
-  const resp = (dna.key_responsibilities || []).filter(Boolean);
-  document.getElementById("responsibilities").innerHTML = resp.length
-    ? resp.map(r => `<li>${esc(r)}</li>`).join("")
-    : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
+    // Requirements
+    const requirements = (dna.must_have || []).filter(Boolean);
+    document.getElementById("requirements").innerHTML = requirements.length
+      ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+      : "<p style='color: var(--ink-2); margin: 0;'>No specific requirements identified</p>";
+    showDebug("✓ Requirements (" + requirements.length + ")");
+
+    // Nice to have
+    const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
+    document.getElementById("niceToHave").innerHTML = nice.length
+      ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+      : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
+    showDebug("✓ Nice to have (" + nice.length + ")");
+
+    // Experience areas
+    const experience = (dna.experience_areas || []).filter(Boolean);
+    document.getElementById("experienceAreas").innerHTML = experience.length
+      ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+      : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
+    showDebug("✓ Experience areas (" + experience.length + ")");
+
+    // Responsibilities
+    const resp = (dna.key_responsibilities || []).filter(Boolean);
+    document.getElementById("responsibilities").innerHTML = resp.length
+      ? resp.map(r => `<li>${esc(r)}</li>`).join("")
+      : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
+    showDebug("✓ Responsibilities (" + resp.length + ")");
+
+    showDebug("🎉 All fields populated successfully!");
+  } catch (e) {
+    showDebug("❌ displayJobDetail error: " + e.message);
+    console.error("displayJobDetail error:", e);
+  }
 }
 
 async function deleteJobAndReturn() {
@@ -476,70 +504,44 @@ async function deleteJobAndReturn() {
   }
 }
 
-// Try to load job immediately from sessionStorage without waiting for auth
-(function() {
+function loadFromSessionStorage() {
   try {
     const stored = sessionStorage.getItem("currentJobDetail");
-    if (stored) {
-      const job = JSON.parse(stored);
-      console.log("Loading from sessionStorage:", job);
-
-      // Populate immediately
-      document.getElementById("jobTitle").textContent = job.title;
-      document.getElementById("jobCode").textContent = job.company_code;
-      document.getElementById("jobLocation").textContent = job.location || "Not specified";
-      document.getElementById("jobRemote").textContent = job.remote_ok ? "Remote available" : "On-site only";
-      document.getElementById("jobDescription").textContent = job.description || "No description provided";
-
-      const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
-
-      // Core skills
-      const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
-      document.getElementById("coreSkills").innerHTML = coreSkills.length
-        ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-        : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
-
-      // Requirements
-      const requirements = (dna.must_have || []).filter(Boolean);
-      document.getElementById("requirements").innerHTML = requirements.length
-        ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-        : "<p style='color: var(--ink-2); margin: 0;'>No requirements identified</p>";
-
-      // Nice to have
-      const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
-      document.getElementById("niceToHave").innerHTML = nice.length
-        ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-        : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
-
-      // Experience areas
-      const experience = (dna.experience_areas || []).filter(Boolean);
-      document.getElementById("experienceAreas").innerHTML = experience.length
-        ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-        : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
-
-      // Responsibilities
-      const resp = (dna.key_responsibilities || []).filter(Boolean);
-      document.getElementById("responsibilities").innerHTML = resp.length
-        ? resp.map(r => `<li>${esc(r)}</li>`).join("")
-        : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
-
-      sessionStorage.removeItem("currentJobDetail");
-      console.log("Job detail loaded successfully!");
+    if (!stored) {
+      showDebug("📦 No job data in sessionStorage");
+      return false;
     }
+
+    showDebug("✅ SessionStorage data found");
+    const job = JSON.parse(stored);
+    showDebug("✓ Job parsed: " + job.title);
+
+    displayJobDetail(job);
+    sessionStorage.removeItem("currentJobDetail");
+    showDebug("✨ Job loaded from sessionStorage!");
+    currentJob = job;
+    return true;
   } catch (e) {
-    console.error("Error loading job from sessionStorage:", e);
+    showDebug("❌ SessionStorage error: " + e.message);
+    console.error("SessionStorage error:", e);
+    return false;
   }
-})();
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
-  showDebug("🚀 Page loaded, initializing auth...");
+  showDebug("🚀 Page loaded, initializing...");
+
+  // First, try to load from sessionStorage (passed from dashboard)
+  const loaded = loadFromSessionStorage();
+
+  // Then initialize auth
   const ok = await initAuth();
   showDebug("🔐 Auth result: " + ok);
-  if (ok) {
-    showDebug("✅ Auth successful, loading job detail...");
+
+  // If we didn't load from sessionStorage and auth succeeded, try Supabase
+  if (!loaded && ok) {
+    showDebug("📡 Loading job detail from Supabase...");
     await loadJobDetail();
-  } else {
-    showDebug("❌ Auth failed, redirecting...");
   }
 });
 </script>

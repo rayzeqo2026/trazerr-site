@@ -359,6 +359,8 @@
     const container = document.getElementById("jobsList");
     const searchInput = document.getElementById("jobSearchInput");
 
+    console.log("📋 loadJobsList called, currentJobs count:", currentJobs.length);
+
     if (!currentJobs.length) {
       container.innerHTML = "<p style='color: var(--ink-2);'>No job postings yet. <a href='#' onclick='window.dashboard.showSection(\"create\");return false'>Create one</a></p>";
       return;
@@ -367,6 +369,7 @@
     // Filter jobs by search term
     const searchTerm = (searchInput?.value || "").toLowerCase();
     const filteredJobs = searchTerm ? currentJobs.filter(j => j.company_code.toLowerCase().includes(searchTerm)) : currentJobs;
+    console.log("🔍 Filtered jobs count:", filteredJobs.length, "searchTerm:", searchTerm);
 
     if (!filteredJobs.length) {
       container.innerHTML = `<p style='color: var(--ink-2);'>No jobs match "${esc(searchTerm)}"</p>`;
@@ -407,10 +410,17 @@
       card.querySelector(".job-card-clickable").addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("Clicking job:", job.id, job.title);
-        // Pass job data via sessionStorage to avoid RLS issues
-        sessionStorage.setItem("currentJobDetail", JSON.stringify(job));
-        window.location.href = "/job-detail.html?id=" + encodeURIComponent(job.id);
+        console.log("🔗 Clicking job:", job.id, job.title);
+        try {
+          const jobStr = JSON.stringify(job);
+          console.log("📦 Serialized job (" + jobStr.length + " bytes)");
+          sessionStorage.setItem("currentJobDetail", jobStr);
+          console.log("✅ SessionStorage set. Reading back:", !!sessionStorage.getItem("currentJobDetail"));
+          window.location.href = "/job-detail.html?id=" + encodeURIComponent(job.id);
+        } catch (err) {
+          console.error("❌ Error setting sessionStorage:", err);
+          alert("Error: Could not save job data. Check browser storage limits.");
+        }
       });
 
       card.querySelector(".job-card-delete").addEventListener("click", () => {
