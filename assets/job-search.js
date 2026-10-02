@@ -450,6 +450,7 @@
     const modal = document.getElementById("jobModal");
     if (modal) {
       modal.classList.add("active");
+      document.body.classList.add("modal-open");
       console.log("✅ Modal opened for job:", selectedJob.title);
     } else {
       console.error("❌ Modal element not found!");
@@ -460,6 +461,7 @@
     const modal = document.getElementById("jobModal");
     if (modal) {
       modal.classList.remove("active");
+      document.body.classList.remove("modal-open");
       console.log("✅ Modal closed");
     }
     selectedJob = null;
