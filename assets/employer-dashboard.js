@@ -404,9 +404,11 @@
         return;
       }
 
-      card.querySelector(".job-card-clickable").addEventListener("click", () => {
+      card.querySelector(".job-card-clickable").addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         console.log("Clicking job:", job.id, job.title);
-        showJobDetail(job.id);
+        window.location.href = "/job-detail.html?id=" + encodeURIComponent(job.id);
       });
 
       card.querySelector(".job-card-delete").addEventListener("click", () => {
