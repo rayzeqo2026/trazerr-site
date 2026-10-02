@@ -331,6 +331,23 @@ body.modal-open {
     <p>Upload your resume to see how well you fit with each opportunity.</p>
   </div>
 
+  <!-- Onboarding Tips -->
+  <div id="onboardingTips" style="display: block; margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, rgba(0,102,224,.08) 0%, rgba(230,240,255,.04) 100%); border: 1px solid rgba(0,102,224,.15); border-radius: 12px;">
+    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+      <div style="font-size: 24px; flex-shrink: 0;">💡</div>
+      <div style="flex: 1;">
+        <div style="font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 8px;">Getting started</div>
+        <ul style="margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 14px; line-height: 1.6;">
+          <li><strong>Upload your resume</strong> to see match scores for each job</li>
+          <li><strong>Use filters</strong> to find jobs by match score, experience level, and location</li>
+          <li><strong>Bookmark jobs</strong> you're interested in for later review</li>
+          <li><strong>Check your profile strength</strong> to see how complete your resume is</li>
+        </ul>
+      </div>
+      <button id="closeTipsBtn" style="background: none; border: none; font-size: 20px; color: var(--ink-2); cursor: pointer; padding: 0;">×</button>
+    </div>
+  </div>
+
   <div class="resume-section" id="resumeSection" onclick="document.getElementById('resumeFile').click()">
     <div style="font-size: 32px; margin-bottom: 12px;">📄</div>
     <h3 style="margin: 0 0 8px;">Upload your resume</h3>
@@ -339,18 +356,79 @@ body.modal-open {
     <div id="resumeStatus"></div>
   </div>
 
+  <!-- Profile Strength Meter -->
+  <div id="profileStrengthContainer" style="display: none; margin-bottom: 24px; padding: 16px; background: var(--bg-2); border-radius: 8px; border: 1px solid var(--border);">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <div style="font-weight: 600; font-size: 14px;">Profile Strength:</div>
+      <div style="font-weight: 700; font-size: 16px; color: var(--blue);" id="profileStrengthScore">0%</div>
+    </div>
+    <div style="height: 8px; background: var(--line); border-radius: 4px; overflow: hidden;">
+      <div id="profileStrengthBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, var(--blue)); transition: width 0.3s ease; border-radius: 4px;"></div>
+    </div>
+    <div style="font-size: 12px; color: var(--ink-2); margin-top: 8px;" id="profileStrengthText">Build your resume to improve match scores</div>
+  </div>
+
   <div class="search-form">
     <input type="text" id="searchInput" placeholder="e.g., Wellness Medical or WLMD" />
     <button class="btn btn-primary" id="searchBtn">Search</button>
+  </div>
+
+  <!-- Filters Section -->
+  <div id="filtersContainer" style="display: none; margin-bottom: 24px; padding: 16px; background: var(--bg-2); border-radius: 8px; border: 1px solid var(--border);">
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+      <label style="font-weight: 600; font-size: 14px; color: var(--ink-2);">Filters:</label>
+
+      <select id="matchFilter" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink);">
+        <option value="">All Match Levels</option>
+        <option value="75">Excellent (75%+)</option>
+        <option value="50">Good (50%+)</option>
+        <option value="0">Any Match</option>
+      </select>
+
+      <select id="experienceFilter" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink);">
+        <option value="">All Experience Levels</option>
+        <option value="entry">Entry Level</option>
+        <option value="mid">Mid Level</option>
+        <option value="senior">Senior</option>
+        <option value="executive">Executive</option>
+      </select>
+
+      <select id="locationFilter" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: var(--bg); color: var(--ink);">
+        <option value="">All Locations</option>
+        <option value="remote">Remote Only</option>
+        <option value="onsite">On-site Only</option>
+      </select>
+
+      <button id="clearFiltersBtn" style="padding: 8px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px; color: var(--ink-2);">Clear Filters</button>
+    </div>
+  </div>
+
+  <div id="jobStats" style="display: none; margin-bottom: 24px; padding: 16px; background: var(--bg-2); border-radius: 8px; border: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+    <div style="text-align: center;">
+      <div style="font-size: 24px; font-weight: 700; color: var(--blue);" id="statsJobsCount">0</div>
+      <div style="font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.5px;">Jobs Found</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="font-size: 24px; font-weight: 700; color: #22c55e;" id="statsMatchedCount">0</div>
+      <div style="font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.5px;">Strong Matches</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="font-size: 24px; font-weight: 700; color: #f59e0b;" id="statsBookmarkedCount">0</div>
+      <div style="font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.5px;">Bookmarked</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="font-size: 24px; font-weight: 700; color: var(--blue);" id="statsAvgMatch">0%</div>
+      <div style="font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.5px;">Avg Match</div>
+    </div>
   </div>
 
   <div id="results" class="job-grid"></div>
 </main>
 
 <!-- Job Detail Modal -->
-<div class="modal" id="jobModal">
+<div class="modal" id="jobModal" role="dialog" aria-modal="true" aria-labelledby="modalJobTitle">
   <div class="modal-content">
-    <button class="modal-close" onclick="closeJobModal()">×</button>
+    <button class="modal-close" onclick="closeJobModal()" aria-label="Close job details">×</button>
     <div id="modalMatchScore" style="margin-bottom: 20px;"></div>
     <h2 id="modalJobTitle"></h2>
     <p id="modalJobCompany" style="color: var(--ink-2); margin-bottom: 16px;"></p>
@@ -358,12 +436,15 @@ body.modal-open {
 
     <div style="margin-bottom: 20px;">
       <strong>Required skills:</strong>
-      <div id="modalJobRequired" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+      <div id="modalJobRequired" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;" role="list"></div>
     </div>
 
     <div id="modalSkillsAnalysis" style="margin-bottom: 20px;"></div>
 
-    <button class="btn btn-primary" onclick="applyForJob()" style="width: 100%;">Apply with your resume</button>
+    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+      <button class="btn btn-primary" onclick="applyForJob()" aria-label="Apply for this job with your resume" style="flex: 1;">Apply with your resume</button>
+      <button class="btn btn-quiet" id="bookmarkBtn" onclick="toggleBookmark()" aria-label="Bookmark this job for later" style="padding: 12px 20px; min-height: 48px;">♡ Bookmark</button>
+    </div>
   </div>
 </div>
 
@@ -376,6 +457,7 @@ body.modal-open {
 
 <footer class="emp-foot"><div class="wrap"><a href="/">Trazerr for job seekers</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:hello@trazerr.com">hello@trazerr.com</a></div></footer>
 
+<script src="/assets/toast.js"></script>
 <script src="/assets/job-search.js"></script>
 </body>
 </html>

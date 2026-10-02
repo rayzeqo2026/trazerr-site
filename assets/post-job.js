@@ -11,6 +11,7 @@ function showError(msg) {
   el.innerHTML = "⚠️ " + msg;
   el.style.display = "block";
   document.getElementById("successMsg").style.display = "none";
+  Toast.error(msg, "Error");
 }
 
 function showSuccess(msg) {
@@ -18,6 +19,7 @@ function showSuccess(msg) {
   el.innerHTML = "✓ " + msg;
   el.style.display = "block";
   document.getElementById("errorMsg").style.display = "none";
+  Toast.success(msg, "Success");
 }
 
 function loadScript(src, integrity) {
