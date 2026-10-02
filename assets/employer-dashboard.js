@@ -156,16 +156,15 @@
       // Sidebar navigation
       document.querySelectorAll(".dash-sidebar nav a").forEach(link => {
         const section = link.dataset.section;
-        // Redirect "Post a Job" to new post-job page directly
-        if (section === "create") {
-          link.href = "/post-job.html";
-          link.onclick = null;
-        } else {
-          link.addEventListener("click", (e) => {
-            e.preventDefault();
-            showSection(section);
-          });
-        }
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Redirect "Post a Job" to new post-job page directly
+          if (section === "create") {
+            window.location.href = "/post-job.html";
+            return;
+          }
+          showSection(section);
+        });
       });
 
       // Job form is now on post-job.html, so no need to attach listener here
