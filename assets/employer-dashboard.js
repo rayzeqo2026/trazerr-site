@@ -199,10 +199,26 @@
     const companyCode = generateCompanyCode(currentEmployer.company);
 
     try {
-      const { data, error } = await sb
-        .from("job_postings")
-        .insert([{
-          employer_id: currentEmployer.user_id,
+      // Create job via API (which extracts Job DNA with Claude AI)
+      const { data: { session } } = await sb.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        alert("Please sign in first");
+        return;
+      }
+
+      const jobPostBtn = document.querySelector('#jobForm button[type="submit"]');
+      jobPostBtn.disabled = true;
+      jobPostBtn.textContent = "Posting... (analyzing job with AI)";
+
+      const r = await fetch(API + "?action=jobpost", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
           company_code: companyCode,
           title,
           description,
@@ -210,24 +226,34 @@
           nice_to_have: niceSkills,
           experience_level: expLevel,
           location,
-          remote_ok: remoteOk,
-          status: "open"
-        }])
-        .select();
+          remote_ok: remoteOk
+        })
+      });
 
-      if (error) throw error;
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to post job");
+      }
 
-      alert("Job posted successfully!");
+      const job = await r.json();
+
+      alert("Job posted successfully! ✓\n\nCompany code: " + companyCode + "\n\nCandidates can now search and apply.");
       document.getElementById("jobForm").reset();
       requiredSkills = [];
       niceSkills = [];
       renderSkills("required");
       renderSkills("nice");
 
+      jobPostBtn.disabled = false;
+      jobPostBtn.textContent = "Post Job";
+
       showSection("jobs");
-      loadJobsList();
+      await loadJobsList();
     } catch (e) {
       console.error("Failed to create job:", e);
+      const jobPostBtn = document.querySelector('#jobForm button[type="submit"]');
+      jobPostBtn.disabled = false;
+      jobPostBtn.textContent = "Post Job";
       alert("Failed to create job: " + (e.message || "Unknown error"));
     }
   }
