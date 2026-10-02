@@ -65,8 +65,52 @@
       console.log("📋 Loading jobs...");
       await loadAllJobs();
 
-      // Load user's saved resume if signed in
-      if (currentSession) {
+      // First, try to load resume from localStorage (works for everyone)
+      const localResume = localStorage.getItem("trazerr.resume");
+      const localSkills = localStorage.getItem("trazerr.skills");
+
+      if (localResume) {
+        console.log("📄 Loading resume from localStorage");
+        candidateResume = localResume;
+        try {
+          candidateSkills = JSON.parse(localSkills || "[]");
+        } catch (e) {
+          candidateSkills = [];
+        }
+
+        console.log(`✓ Resume loaded from localStorage with ${candidateSkills.length} skills`);
+
+        // Update resume section
+        const resumeSection = document.getElementById("resumeSection");
+        if (resumeSection) {
+          resumeSection.style.pointerEvents = "none";
+          resumeSection.style.opacity = "0.7";
+          resumeSection.style.cursor = "default";
+
+          const heading = resumeSection.querySelector("h3");
+          const description = resumeSection.querySelector("p");
+
+          if (heading) heading.textContent = "✓ Resume Already Loaded";
+          if (description) description.textContent = `${candidateSkills.length} skills detected • Ready to match with jobs`;
+
+          console.log("✓ Resume section updated to show loaded state");
+        }
+
+        const statusEl = document.getElementById("resumeStatus");
+        if (statusEl) {
+          statusEl.innerHTML = `
+            <div class="resume-status ready">
+              <strong>✓ Resume Connected</strong><br>
+              Using your resume with <strong>${candidateSkills.length} skills</strong> detected
+            </div>
+          `;
+        }
+
+        updateProfileStrength();
+        renderResults(allJobs);
+      }
+      // Load user's saved resume from database if signed in
+      else if (currentSession) {
         try {
           console.log("📄 Loading saved resume for user:", currentSession.user.id);
           const { data: record, error } = await sb
@@ -368,6 +412,15 @@
       });
 
       candidateResume = text;
+
+      // Save resume to localStorage so it persists across pages
+      try {
+        localStorage.setItem("trazerr.resume", candidateResume);
+        localStorage.setItem("trazerr.skills", JSON.stringify(candidateSkills));
+        console.log("✓ Resume saved to localStorage");
+      } catch (e) {
+        console.warn("⚠️ Could not save resume to localStorage:", e);
+      }
 
       if (candidateSkills.length > 0) {
         statusEl.innerHTML = `
