@@ -61,11 +61,30 @@ function getQuery(req) {
   try { return Object.fromEntries(new URL(req.url, "http://localhost").searchParams); } catch { return {}; }
 }
 
+async function getSession(req) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.anon) return { data: null };
+
+  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!token) return { data: null };
+
+  try {
+    const r = await fetch(cfg.url + "/auth/v1/user", {
+      headers: { Authorization: "Bearer " + token, apikey: cfg.anon }
+    });
+    if (!r.ok) return { data: null };
+    const user = await r.json();
+    return { data: { session: { user, access_token: token } } };
+  } catch (e) {
+    return { data: null };
+  }
+}
+
 // Per-visitor limits to protect the API budget. With storage connected they're shared by every server
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobmatch: 30, appAlert: 20 };
 const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe", "employerme", "myrequests", "adminemployers"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
@@ -1389,6 +1408,250 @@ async function unsubscribe(req, res) {
   return page(res, 200, "Job alerts stopped", "<p>You won't get any more job alert emails. You can turn alerts back on after any job search on Trazerr.</p>");
 }
 
+/* ---------------- Job posting and matching (employer side) ---------------- */
+
+// Create a job posting and extract Job DNA from the description
+async function jobpost(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Accounts aren't switched on yet.");
+
+  const { data: { session } } = await getSession(req);
+  if (!session) throw new UserError(401, "Sign in first.");
+
+  const body = getBody(req) || {};
+  const title = str(body.title, 120);
+  const description = str(body.description, 5000);
+  const required = list(body.required_skills, 20);
+  const nice = list(body.nice_to_have, 20);
+  const level = str(body.experience_level, 20);
+  const location = str(body.location, 100);
+
+  if (!title || !description || !required.length) throw new UserError(400, "Job needs a title, description, and at least one required skill.");
+  if (!/^(entry|mid|senior|lead)$/.test(level)) throw new UserError(400, "Invalid experience level.");
+
+  // Extract Job DNA using Claude: structured capabilities required for this role
+  let jobDna = null;
+  try {
+    const prompt = `Extract the core job requirements from this job posting into a structured format.\n\nJob Title: ${title}\nDescription: ${description}\n\nReturn ONLY valid JSON (no markdown, no code blocks) with this structure:\n{\n  "core_skills": ["skill1", "skill2"],\n  "experience_areas": ["area1", "area2"],\n  "key_responsibilities": ["resp1", "resp2"],\n  "must_have": ["requirement1", "requirement2"],\n  "nice_to_have": ["bonus1", "bonus2"]\n}`;
+
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 500, messages: [{ role: "user", content: prompt }] }),
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!r.ok) throw new Error("Claude didn't answer: " + r.status);
+    const out = await r.json();
+    jobDna = extractJson(out.content[0]?.text || "");
+  } catch (e) {
+    console.error("Job DNA extraction failed:", e.message);
+    // Fall back to simple structure if AI fails
+    jobDna = { core_skills: required, experience_areas: [], key_responsibilities: [], must_have: required, nice_to_have: nice };
+  }
+
+  // Insert job posting
+  const insertR = await fetch(cfg.url + "/rest/v1/job_postings", {
+    method: "POST",
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      employer_id: session.user.id,
+      company_code: body.company_code || "AUTO",
+      title,
+      description,
+      required_skills: required,
+      nice_to_have: nice,
+      experience_level: level,
+      location,
+      remote_ok: body.remote_ok === true,
+      job_dna: jobDna,
+      status: "open"
+    })
+  });
+
+  if (!insertR.ok) throw new UserError(502, "Couldn't save job.", "jobpost: Supabase " + insertR.status);
+  const job = await insertR.json();
+
+  return res.status(201).json(job);
+}
+
+// Calculate match score between candidate's Career DNA and job requirements
+// Returns { score, summary, gaps }
+function calculateMatch(careerDna, jobDna) {
+  if (!careerDna || !jobDna) return { score: 0, summary: "Unable to calculate match", gaps: [] };
+
+  const candidateSkills = new Set((careerDna.skills || []).map(s => s.toLowerCase()));
+  const candidateExperience = new Set((careerDna.experience_areas || []).map(a => a.toLowerCase()));
+
+  const jobRequirements = new Set((jobDna.must_have || jobDna.core_skills || []).map(s => s.toLowerCase()));
+  const jobNice = new Set((jobDna.nice_to_have || []).map(s => s.toLowerCase()));
+  const allJobNeeds = new Set([...jobRequirements, ...jobNice]);
+
+  let matchedRequired = 0;
+  let matchedNice = 0;
+  const gaps = [];
+
+  // Check required skills
+  for (const req of jobRequirements) {
+    const base = req.split(/[,;/\s]+/)[0].toLowerCase();
+    let found = false;
+
+    // Exact match or close match
+    if (candidateSkills.has(req) || candidateSkills.has(base)) {
+      matchedRequired++;
+      found = true;
+    } else {
+      // Fuzzy match: check if any candidate skill contains the requirement
+      for (const skill of candidateSkills) {
+        if (skill.includes(base) || req.includes(skill.split(/[,;/\s]+/)[0])) {
+          matchedRequired += 0.5;
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) gaps.push(req);
+  }
+
+  // Check nice-to-have
+  for (const nice of jobNice) {
+    if (candidateSkills.has(nice) || candidateSkills.has(nice.split(/[,;/\s]+/)[0])) {
+      matchedNice += 0.5;
+    }
+  }
+
+  // Calculate score
+  const requiredScore = jobRequirements.size > 0 ? (matchedRequired / jobRequirements.size) * 70 : 70;
+  const niceScore = jobNice.size > 0 ? (matchedNice / jobNice.size) * 20 : 0;
+  const experienceBonus = Math.min(10, (careerDna.years_of_experience || 0) * 1.5);
+  const score = Math.round(Math.min(100, requiredScore + niceScore + experienceBonus));
+
+  // Generate summary
+  let summary = "";
+  if (score >= 80) {
+    summary = `Strong match (${matchedRequired}/${jobRequirements.size} required skills) with ${careerDna.years_of_experience || 0}+ years experience.`;
+  } else if (score >= 60) {
+    summary = `Good match on core skills; ${gaps.length} gaps (${gaps.slice(0, 2).join(", ")}).`;
+  } else if (score >= 40) {
+    summary = `Partial match with key gaps: ${gaps.slice(0, 2).join(", ")}.`;
+  } else {
+    summary = `Limited match. Missing ${gaps.slice(0, 3).join(", ")}.`;
+  }
+
+  return { score, summary, gaps: gaps.slice(0, 5) };
+}
+
+// When candidate applies, calculate match and optionally send employer alert
+async function jobmatch(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Accounts aren't switched on yet.");
+
+  const body = getBody(req) || {};
+  const appId = str(body.application_id, 40);
+  const jobId = str(body.job_id, 40);
+  const candidateId = str(body.candidate_id, 40);
+
+  if (!appId || !jobId || !candidateId) throw new UserError(400, "Missing required fields.");
+
+  // Get job details
+  const jobR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + jobId + "&select=*", {
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+  });
+  if (!jobR.ok) throw new UserError(502, "Couldn't load job.");
+  const [job] = await jobR.json();
+  if (!job) throw new UserError(404, "Job not found.");
+
+  // Get candidate Career DNA
+  const candR = await fetch(cfg.url + "/rest/v1/career_records?user_id=eq." + candidateId + "&select=career_dna", {
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+  });
+  if (!candR.ok) throw new UserError(502, "Couldn't load candidate.");
+  const [cand] = await candR.json();
+
+  // Calculate match
+  const { score, summary, gaps } = calculateMatch(cand?.career_dna, job.job_dna);
+
+  // Update application with match score
+  const updateR = await fetch(cfg.url + "/rest/v1/applications?id=eq." + appId, {
+    method: "PATCH",
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ match_score: score, match_summary: summary, gaps })
+  });
+  if (!updateR.ok) throw new UserError(502, "Couldn't update application.");
+
+  return res.status(200).json({ score, summary, gaps });
+}
+
+// Send email to employer about new application
+async function appAlert(req, res) {
+  const cfg = supabaseConfig();
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!cfg || !cfg.key) throw new UserError(503, "Accounts aren't switched on yet.");
+  if (!resendKey) throw new UserError(503, "Email isn't switched on yet.");
+
+  const body = getBody(req) || {};
+  const appId = str(body.application_id, 40);
+
+  if (!appId) throw new UserError(400, "Missing application_id.");
+
+  // Get application with job and employer details
+  const appR = await fetch(cfg.url + "/rest/v1/applications?id=eq." + appId + "&select=*,job_postings(*),career_records(user_id)", {
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+  });
+  if (!appR.ok) throw new UserError(502, "Couldn't load application.");
+  const [app] = await appR.json();
+  if (!app) throw new UserError(404, "Application not found.");
+
+  // Get employer email
+  const empR = await fetch(cfg.url + "/auth/v1/admin/users/" + app.job_postings.employer_id, {
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+  });
+  const empUser = empR.ok ? await empR.json() : {};
+  const empEmail = empUser.email || "employer@trazerr.com";
+
+  // Build email
+  const candidateName = app.career_dna?.name || "A candidate";
+  const jobTitle = app.job_postings?.title || "Your job";
+  const subject = `${candidateName} applied – ${app.match_score}% fit for ${jobTitle}`;
+
+  const paras = [
+    `<b>${escHtml(candidateName)}</b> applied to your <b>${escHtml(jobTitle)}</b> opening.`,
+    `<b>Match score:</b> ${app.match_score}%<br><b>Fit:</b> ${escHtml(app.match_summary || "No summary available")}`,
+    ...(app.gaps && app.gaps.length ? [`<b>Gaps:</b> ${escHtml(app.gaps.join(", "))}`] : []),
+    emailButton(SITE + "/employer-dashboard.html", "View full profile")
+  ];
+  const html = simpleHtml(paras, "Review all applications in your dashboard.");
+
+  // Send via Resend
+  const sent = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + resendKey, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Trazerr <applications@trazerr.com>",
+      to: [empEmail],
+      subject,
+      html,
+      reply_to: "hello@trazerr.com"
+    }),
+    signal: AbortSignal.timeout(10000)
+  });
+
+  if (!sent.ok) {
+    const err = await sent.text().catch(() => "");
+    throw new UserError(502, "Email didn't send.", "appAlert: Resend " + sent.status + " " + err.slice(0, 200));
+  }
+
+  // Log email sent
+  await fetch(cfg.url + "/rest/v1/application_emails_sent", {
+    method: "POST",
+    headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ application_id: appId, employer_id: app.job_postings.employer_id, email_address: empEmail, subject })
+  }).catch(() => {});
+
+  return res.status(200).json({ sent: true });
+}
+
 /* ---------------- Error log and alerts ---------------- */
 // Keeps the newest 200 errors, from the server and from visitors' browsers, for the usage page, and emails
 // an alert when the server fails (at most one an hour). Messages are cut short and email addresses are
@@ -1474,7 +1737,7 @@ async function health(req, res) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, jobpost, jobmatch, appAlert };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);

@@ -199,7 +199,39 @@
 
       if (error) throw error;
 
-      alert("Application submitted! You'll see your match score shortly.");
+      const appId = application[0]?.id;
+      if (appId) {
+        // Calculate match score via API
+        try {
+          const token = currentSession.access_token;
+          await fetch(API + "?action=jobmatch", {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              application_id: appId,
+              job_id: selectedJob.id,
+              candidate_id: currentSession.user.id
+            })
+          });
+
+          // Send email alert to employer
+          await fetch(API + "?action=appAlert", {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ application_id: appId })
+          }).catch(() => {}); // Don't fail if email doesn't send
+        } catch (e) {
+          console.error("Failed to calculate match or send alert:", e);
+        }
+      }
+
+      alert("Application submitted! The employer will be notified of your match score.");
       closeJobModal();
       loadAllJobs(); // Refresh to show updated state
     } catch (e) {
