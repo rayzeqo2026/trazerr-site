@@ -260,8 +260,10 @@ async function extractAndPost() {
     console.log("API response status:", r.status);
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
-      console.error("API error:", err);
-      throw new Error(err.error || "Failed to post job");
+      console.error("API error response:", err);
+      console.error("API error full:", JSON.stringify(err));
+      const errorMsg = err.error || err.message || JSON.stringify(err) || "Failed to post job";
+      throw new Error(errorMsg);
     }
 
     const job = await r.json();
@@ -382,12 +384,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     uploadArea.style.cursor = "pointer";
     uploadArea.addEventListener("click", () => {
       console.log("Upload area clicked");
-      alert("Opening file picker...");
       const fileInput = document.getElementById("fileInput");
       if (fileInput) {
         fileInput.click();
-      } else {
-        alert("Error: File input element not found");
       }
     });
 
