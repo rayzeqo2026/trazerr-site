@@ -348,112 +348,69 @@ async function initAuth() {
 
 async function loadJobDetail() {
   try {
-    showDebug("📍 Fetching job from Supabase...");
-    const params = new URLSearchParams(window.location.search);
-    const jobId = params.get("id");
-    showDebug("🔍 Job ID from URL: " + (jobId || "MISSING"));
+    const jobId = new URLSearchParams(window.location.search).get("id");
+    console.log("Loading job ID:", jobId);
 
     if (!jobId) {
       throw new Error("No job ID in URL");
     }
 
-    showDebug("🔐 Checking auth...");
-    const { data: { session } } = await sb.auth.getSession();
-    showDebug("👤 User: " + (session?.user?.email || "NOT LOGGED IN"));
-
-    showDebug("📡 Querying Supabase...");
     const { data: job, error } = await sb
       .from("job_postings")
       .select("*")
       .eq("id", jobId)
       .single();
 
-    showDebug("📊 Query result - error: " + (error ? error.message : "none") + ", data: " + (job ? "YES" : "NO"));
-
-    if (error) {
-      throw new Error("Supabase query failed: " + error.message + " (code: " + error.code + ")");
+    if (error || !job) {
+      throw new Error(error?.message || "Job not found");
     }
 
-    if (!job) {
-      throw new Error("Job not found in database");
-    }
-
-    showDebug("✅ Job loaded: " + job.title);
+    console.log("Job loaded from Supabase:", job.title);
     currentJob = job;
     displayJobDetail(job);
   } catch (e) {
-    console.error("Error loading job:", e);
-    showDebug("❌ ERROR: " + e.message);
-    document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error loading job</h1><p>${esc(e.message)}</p><p style="font-size: 12px; margin-top: 16px; color: var(--ink-2);">Check browser console (F12) for details</p><a href="/employer-dashboard.html" style="color: var(--blue); margin-top: 16px; display: inline-block;">← Go back</a></div>`;
+    console.error("loadJobDetail error:", e);
+    document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error: ${esc(e.message)}</h1><p><a href="/employer-dashboard.html" style="color: var(--blue);">← Back to Dashboard</a></p></div>`;
   }
 }
 
 function displayJobDetail(job) {
-  try {
-    showDebug("📄 displayJobDetail called with job: " + (job?.title || "NO TITLE"));
+  console.log("displayJobDetail called with:", job?.title || "NO TITLE");
 
-    // Safely get elements
-    const titleEl = document.getElementById("jobTitle");
-    const codeEl = document.getElementById("jobCode");
-    const locEl = document.getElementById("jobLocation");
-    const remoteEl = document.getElementById("jobRemote");
-    const descEl = document.getElementById("jobDescription");
+  const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
 
-    if (!titleEl) {
-      showDebug("❌ jobTitle element not found!");
-      throw new Error("jobTitle element not found in DOM");
-    }
+  document.getElementById("jobTitle").textContent = job.title || "Untitled";
+  document.getElementById("jobCode").textContent = job.company_code || "N/A";
+  document.getElementById("jobLocation").textContent = job.location || "Not specified";
+  document.getElementById("jobRemote").textContent = job.remote_ok ? "Remote available" : "On-site only";
+  document.getElementById("jobDescription").textContent = job.description || "No description provided";
 
-    const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
-    showDebug("✓ Parsed job_dna: " + (Object.keys(dna).join(", ") || "empty"));
+  const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
+  document.getElementById("coreSkills").innerHTML = coreSkills.length
+    ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
 
-    titleEl.textContent = job.title;
-    codeEl.textContent = job.company_code;
-    locEl.textContent = job.location || "Not specified";
-    remoteEl.textContent = job.remote_ok ? "Remote available" : "On-site only";
-    descEl.textContent = job.description || "No description provided";
-    showDebug("✓ Header fields populated");
+  const requirements = (dna.must_have || []).filter(Boolean);
+  document.getElementById("requirements").innerHTML = requirements.length
+    ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No requirements identified</p>";
 
-    // Core skills
-    const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
-    document.getElementById("coreSkills").innerHTML = coreSkills.length
-      ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
-    showDebug("✓ Core skills (" + coreSkills.length + ")");
+  const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
+  document.getElementById("niceToHave").innerHTML = nice.length
+    ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
 
-    // Requirements
-    const requirements = (dna.must_have || []).filter(Boolean);
-    document.getElementById("requirements").innerHTML = requirements.length
-      ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No specific requirements identified</p>";
-    showDebug("✓ Requirements (" + requirements.length + ")");
+  const experience = (dna.experience_areas || []).filter(Boolean);
+  document.getElementById("experienceAreas").innerHTML = experience.length
+    ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No experience areas identified</p>";
 
-    // Nice to have
-    const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
-    document.getElementById("niceToHave").innerHTML = nice.length
-      ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
-    showDebug("✓ Nice to have (" + nice.length + ")");
+  const resp = (dna.key_responsibilities || []).filter(Boolean);
+  document.getElementById("responsibilities").innerHTML = resp.length
+    ? resp.map(r => `<li>${esc(r)}</li>`).join("")
+    : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
 
-    // Experience areas
-    const experience = (dna.experience_areas || []).filter(Boolean);
-    document.getElementById("experienceAreas").innerHTML = experience.length
-      ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
-    showDebug("✓ Experience areas (" + experience.length + ")");
-
-    // Responsibilities
-    const resp = (dna.key_responsibilities || []).filter(Boolean);
-    document.getElementById("responsibilities").innerHTML = resp.length
-      ? resp.map(r => `<li>${esc(r)}</li>`).join("")
-      : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
-    showDebug("✓ Responsibilities (" + resp.length + ")");
-
-    showDebug("🎉 All fields populated successfully!");
-  } catch (e) {
-    showDebug("❌ displayJobDetail error: " + e.message);
-    console.error("displayJobDetail error:", e);
-  }
+  console.log("displayJobDetail completed successfully");
 }
 
 async function deleteJobAndReturn() {
@@ -488,11 +445,17 @@ async function deleteJobAndReturn() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  showDebug("🚀 Page loaded");
+  console.log("=== DOMContentLoaded fired ===");
 
-  const ok = await initAuth();
-  if (ok) {
-    await loadJobDetail();
+  try {
+    const ok = await initAuth();
+    console.log("Auth result:", ok);
+    if (ok) {
+      await loadJobDetail();
+    }
+  } catch (e) {
+    console.error("Fatal error:", e);
+    document.body.innerHTML = "<h1>Error: " + e.message + "</h1>";
   }
 });
 </script>
