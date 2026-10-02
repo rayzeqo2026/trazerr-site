@@ -351,6 +351,15 @@ async function initAuth() {
 
 async function loadJobDetail() {
   try {
+    // Initialize Supabase if not already done
+    if (!sb) {
+      const cfg = await fetch(API + "?action=authconfig").then(r => r.json());
+      if (!window.supabase) {
+        await loadScript(SB_LIB, SB_LIB_SRI);
+      }
+      sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+    }
+
     const params = new URLSearchParams(window.location.search);
     const jobId = params.get("id");
 
@@ -359,8 +368,6 @@ async function loadJobDetail() {
       return;
     }
 
-    showOnPage("🔄 Loading job " + jobId.substring(0, 8) + "...");
-
     const { data: job, error } = await sb
       .from("job_postings")
       .select("*")
@@ -368,31 +375,20 @@ async function loadJobDetail() {
       .single();
 
     if (error) {
-      showOnPage("❌ Database error: " + error.message);
+      showOnPage("❌ Error: " + error.message);
       return;
     }
 
     if (!job) {
-      showOnPage("❌ Job not found in database");
+      showOnPage("❌ Job not found");
       return;
     }
 
-    showOnPage("✅ Loaded: " + job.title);
-
-    // Debug: show what we got
-    if (!job.title) showOnPage("⚠️ WARNING: Job has no title!");
-    if (!job.company_code) showOnPage("⚠️ WARNING: Job has no company_code!");
-
     currentJob = job;
     displayJobDetail(job);
-
-    // Hide status after a moment
-    setTimeout(() => {
-      const status = document.getElementById("loadStatus");
-      if (status) status.style.display = "none";
-    }, 2000);
+    showOnPage("✅ Ready");
   } catch (e) {
-    showOnPage("❌ Error: " + e.message);
+    showOnPage("❌ " + (e?.message || "Error loading job"));
   }
 }
 
