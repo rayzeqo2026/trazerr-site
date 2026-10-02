@@ -376,13 +376,13 @@
     container.innerHTML = filteredJobs.map(job => {
       const appCount = currentApplications.filter(a => a.job_id === job.id).length;
       return `
-        <div class="job-card">
+        <div class="job-card" data-job-id="${esc(job.id)}">
           <div class="job-card-header">
-            <div onclick="window.dashboard.showJobDetail('${job.id}')" style="cursor: pointer; flex: 1;">
+            <div class="job-card-clickable" style="cursor: pointer; flex: 1;">
               <h3 class="job-card-title">${esc(job.title)}</h3>
               <span class="job-card-code">${esc(job.company_code)}</span>
             </div>
-            <button onclick="window.dashboard.deleteJob('${job.id}', '${esc(job.title)}')" style="background: #c00; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Delete</button>
+            <button class="job-card-delete" style="background: #c00; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Delete</button>
           </div>
           <div class="job-card-meta">
             <span>${new Date(job.created_at).toLocaleDateString()}</span>
@@ -394,6 +394,22 @@
         </div>
       `;
     }).join("");
+
+    // Add event listeners to job cards
+    container.querySelectorAll(".job-card").forEach(card => {
+      const jobId = card.dataset.jobId;
+      const job = currentJobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      card.querySelector(".job-card-clickable").addEventListener("click", () => {
+        console.log("Clicking job:", jobId);
+        showJobDetail(jobId);
+      });
+
+      card.querySelector(".job-card-delete").addEventListener("click", () => {
+        deleteJob(jobId, job.title);
+      });
+    });
   }
 
   async function loadApplicationsList() {
