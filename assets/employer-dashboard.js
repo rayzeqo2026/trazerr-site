@@ -12,6 +12,17 @@
   let currentJobs = [];
   let currentApplications = [];
 
+  // Error display
+  function showError(msg) {
+    console.error("Dashboard error:", msg);
+    const errorEl = document.getElementById("dashboardError");
+    if (errorEl) {
+      errorEl.textContent = "Error: " + msg;
+      errorEl.style.display = "block";
+    }
+    alert("Dashboard Error: " + msg);
+  }
+
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
   function loadScript(src, integrity) {
@@ -112,43 +123,70 @@
   }
 
   function setupUI(email) {
-    document.getElementById("companyName").textContent = currentEmployer.company;
-    document.getElementById("companyNameField").value = currentEmployer.company;
-    document.getElementById("contactNameField").value = currentEmployer.contact_name;
-    document.getElementById("companyCodeField").value = generateCompanyCode(currentEmployer.company);
+    try {
+      const companyNameEl = document.getElementById("companyName");
+      if (!companyNameEl) {
+        showError("companyName element not found");
+        return;
+      }
 
-    // Sign out
-    document.getElementById("signOut").addEventListener("click", async () => {
-      await sb.auth.signOut().catch(() => {});
-      window.location.href = "/employers.html";
-    });
+      companyNameEl.textContent = currentEmployer.company;
+      document.getElementById("companyNameField").value = currentEmployer.company;
+      document.getElementById("contactNameField").value = currentEmployer.contact_name;
+      document.getElementById("companyCodeField").value = generateCompanyCode(currentEmployer.company);
 
-    // Sidebar navigation
-    document.querySelectorAll(".dash-sidebar nav a").forEach(link => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const section = link.dataset.section;
-        showSection(section);
+      // Sign out
+      document.getElementById("signOut").addEventListener("click", async () => {
+        await sb.auth.signOut().catch(() => {});
+        window.location.href = "/employers.html";
       });
-    });
 
-    // Job form
-    document.getElementById("jobForm").addEventListener("submit", createJob);
+      // Sidebar navigation
+      document.querySelectorAll(".dash-sidebar nav a").forEach(link => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const section = link.dataset.section;
+          showSection(section);
+        });
+      });
+
+      // Job form
+      const jobForm = document.getElementById("jobForm");
+      if (jobForm) {
+        jobForm.addEventListener("submit", createJob);
+      } else {
+        showError("jobForm element not found");
+      }
+    } catch (e) {
+      showError("setupUI error: " + (e.message || String(e)));
+    }
   }
 
   function showSection(name) {
     try {
-      document.querySelectorAll(".dash-section").forEach(s => s.classList.remove("active"));
-      document.getElementById(name).classList.add("active");
+      const sections = document.querySelectorAll(".dash-section");
+      if (!sections || sections.length === 0) {
+        showError("Sections not found in DOM. Page may not be fully loaded.");
+        return;
+      }
+
+      sections.forEach(s => s.classList.remove("active"));
+      const target = document.getElementById(name);
+      if (!target) {
+        showError("Section '" + name + "' not found. Available: " + Array.from(sections).map(s => s.id).join(", "));
+        return;
+      }
+      target.classList.add("active");
 
       document.querySelectorAll(".dash-sidebar nav a").forEach(a => a.classList.remove("active"));
-      document.querySelector(`[data-section="${name}"]`).classList.add("active");
+      const link = document.querySelector(`[data-section="${name}"]`);
+      if (link) link.classList.add("active");
 
       if (name === "overview") loadOverview();
       if (name === "jobs") loadJobsList();
       if (name === "applications") loadApplicationsList();
     } catch (e) {
-      alert("Error switching section: " + (e.message || e));
+      showError("showSection error: " + (e.message || String(e)));
     }
   }
 
