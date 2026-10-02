@@ -806,6 +806,7 @@ async function fetchJobsFromSupabase() {
 }
 
 function loadSampleJobs() {
+  console.log('loadSampleJobs() called');
   allJobs = [
     {
       id: 'job-1',
@@ -915,6 +916,7 @@ function filterJobs() {
 }
 
 function renderJobs() {
+  console.log('renderJobs() called, allJobs:', allJobs.length);
   const filtered = filterJobs();
   const sorted = filtered.sort((a, b) => {
     const sortBy = document.getElementById('tmSortSelect').value;
@@ -1104,18 +1106,22 @@ document.getElementById('tmJobModal').addEventListener('click', (e) => {
 });
 
 // Initialize
+console.log('Initializing Trazerr Match page...');
 loadData();
+console.log('Data loaded, attempting to load jobs...');
 
-// Start loading jobs with a timeout failsafe
+// Load jobs immediately (no async waiting)
 loadJobs();
 
-// If jobs don't load within 5 seconds, force sample jobs
+// Emergency fallback - if nothing happened after 100ms, force render
 setTimeout(() => {
   if (allJobs.length === 0) {
-    console.log('Job loading timeout, using sample jobs');
+    console.warn('Emergency fallback: forcing sample jobs');
     loadSampleJobs();
+  } else {
+    console.log('Jobs already loaded:', allJobs.length);
   }
-}, 5000);
+}, 100);
 </script>
 
 </body>
