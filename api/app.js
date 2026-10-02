@@ -1720,10 +1720,13 @@ async function jobdelete(req, res) {
     console.log("✓ [jobdelete] Job verified, proceeding with deletion");
 
     // Delete the job
+    console.log("📤 [jobdelete] Sending DELETE request to Supabase...");
     const deleteR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + encodeURIComponent(jobId), {
       method: "DELETE",
       headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + session.access_token }
     });
+
+    console.log("📥 [jobdelete] DELETE response status:", deleteR.status);
 
     if (!deleteR.ok) {
       const detail = await deleteR.text().catch(() => "");
@@ -1731,8 +1734,25 @@ async function jobdelete(req, res) {
       throw new Error("Delete failed: " + detail);
     }
 
+    // Verify the job was actually deleted by querying again
+    console.log("🔍 [jobdelete] Verifying deletion by re-querying...");
+    const verifyDeleteR = await fetch(cfg.url + "/rest/v1/job_postings?id=eq." + encodeURIComponent(jobId) + "&select=id", {
+      headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + session.access_token }
+    });
+
+    if (verifyDeleteR.ok) {
+      const remaining = await verifyDeleteR.json();
+      if (remaining.length > 0) {
+        console.error("❌ [jobdelete] VERIFICATION FAILED: Job still exists after delete!", remaining);
+        throw new Error("Deletion verification failed: job still exists in database");
+      }
+      console.log("✓ [jobdelete] Verification passed: job no longer exists");
+    } else {
+      console.warn("⚠️ [jobdelete] Could not verify deletion (query failed)");
+    }
+
     console.log("✓ [jobdelete] Job successfully deleted from database:", jobId);
-    return res.status(200).json({ deleted: true, id: jobId });
+    return res.status(200).json({ deleted: true, id: jobId, verified: true });
   } catch (e) {
     if (e instanceof UserError) throw e;
     console.error("❌ [jobdelete] Error:", e.message);
