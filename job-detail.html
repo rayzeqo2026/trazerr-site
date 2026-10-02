@@ -219,6 +219,9 @@ body {
 </style>
 </head>
 <body>
+<div id="loadStatus" style="padding: 12px 16px; background: #fbbf24; border-bottom: 2px solid #f59e0b; font-size: 13px; font-weight: 600; position: sticky; top: 0; z-index: 9999;">
+  ⏳ Loading...
+</div>
 <div id="debugInfo" style="padding: 20px; background: #fff3cd; border: 1px solid #ffc107; margin: 20px; border-radius: 8px; display: none;">
   <strong>Debug Info:</strong>
   <p id="debugText"></p>
@@ -394,15 +397,10 @@ async function loadJobDetail() {
 }
 
 function showOnPage(msg) {
-  let status = document.getElementById("loadStatus");
-  if (!status) {
-    status = document.createElement("div");
-    status.id = "loadStatus";
-    status.style.cssText = "position: fixed; top: 20px; left: 20px; right: 20px; background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; font-size: 13px; z-index: 9999;";
-    document.body.insertBefore(status, document.body.firstChild);
+  const status = document.getElementById("loadStatus");
+  if (status) {
+    status.textContent = msg;
   }
-  status.textContent = msg;
-  status.style.display = "block";
 }
 
 function displayJobDetail(job) {
@@ -476,17 +474,19 @@ async function deleteJobAndReturn() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("=== DOMContentLoaded fired ===");
-
   try {
+    showOnPage("🔐 Authenticating...");
     const ok = await initAuth();
-    console.log("Auth result:", ok);
-    if (ok) {
-      await loadJobDetail();
+
+    if (!ok) {
+      showOnPage("❌ Authentication failed - redirecting to login...");
+      return;
     }
+
+    showOnPage("📡 Loading job details...");
+    await loadJobDetail();
   } catch (e) {
-    console.error("Fatal error:", e);
-    document.body.innerHTML = "<h1>Error: " + e.message + "</h1>";
+    showOnPage("❌ Fatal error: " + e.message);
   }
 });
 </script>
