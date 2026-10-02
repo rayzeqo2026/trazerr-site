@@ -1161,7 +1161,7 @@ function renderTailored(){
   const st = tailorState, r = st.resume;
   let h = '<span class="flag">Tailored for ' + esc(st.role) + '</span><h2 class="o-headline">Your resume, shaped for ' + esc(st.role) + ".</h2>";
   if (r.fitBefore !== null || r.fitAfter !== null) h += '<div class="shift"><div><small>Fit before</small><b>' + (r.fitBefore ?? "–") + '</b></div><span aria-hidden="true">→</span><div class="after"><small>Estimated fit after</small><b>' + (r.fitAfter ?? "–") + "</b></div><p>An estimate. Filling the blanks with real details makes it stronger.</p></div>";
-  if (r.changes.length) h += '<div class="o-sec"><h3>What changed</h3><ul class="items">' + r.changes.map(c => '<li><i class="mark inferred" aria-hidden="true"></i><span class="why">' + esc(c) + "</span></li>").join("") + "</ul></div>";
+  if (r.changes.length) h += '<div class="o-sec"><h3>What changed</h3><p class="hint">Click to toggle suggested changes on/off. Changes are applied instantly to your resume preview.</p><ul class="items">' + r.changes.map((c, i) => '<li data-change-id="' + i + '"><button type="button" class="change-toggle" data-change="' + i + '" style="background:none;border:none;cursor:pointer;padding:0;text-align:left;width:100%;"><i class="mark inferred" aria-hidden="true" style="opacity:1"></i><span class="why">' + esc(c) + "</span></button></li>").join("") + "</ul></div>";
   if (r.blanks.length) h += '<div class="o-sec"><h3>Fill in the blanks</h3><p class="hint">Add only real details. Anything you leave empty stays marked in brackets so you don\'t miss it.</p><div class="blanks">' +
     r.blanks.map((b, i) => '<div><label for="tb' + i + '">' + esc(b.question) + ' <span style="color:var(--brass)">[' + esc(b.placeholder) + ']</span></label><input class="input" id="tb' + i + '" data-ph="' + esc(b.placeholder) + '" type="text" maxlength="80"></div>').join("") + "</div></div>";
   h += '<div class="o-sec"><h3>Your tailored resume</h3><div class="paper" id="paper">' + resumeBody(r, "html") + "</div></div>";
@@ -1171,6 +1171,47 @@ function renderTailored(){
   openOverlay("Tailor my DNA", h);
   const body = $("oBody");
   wireFeedback("tailor", st.role);
+
+  // Initialize change tracking
+  if (!st.appliedChanges) st.appliedChanges = {};
+  r.changes.forEach((_, i) => {
+    if (st.appliedChanges[i] === undefined) st.appliedChanges[i] = true; // Default all changes to applied
+  });
+
+  // Handle change toggles
+  body.querySelectorAll("[data-change]").forEach(btn => {
+    const changeId = +btn.dataset.change;
+    const li = btn.closest('[data-change-id]');
+
+    // Set initial state
+    updateChangeButton(btn, st.appliedChanges[changeId]);
+
+    btn.onclick = (e) => {
+      e.preventDefault();
+      st.appliedChanges[changeId] = !st.appliedChanges[changeId];
+      updateChangeButton(btn, st.appliedChanges[changeId]);
+
+      // Update resume preview instantly
+      $("paper").innerHTML = resumeBody(r, "html");
+
+      // Visual feedback
+      li.style.opacity = st.appliedChanges[changeId] ? "1" : "0.6";
+      li.style.transition = "opacity 0.2s";
+    };
+  });
+
+  function updateChangeButton(btn, isApplied) {
+    if (isApplied) {
+      btn.style.opacity = "1";
+      btn.style.fontWeight = "500";
+      btn.title = "Click to remove this change";
+    } else {
+      btn.style.opacity = "0.6";
+      btn.style.fontWeight = "400";
+      btn.title = "Click to apply this change";
+    }
+  }
+
   body.querySelectorAll("[data-ph]").forEach(inp => inp.oninput = () => { st.values[inp.dataset.ph] = inp.value; $("paper").innerHTML = resumeBody(r, "html"); });
   const left = () => { const n = (resumeText(r).match(/\[[^\]]{1,60}\]/g) || []).length; return n ? " " + n + (n === 1 ? " blank is" : " blanks are") + " still marked in [brackets]." : ""; };
   const fileBase = (r.name || "Resume") + " - " + (st.role || "tailored");
