@@ -292,8 +292,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  const ok = await initAuth();
-  if (!ok) {
-    document.getElementById("extractBtn").disabled = true;
+  try {
+    const ok = await initAuth();
+
+    // Hide loading, show form
+    const loading = document.getElementById("loadingMsg");
+    const header = document.getElementById("header");
+    const form = document.getElementById("formContainer");
+
+    if (loading) loading.style.display = "none";
+    if (header) header.style.display = "block";
+    if (form) form.style.display = "block";
+
+    if (!ok) {
+      document.getElementById("extractBtn").disabled = true;
+    }
+  } catch (e) {
+    console.error("Init error:", e);
+    document.getElementById("errorMsg").style.display = "block";
+    document.getElementById("errorMsg").innerHTML = "⚠️ Error: " + (e.message || e);
+    document.getElementById("loadingMsg").style.display = "none";
+    document.getElementById("header").style.display = "block";
+    document.getElementById("formContainer").style.display = "block";
   }
 });
