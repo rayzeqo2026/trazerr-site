@@ -544,7 +544,7 @@
       const isBookmarked = bookmarkedJobs.includes(job.id);
 
       return `
-        <div class="job-item" data-job-id="${esc(job.id)}" style="position: relative;">
+        <div class="job-item" data-job-id="${esc(job.id)}" style="position: relative; cursor: pointer;" onclick="window.jobSearch && window.jobSearch.selectJob('${esc(job.id)}')">
           ${isBookmarked ? '<div style="position: absolute; top: 12px; right: 12px; color: #ef4444; font-size: 20px;">♥</div>' : ''}
           ${matchScore !== null ? `
             <div class="job-item-match">
@@ -572,15 +572,6 @@
         </div>
       `;
     }).join("");
-
-    // Attach click handlers to job items using event delegation
-    container.addEventListener("click", (e) => {
-      const jobItem = e.target.closest(".job-item");
-      if (jobItem && jobItem.dataset.jobId) {
-        console.log("📍 Job item clicked:", jobItem.dataset.jobId);
-        selectJob(jobItem.dataset.jobId);
-      }
-    });
   }
 
   function toggleBookmark() {

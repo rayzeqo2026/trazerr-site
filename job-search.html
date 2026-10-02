@@ -369,8 +369,8 @@ body.modal-open {
   </div>
 
   <div class="search-form">
-    <input type="text" id="searchInput" placeholder="e.g., Wellness Medical or WLMD" />
-    <button class="btn btn-primary" id="searchBtn">Search</button>
+    <input type="text" id="searchInput" placeholder="e.g., Wellness Medical or WLMD" onkeypress="if(event.key==='Enter') window.jobSearch && window.jobSearch.performSearch()" />
+    <button class="btn btn-primary" id="searchBtn" onclick="window.jobSearch && window.jobSearch.performSearch()">Search</button>
   </div>
 
   <!-- Filters Section -->
