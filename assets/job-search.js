@@ -64,6 +64,64 @@
       console.log("📋 Loading jobs...");
       await loadAllJobs();
 
+      // Load user's saved resume if signed in
+      if (currentSession) {
+        try {
+          console.log("📄 Loading saved resume...");
+          const { data: record, error } = await sb
+            .from("career_records")
+            .select("resume, career_dna")
+            .eq("user_id", currentSession.user.id)
+            .single();
+
+          if (record && record.resume) {
+            candidateResume = record.resume;
+            console.log("✓ Saved resume loaded");
+
+            // Extract skills from saved resume
+            const allSkillsText = candidateResume.toLowerCase();
+            const commonSkills = [
+              'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'react', 'angular', 'vue',
+              'node.js', 'express', 'django', 'flask', 'spring', 'sql', 'mongodb', 'postgresql',
+              'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'rest api', 'graphql',
+              'html', 'css', 'bootstrap', 'tailwind', 'webpack', 'npm', 'yarn', 'sass',
+              'agile', 'scrum', 'jira', 'confluence', 'linux', 'windows', 'macos',
+              'communication', 'leadership', 'teamwork', 'problem-solving', 'project management',
+              'data analysis', 'machine learning', 'ai', 'nlp', 'computer vision', 'deep learning',
+              'sales', 'marketing', 'business development', 'customer service', 'negotiation',
+              'financial analysis', 'accounting', 'budgeting', 'forecasting',
+              'project management', 'risk management', 'quality assurance', 'testing'
+            ];
+
+            candidateSkills = commonSkills.filter(skill => {
+              const regex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
+              return regex.test(allSkillsText);
+            });
+
+            console.log(`✓ Extracted ${candidateSkills.length} skills from saved resume`);
+
+            // Hide resume upload section and show status
+            const resumeSection = document.getElementById("resumeSection");
+            const statusEl = document.getElementById("resumeStatus");
+            if (resumeSection) {
+              resumeSection.style.display = "none";
+              if (statusEl) {
+                statusEl.innerHTML = `
+                  <div class="resume-status ready">
+                    ✓ Using saved resume with <strong>${candidateSkills.length} skills</strong> detected
+                  </div>
+                `;
+              }
+            }
+
+            // Re-render with match scores
+            renderResults(allJobs);
+          }
+        } catch (e) {
+          console.log("No saved resume yet, showing upload option");
+        }
+      }
+
       // Setup resume upload
       const resumeFile = document.getElementById("resumeFile");
       const searchBtn = document.getElementById("searchBtn");
