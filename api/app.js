@@ -1431,6 +1431,8 @@ async function jobpost(req, res) {
   // Extract Job DNA using Claude - do the AI magic
   let jobDna = null;
   try {
+    if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
+
     const prompt = `Extract the core job requirements from this job posting.\n\nJob Title: ${title}${description ? "\n\nDescription:\n" + description : ""}\n\nReturn ONLY valid JSON (no markdown) with this structure:\n{\n  "core_skills": ["skill1", "skill2", "skill3"],\n  "experience_areas": ["area1", "area2"],\n  "key_responsibilities": ["resp1", "resp2"],\n  "must_have": ["requirement1", "requirement2"],\n  "nice_to_have": ["bonus1", "bonus2"]\n}`;
 
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -1485,7 +1487,7 @@ async function jobpost(req, res) {
     if (!insertR.ok) {
       const detail = await insertR.text().catch(() => "");
       console.error("Supabase insert error:", insertR.status, detail);
-      const userMsg = detail.includes("permission denied") ? "Permission denied - table may not exist or RLS is blocking" : detail.includes("violates") ? "Job posting already exists with this code+title" : "Couldn't save job";
+      const userMsg = detail.includes("permission denied") ? "Permission denied - check RLS policies" : detail.includes("violates") ? "Job posting already exists" : detail || "Supabase error " + insertR.status;
       throw new UserError(502, userMsg, "jobpost: Supabase " + insertR.status + ": " + detail.slice(0, 200));
     }
 
@@ -1494,7 +1496,7 @@ async function jobpost(req, res) {
   } catch (e) {
     if (e instanceof UserError) throw e;
     console.error("Job posting database error:", e);
-    throw new UserError(502, "Couldn't save job. Please try again.", "jobpost database: " + e.message);
+    throw new UserError(502, "Database error: " + e.message, "jobpost database: " + e.message);
   }
 }
 
