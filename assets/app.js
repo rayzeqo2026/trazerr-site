@@ -314,8 +314,7 @@ if ($("analyzeBtn")) $("analyzeBtn").addEventListener("click", async () => {
     showProfile(p);
     window.Seqlay?.finish(true);
 
-    // Extract skills and trigger Trazerr Match section
-    const allSkillsText = payload.toLowerCase();
+    // Extract skills from the Career DNA profile
     const commonSkills = [
       'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'react', 'angular', 'vue',
       'node.js', 'express', 'django', 'flask', 'spring', 'sql', 'mongodb', 'postgresql',
@@ -326,21 +325,33 @@ if ($("analyzeBtn")) $("analyzeBtn").addEventListener("click", async () => {
       'data analysis', 'machine learning', 'ai', 'nlp', 'computer vision', 'deep learning',
       'sales', 'marketing', 'business development', 'customer service', 'negotiation',
       'financial analysis', 'accounting', 'budgeting', 'forecasting',
-      'project management', 'risk management', 'quality assurance', 'testing'
+      'risk management', 'quality assurance', 'testing', 'strategic planning', 'design',
+      'ux', 'ui', 'product management', 'analytics', 'reporting'
     ];
+
+    // Combine all profile text for skill extraction
+    const profileText = [
+      p.headline, p.experience, p.stage,
+      ...p.strengths.map(s => s.name + ' ' + s.evidence),
+      ...p.hiddenTalent.map(h => h.title + ' ' + h.why),
+      ...p.directions.map(d => d.role + ' ' + d.why)
+    ].join(' ').toLowerCase();
 
     const extractedSkills = commonSkills.filter(skill => {
       const regex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
-      return regex.test(allSkillsText);
+      return regex.test(profileText);
     });
+
+    console.log("✓ Extracted skills for Trazerr Match:", extractedSkills);
 
     // Save to localStorage and dispatch event
     try {
-      localStorage.setItem("trazerr.resume", payload);
+      localStorage.setItem("trazerr.resume", JSON.stringify(payload));
       localStorage.setItem("trazerr.skills", JSON.stringify(extractedSkills));
     } catch (e) {}
 
     // Dispatch custom event for Trazerr Match
+    console.log("📋 Dispatching trazerrResumeProcessed event with", extractedSkills.length, "skills");
     document.dispatchEvent(new CustomEvent("trazerrResumeProcessed", {
       detail: { resume: payload, skills: extractedSkills }
     }));
@@ -585,6 +596,41 @@ function showProfile(p){
   $("cardBtn").onclick = () => saveCard(p, $("cardBtn"));
   const u = $("unsaveBtn"); if (u) u.onclick = () => { removeProfile(); refreshProfileUI(); $("oNote").textContent = "Removed from this device. It stays available until you close this page."; u.remove(); };
   const gf = $("goalForm"); if (gf) gf.onsubmit = (e) => { e.preventDefault(); planPath(p); };
+
+  // Trigger Trazerr Match for real profiles
+  if (!ex) {
+    const commonSkills = [
+      'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'react', 'angular', 'vue',
+      'node.js', 'express', 'django', 'flask', 'spring', 'sql', 'mongodb', 'postgresql',
+      'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'rest api', 'graphql',
+      'html', 'css', 'bootstrap', 'tailwind', 'webpack', 'npm', 'yarn', 'sass',
+      'agile', 'scrum', 'jira', 'confluence', 'linux', 'windows', 'macos',
+      'communication', 'leadership', 'teamwork', 'problem-solving', 'project management',
+      'data analysis', 'machine learning', 'ai', 'nlp', 'computer vision', 'deep learning',
+      'sales', 'marketing', 'business development', 'customer service', 'negotiation',
+      'financial analysis', 'accounting', 'budgeting', 'forecasting',
+      'risk management', 'quality assurance', 'testing', 'strategic planning', 'design',
+      'ux', 'ui', 'product management', 'analytics', 'reporting'
+    ];
+
+    const profileText = [
+      p.headline, p.experience, p.stage,
+      ...p.strengths.map(s => s.name + ' ' + s.evidence),
+      ...p.hiddenTalent.map(h => h.title + ' ' + h.why),
+      ...p.directions.map(d => d.role + ' ' + d.why)
+    ].join(' ').toLowerCase();
+
+    const extractedSkills = commonSkills.filter(skill => {
+      const regex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
+      return regex.test(profileText);
+    });
+
+    console.log("✓ Extracted skills from profile for Trazerr Match:", extractedSkills);
+    console.log("📋 Dispatching trazerrResumeProcessed event from showProfile");
+    document.dispatchEvent(new CustomEvent("trazerrResumeProcessed", {
+      detail: { resume: resumeSrc || { kind: "text", text: p.headline }, skills: extractedSkills }
+    }));
+  }
 }
 function resetForm(){ picked = null; $("file").value = ""; $("fileName").hidden = true; $("paste").value = ""; setStatus($("status"), ""); }
 

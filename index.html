@@ -439,36 +439,58 @@
   // Initialize Supabase for job matching
   async function initTMSupabase() {
     try {
-      console.log("📋 Initializing Trazerr Match...");
+      console.log("📋 Initializing Trazerr Match - Step 1: Load Supabase library");
 
       if (!window.supabase) {
+        console.log("📋 Trazerr Match - Loading Supabase from CDN...");
         const script = document.createElement('script');
         script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js";
         script.integrity = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
         script.crossOrigin = "anonymous";
-        script.onload = loadTMJobs;
+        script.onload = () => {
+          console.log("✓ Supabase library loaded, now loading jobs...");
+          loadTMJobs();
+        };
+        script.onerror = () => {
+          console.error("✗ Failed to load Supabase library from CDN");
+        };
         document.head.appendChild(script);
       } else {
+        console.log("✓ Supabase already loaded, loading jobs...");
         loadTMJobs();
       }
     } catch (e) {
-      console.error("Failed to initialize Trazerr Match:", e);
+      console.error("✗ Failed to initialize Trazerr Match:", e);
     }
   }
 
   async function loadTMJobs() {
     try {
-      const cfg = await fetch("/api/app?action=authconfig").then(r => r.json());
+      console.log("📋 Trazerr Match - Step 2: Fetch auth config from API");
+      const cfgResp = await fetch("/api/app?action=authconfig");
+      console.log("📋 Auth config response status:", cfgResp.status);
 
-      if (!window.supabase) {
-        console.warn("⚠️ Supabase library not available");
+      if (!cfgResp.ok) {
+        console.error("✗ Auth config endpoint returned error:", cfgResp.status);
+        loadSampleJobs();
         return;
       }
 
+      const cfg = await cfgResp.json();
+      console.log("✓ Auth config received, URL present:", !!cfg.url, "Key present:", !!cfg.anonKey);
+
+      if (!window.supabase) {
+        console.error("✗ Supabase library not available after load");
+        loadSampleJobs();
+        return;
+      }
+
+      console.log("📋 Trazerr Match - Step 3: Create Supabase client");
       const sb = window.supabase.createClient(cfg.url, cfg.anonKey, {
         auth: { persistSession: false }
       });
 
+      console.log("📋 Trazerr Match - Step 4: Fetch jobs from database");
       const { data, error } = await sb
         .from("job_postings")
         .select("id, employer_id, company_code, title, description, required_skills, experience_level, location, remote_ok, status, created_at")
@@ -477,21 +499,86 @@
         .limit(50);
 
       if (error) {
-        console.error("Error loading jobs:", error);
+        console.error("✗ Error loading jobs from database:", error);
+        console.log("  Loading sample jobs as fallback...");
+        loadSampleJobs();
         return;
       }
 
       tmAllJobs = data || [];
       console.log(`✓ Loaded ${tmAllJobs.length} jobs for Trazerr Match`);
+      if (tmAllJobs.length > 0) {
+        console.log("📋 Sample job (first):", tmAllJobs[0]);
+      }
     } catch (e) {
-      console.error("Failed to load jobs:", e);
+      console.error("✗ Failed to load jobs:", e);
+      loadSampleJobs();
     }
+  }
+
+  function loadSampleJobs() {
+    console.log("📋 Loading sample jobs for development...");
+    tmAllJobs = [
+      {
+        id: "sample-1",
+        title: "Senior Software Engineer",
+        description: "Looking for a skilled software engineer with experience in modern web technologies. Will work on our platform serving millions of users.",
+        location: "San Francisco, CA",
+        remote_ok: true,
+        experience_level: "senior",
+        required_skills: ["javascript", "react", "node.js", "aws", "sql"],
+        status: "open",
+        created_at: new Date().toISOString()
+      },
+      {
+        id: "sample-2",
+        title: "Product Manager",
+        description: "Join our product team to shape the future of career development tools. You'll work with engineering and design to ship features.",
+        location: "New York, NY",
+        remote_ok: true,
+        experience_level: "mid",
+        required_skills: ["product management", "data analysis", "communication", "leadership"],
+        status: "open",
+        created_at: new Date().toISOString()
+      },
+      {
+        id: "sample-3",
+        title: "Data Analyst",
+        description: "Analyze user behavior and trends to help us improve our product. Strong SQL and Python skills required.",
+        location: "Remote",
+        remote_ok: true,
+        experience_level: "mid",
+        required_skills: ["sql", "python", "data analysis", "analytics"],
+        status: "open",
+        created_at: new Date().toISOString()
+      }
+    ];
+    console.log(`✓ Loaded ${tmAllJobs.length} sample jobs`);
   }
 
   function calculateTMMatch(job) {
     if (tmSkills.length === 0) return null;
 
-    const jobSkills = (job.required_skills || []).map(s => s.toLowerCase());
+    // Handle various formats of required_skills
+    let jobSkills = [];
+    if (Array.isArray(job.required_skills)) {
+      jobSkills = job.required_skills.map(s => {
+        // If it's an object, extract the name; otherwise treat as string
+        return typeof s === 'string' ? s.toLowerCase() : (s.name || String(s)).toLowerCase();
+      });
+    } else if (typeof job.required_skills === 'string') {
+      // If it's a JSON string, parse it
+      try {
+        const parsed = JSON.parse(job.required_skills);
+        jobSkills = Array.isArray(parsed) ? parsed.map(s =>
+          typeof s === 'string' ? s.toLowerCase() : (s.name || String(s)).toLowerCase()
+        ) : [];
+      } catch (e) {
+        // If not JSON, treat as comma-separated or single string
+        jobSkills = job.required_skills.split(',').map(s => s.toLowerCase().trim());
+      }
+    }
+
     if (jobSkills.length === 0) return null;
 
     const matched = jobSkills.filter(skill =>
@@ -579,18 +666,41 @@
   }
 
   function showTMResults(resume, skills) {
-    console.log("🎯 Displaying Trazerr Match with", tmAllJobs.length, "jobs");
+    console.log("🎯 showTMResults called!");
+    console.log("   - tmAllJobs.length:", tmAllJobs.length);
+    console.log("   - skills received:", skills);
+    console.log("   - resume type:", typeof resume, resume ? resume.kind : "null");
+
     tmResume = resume;
     tmSkills = skills;
 
     const section = document.getElementById("trazerrMatch");
+    console.log("   - Section element found:", !!section);
+    console.log("   - Section current display:", section ? section.style.display : "N/A");
+
+    // If jobs haven't loaded yet, try loading them or use sample jobs
+    if (tmAllJobs.length === 0) {
+      console.log("   - No jobs loaded yet, checking if we should load...");
+      if (!window.supabase) {
+        console.log("   - Supabase not available, using sample jobs");
+        loadSampleJobs();
+      } else {
+        console.log("   - Retrying job load...");
+        loadTMJobs();
+      }
+    }
+    
+
     if (section) {
       section.style.display = "block";
+      console.log("   - Section display set to block");
 
       // Calculate and display results
       const filtered = applyTMFilters(tmAllJobs);
+      console.log("   - Filtered jobs:", filtered.length);
       updateTMStats(filtered);
       renderTMResults(filtered);
+      console.log("   - Results rendered");
 
       // Attach filter listeners
       document.getElementById("tmMatchFilter").addEventListener("change", () => {
@@ -630,13 +740,23 @@
   };
 
   // Initialize when resume is processed
+  console.log("📋 Trazerr Match - Setting up event listener for 'trazerrResumeProcessed'");
   initTMSupabase();
 
   // Listen for resume processing completion
   const originalShowTMResults = showTMResults;
   document.addEventListener("trazerrResumeProcessed", (e) => {
+    console.log("🎉 Event 'trazerrResumeProcessed' fired!");
+    console.log("   - Event detail present:", !!e.detail);
+    console.log("   - Resume present:", !!e.detail?.resume);
+    console.log("   - Skills present:", !!e.detail?.skills);
+    console.log("   - Skills count:", e.detail?.skills?.length || 0);
+
     if (e.detail && e.detail.resume && e.detail.skills) {
+      console.log("✓ All data present, calling showTMResults");
       originalShowTMResults(e.detail.resume, e.detail.skills);
+    } else {
+      console.warn("⚠️ Missing data in event, not showing Trazerr Match");
     }
   });
 </script>
