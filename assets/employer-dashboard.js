@@ -14,6 +14,7 @@
   let currentEmployer = null;
   let currentJobs = [];
   let currentApplications = [];
+  let modalElement = null;
 
   // Error display
   function showError(msg) {
@@ -493,9 +494,6 @@
   /* ========== Helpers ========== */
 
   function showJobModal(job) {
-    // Remove ALL existing modals first (use querySelectorAll to catch all instances)
-    document.querySelectorAll("[data-job-modal]").forEach(m => m.remove());
-
     const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
     const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
     const requirements = (dna.must_have || []).filter(Boolean);
@@ -503,30 +501,31 @@
     const experience = (dna.experience_areas || []).filter(Boolean);
     const resp = (dna.key_responsibilities || []).filter(Boolean);
 
-    const modal = document.createElement("div");
-    modal.setAttribute("data-job-modal", "true");
-    modal.id = "jobModal";
+    // Create modal only once
+    if (!modalElement) {
+      const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() ||
+                      (document.documentElement.dataset.theme === 'dark' ? '#0E1628' : '#FFFFFF');
 
-    // Use computed background color to ensure it's opaque
-    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() ||
-                    (document.documentElement.dataset.theme === 'dark' ? '#0E1628' : '#FFFFFF');
+      modalElement = document.createElement("div");
+      modalElement.id = "jobModal";
+      modalElement.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: ${bgColor}; z-index: 10001; overflow-y: auto;
+        padding: 20px; margin: 0; display: none;
+      `;
 
-    modal.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: ${bgColor}; z-index: 10001; overflow-y: auto;
-      padding: 20px; margin: 0;
-    `;
+      modalElement.addEventListener('click', (e) => {
+        if (e.target === modalElement) modalElement.style.display = 'none';
+      });
 
-    // Close modal when clicking outside content
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.remove();
-      }
-    });
+      document.body.appendChild(modalElement);
+    }
 
-    modal.innerHTML = `
+    // Update modal content and show it
+    modalElement.style.display = 'block';
+    modalElement.innerHTML = `
       <div style="max-width: 900px; margin: 0 auto;">
-        <button onclick="document.querySelector('[data-job-modal]').remove()" style="
+        <button onclick="document.getElementById('jobModal').style.display='none'" style="
           background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ink);
           padding: 0; margin-bottom: 20px;
         ">← Back</button>
@@ -589,13 +588,11 @@
         </div>
 
         <div style="display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border);">
-          <button onclick="document.querySelector('[data-job-modal]').remove()" style="flex: 1; padding: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; font-weight: 600; cursor: pointer;">← Back</button>
-          <button onclick="window.dashboard.deleteJob('${job.id}', '${job.title.replace(/'/g, "\\'")}'); document.querySelector('[data-job-modal]').remove();" style="flex: 1; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🗑 Delete Job</button>
+          <button onclick="document.getElementById('jobModal').style.display='none'" style="flex: 1; padding: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; font-weight: 600; cursor: pointer;">← Back</button>
+          <button onclick="window.dashboard.deleteJob('${job.id}', '${job.title.replace(/'/g, "\\'")}'); document.getElementById('jobModal').style.display='none';" style="flex: 1; padding: 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🗑 Delete Job</button>
         </div>
       </div>
     `;
-
-    document.body.appendChild(modal);
   }
 
   function generateCompanyCode(companyName) {
