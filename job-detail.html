@@ -353,11 +353,20 @@ async function loadJobDetail() {
   try {
     // Initialize Supabase if not already done
     if (!sb) {
-      const cfg = await fetch(API + "?action=authconfig").then(r => r.json());
-      if (!window.supabase) {
-        await loadScript(SB_LIB, SB_LIB_SRI);
+      showOnPage("⏳ Initializing...");
+      try {
+        const cfg = await Promise.race([
+          fetch(API + "?action=authconfig").then(r => r.json()),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Config timeout")), 5000))
+        ]);
+        if (!window.supabase) {
+          await loadScript(SB_LIB, SB_LIB_SRI);
+        }
+        sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+      } catch (e) {
+        showOnPage("❌ Init failed: " + e.message);
+        return;
       }
-      sb = window.supabase.createClient(cfg.url, cfg.anonKey);
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -368,14 +377,21 @@ async function loadJobDetail() {
       return;
     }
 
-    const { data: job, error } = await sb
+    showOnPage("📡 Fetching...");
+
+    const queryPromise = sb
       .from("job_postings")
       .select("*")
       .eq("id", jobId)
       .single();
 
+    const { data: job, error } = await Promise.race([
+      queryPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Query timeout")), 8000))
+    ]);
+
     if (error) {
-      showOnPage("❌ Error: " + error.message);
+      showOnPage("❌ Query error: " + error.message);
       return;
     }
 
@@ -388,7 +404,7 @@ async function loadJobDetail() {
     displayJobDetail(job);
     showOnPage("✅ Ready");
   } catch (e) {
-    showOnPage("❌ " + (e?.message || "Error loading job"));
+    showOnPage("❌ " + (e?.message || "Error"));
   }
 }
 
