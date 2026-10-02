@@ -32,7 +32,7 @@ function loadScript(src, integrity) {
   });
 }
 
-function handleFileSelect(event) {
+async function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -50,6 +50,65 @@ function handleFileSelect(event) {
   selectedFile = file;
   updateFileList();
   document.getElementById("errorMsg").style.display = "none";
+
+  // Extract text from PDF and auto-fill job description
+  if (file.type === 'application/pdf') {
+    try {
+      const text = await extractPdfText(file);
+      if (text) {
+        document.getElementById("jobDesc").value = text;
+
+        // Try to extract location from the PDF text
+        const location = extractLocation(text);
+        if (location) {
+          document.getElementById("location").value = location;
+        }
+
+        showSuccess("✓ PDF uploaded! Job description auto-filled from document.");
+      }
+    } catch (e) {
+      console.error("Error extracting PDF text:", e);
+      showError("Could not extract text from PDF. Please paste the job description manually.");
+    }
+  }
+}
+
+async function extractPdfText(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(" ");
+      fullText += pageText + "\n";
+    }
+
+    return fullText;
+  } catch (e) {
+    console.error("PDF extraction error:", e);
+    return null;
+  }
+}
+
+function extractLocation(text) {
+  // Try to find common location patterns
+  const locationPatterns = [
+    /Location:\s*([^,\n]+(?:,\s*[A-Z]{2})?)/i,
+    /(?:Based in|Located in|Location):\s*([^,\n]+)/i,
+    /([A-Z][a-z]+(?:,\s*[A-Z]{2})?)\s*(?:USA|US|United States)/i,
+  ];
+
+  for (const pattern of locationPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
 }
 
 function updateFileList() {
@@ -141,10 +200,11 @@ async function extractAndPost() {
     const btn = document.getElementById("extractBtn");
     const btnText = document.getElementById("btnText");
 
-    console.log("Form values:", { desc: desc.length, title, location, remoteOk });
+    console.log("Form values:", { desc: desc.length, title, location, remoteOk, hasFile: !!selectedFile });
 
-    if (!desc) {
-      showError("Please paste a job description");
+    // Job description is required unless a file is uploaded
+    if (!desc && !selectedFile) {
+      showError("Please paste a job description or upload a PDF");
       return;
     }
 
