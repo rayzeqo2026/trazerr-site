@@ -194,13 +194,32 @@
   // Handle "Add Your Profile" button on the main page
   const profileBtn = $("empProfileBtn");
   if (profileBtn) {
-    profileBtn.onclick = () => { hideLanding(); showSignIn(); };
+    profileBtn.onclick = async () => {
+      profileBtn.disabled = true;
+      try {
+        hideLanding();
+        const app = getApp();
+        if (!sb) {
+          const cfg = await fetch(API + "?action=authconfig").then(r => { if (!r.ok) throw new Error(); return r.json(); });
+          if (!window.supabase) await loadScript(SB_LIB, SB_LIB_SRI);
+          sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { storageKey: "trazerr.auth", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } });
+        }
+        showSignIn();
+      } catch (e) {
+        getApp().innerHTML = '<p class="status err">Failed to load. Check your connection and try again.</p>';
+      }
+      profileBtn.disabled = false;
+    };
   }
 
   // Handle "Sign in here" link
   const signInLink = $("empSignInLink");
   if (signInLink) {
-    signInLink.onclick = (e) => { e.preventDefault(); hideLanding(); showSignIn(); };
+    signInLink.onclick = (e) => {
+      e.preventDefault();
+      const btn = profileBtn;
+      if (btn) btn.click();
+    };
   }
 
   start();
