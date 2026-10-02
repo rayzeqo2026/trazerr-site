@@ -458,89 +458,8 @@
     container.innerHTML = html || "<p style='color: var(--ink-2);'>No applications yet.</p>";
   }
 
-  let currentDetailJobId = null;
-
   function showJobDetail(jobId) {
-    const job = currentJobs.find(j => j.id === jobId);
-    if (!job) {
-      console.error("Job not found:", jobId);
-      return;
-    }
-
-    console.log("Opening job detail for:", job.title, "Job data:", job);
-
-    currentDetailJobId = jobId;
-    const modal = document.getElementById("jobDetailModal");
-
-    // Parse job_dna if it's a string, otherwise use as-is
-    let dna = job.job_dna || {};
-    if (typeof dna === "string") {
-      try {
-        dna = JSON.parse(dna);
-      } catch (e) {
-        console.warn("Failed to parse job_dna:", e);
-        dna = {};
-      }
-    }
-
-    console.log("Parsed DNA:", dna);
-
-    // Populate basic info
-    document.getElementById("modalJobTitle").textContent = job.title;
-    document.getElementById("modalJobCode").textContent = job.company_code;
-    document.getElementById("modalJobDescription").textContent = job.description || "No description provided";
-    document.getElementById("modalJobLocation").textContent = job.location || "Not specified";
-    document.getElementById("modalJobRemote").textContent = job.remote_ok ? "Yes, remote work available" : "On-site only";
-
-    // Populate core skills - also check required_skills field
-    const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
-    document.getElementById("modalCoreSkills").innerHTML = coreSkills.length
-      ? coreSkills.map(skill => `<span class="skill-tag">${esc(skill)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No specific skills identified</p>";
-
-    // Populate must have
-    const mustHave = (dna.must_have || []).filter(Boolean);
-    document.getElementById("modalMustHave").innerHTML = mustHave.length
-      ? mustHave.map(skill => `<span class="skill-tag">${esc(skill)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No specific requirements identified</p>";
-
-    // Populate nice to have - also check nice_to_have field
-    const niceToHave = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
-    document.getElementById("modalNiceToHave").innerHTML = niceToHave.length
-      ? niceToHave.map(skill => `<span class="skill-tag">${esc(skill)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
-
-    // Populate experience areas
-    const expAreas = (dna.experience_areas || []).filter(Boolean);
-    document.getElementById("modalExperienceAreas").innerHTML = expAreas.length
-      ? expAreas.map(area => `<span class="skill-tag">${esc(area)}</span>`).join("")
-      : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
-
-    // Populate responsibilities
-    const resp = (dna.key_responsibilities || []).filter(Boolean);
-    document.getElementById("modalResponsibilities").innerHTML = resp.length
-      ? resp.map(r => `<li>${esc(r)}</li>`).join("")
-      : "<li style='color: var(--ink-2);'>No specific responsibilities listed</li>";
-
-    modal.style.display = "block";
-    document.body.style.overflow = "hidden";
-
-    console.log("Modal displayed");
-  }
-
-  function closeJobDetail() {
-    const modal = document.getElementById("jobDetailModal");
-    modal.style.display = "none";
-    document.body.style.overflow = "auto";
-    currentDetailJobId = null;
-  }
-
-  function deleteJobFromModal() {
-    if (currentDetailJobId) {
-      const job = currentJobs.find(j => j.id === currentDetailJobId);
-      closeJobDetail();
-      if (job) deleteJob(currentDetailJobId, job.title);
-    }
+    window.location.href = "/job-detail.html?id=" + encodeURIComponent(jobId);
   }
 
   function showAppDetail(appId) {
@@ -591,8 +510,6 @@
     addSkill,
     removeSkill,
     showJobDetail,
-    closeJobDetail,
-    deleteJobFromModal,
     showAppDetail,
     deleteJob
   };
@@ -600,16 +517,6 @@
   document.addEventListener("DOMContentLoaded", () => {
     try {
       checkAuth();
-
-      // Close modal when clicking outside
-      const modal = document.getElementById("jobDetailModal");
-      if (modal) {
-        modal.addEventListener("click", (e) => {
-          if (e.target === modal) {
-            closeJobDetail();
-          }
-        });
-      }
     } catch (e) {
       console.error("Dashboard init error:", e);
       alert("Dashboard error: " + (e.message || e));

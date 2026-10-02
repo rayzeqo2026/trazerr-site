@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Job Details · Trazerr</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#FFFFFF">
+<script>(function(){
+  var root=document.documentElement, t="light";
+  try{t=localStorage.getItem("trazerr.theme")==="dark"?"dark":"light"}catch(e){}
+  root.dataset.theme=t;
+  if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#0E1628";
+  root.dataset.design="1";
+})()</script>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+body {
+  background: var(--bg);
+}
+
+.detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.detail-header {
+  background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+  color: white;
+  padding: 48px 32px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  box-shadow: 0 10px 40px rgba(0, 102, 255, 0.2);
+}
+
+.detail-header h1 {
+  margin: 0 0 16px;
+  font-size: 36px;
+  font-weight: 800;
+}
+
+.detail-header-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  opacity: 0.95;
+}
+
+.detail-header-meta > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+.section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+  color: var(--ink);
+}
+
+.section-blue .section-title { color: #0066ff; border-bottom-color: #0066ff; }
+.section-blue { padding: 24px; background: linear-gradient(135deg, rgba(0,102,255,0.08) 0%, rgba(0,102,255,0.02) 100%); border-radius: 12px; border-left: 5px solid #0066ff; }
+
+.section-yellow .section-title { color: #f59e0b; border-bottom-color: #f59e0b; }
+.section-yellow { padding: 24px; background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.02) 100%); border-radius: 12px; border-left: 5px solid #f59e0b; }
+
+.section-green .section-title { color: #22c55e; border-bottom-color: #22c55e; }
+.section-green { padding: 24px; background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%); border-radius: 12px; border-left: 5px solid #22c55e; }
+
+.section-purple .section-title { color: #8b5cf6; border-bottom-color: #8b5cf6; }
+.section-purple { padding: 24px; background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.02) 100%); border-radius: 12px; border-left: 5px solid #8b5cf6; }
+
+.skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-tag {
+  display: inline-block;
+  background: var(--blue);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.section-yellow .skill-tag { background: #f59e0b; }
+.section-green .skill-tag { background: #22c55e; }
+.section-purple .skill-tag { background: #8b5cf6; }
+
+.description {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink);
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+
+.responsibilities-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.responsibilities-list li {
+  padding: 10px 0;
+  padding-left: 24px;
+  position: relative;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.responsibilities-list li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.section-yellow .responsibilities-list li:before { color: #f59e0b; }
+.section-green .responsibilities-list li:before { color: #22c55e; }
+.section-purple .responsibilities-list li:before { color: #8b5cf6; }
+
+.footer {
+  display: flex;
+  gap: 12px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-back {
+  flex: 1;
+  padding: 14px 24px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: var(--bg-2);
+  border-color: var(--blue);
+}
+
+.btn-delete {
+  flex: 1;
+  padding: 14px 24px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .detail-header {
+    padding: 32px 24px;
+  }
+
+  .detail-header h1 {
+    font-size: 28px;
+  }
+
+  .detail-header-meta {
+    gap: 16px;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+<body>
+<div class="detail-container">
+  <div style="margin-bottom: 24px;">
+    <a href="/employer-dashboard.html" style="color: var(--blue); text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">← Back to Dashboard</a>
+  </div>
+
+  <div class="detail-header">
+    <h1 id="jobTitle">Job Title</h1>
+    <div class="detail-header-meta">
+      <div><span class="badge" id="jobCode">CODE</span></div>
+      <div>📍 <span id="jobLocation">Location not specified</span></div>
+      <div>🌐 <span id="jobRemote">On-site</span></div>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="section">
+    <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 16px; color: var(--ink);">About This Role</h2>
+    <p class="description" id="jobDescription"></p>
+  </div>
+
+  <!-- Core Skills -->
+  <div class="section section-blue">
+    <h3 class="section-title">✓ Core Skills</h3>
+    <div class="skills-grid" id="coreSkills"></div>
+  </div>
+
+  <!-- Requirements -->
+  <div class="section section-yellow">
+    <h3 class="section-title">⭐ Requirements</h3>
+    <div class="skills-grid" id="requirements"></div>
+  </div>
+
+  <!-- Nice to Have -->
+  <div class="section section-green">
+    <h3 class="section-title">★ Nice to Have</h3>
+    <div class="skills-grid" id="niceToHave"></div>
+  </div>
+
+  <!-- Experience Areas -->
+  <div class="section section-purple">
+    <h3 class="section-title">📊 Experience Areas</h3>
+    <div class="skills-grid" id="experienceAreas"></div>
+  </div>
+
+  <!-- Key Responsibilities -->
+  <div class="section">
+    <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 16px; color: var(--ink);">📋 Key Responsibilities</h2>
+    <ul class="responsibilities-list" id="responsibilities"></ul>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="/employer-dashboard.html" class="btn-back">← Back</a>
+    <button class="btn-delete" onclick="deleteJobAndReturn()">🗑 Delete Job</button>
+  </div>
+</div>
+
+<script>
+const API = "/api/app";
+const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js";
+const SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
+
+let sb = null;
+let currentJob = null;
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function loadScript(src, integrity) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src;
+    if (integrity) s.integrity = integrity;
+    s.crossOrigin = "anonymous";
+    s.onload = res;
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function initAuth() {
+  try {
+    const cfg = await fetch(API + "?action=authconfig").then(r => {
+      if (!r.ok) throw new Error("Failed to get auth config");
+      return r.json();
+    });
+
+    if (!window.supabase) await loadScript(SB_LIB, SB_LIB_SRI);
+
+    sb = window.supabase.createClient(cfg.url, cfg.anonKey, {
+      auth: {
+        storageKey: "trazerr.auth",
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: "implicit"
+      }
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      window.location.href = "/employers.html";
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error("Auth error:", e);
+    window.location.href = "/employers.html";
+    return false;
+  }
+}
+
+async function loadJobDetail() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const jobId = params.get("id");
+
+    if (!jobId) {
+      throw new Error("No job ID provided");
+    }
+
+    const { data: job, error } = await sb
+      .from("job_postings")
+      .select("*")
+      .eq("id", jobId)
+      .single();
+
+    if (error || !job) {
+      throw new Error("Job not found");
+    }
+
+    currentJob = job;
+    displayJobDetail(job);
+  } catch (e) {
+    console.error("Failed to load job:", e);
+    document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error loading job</h1><p>${esc(e.message)}</p><a href="/employer-dashboard.html" style="color: var(--blue);">← Go back</a></div>`;
+  }
+}
+
+function displayJobDetail(job) {
+  const dna = (typeof job.job_dna === "string" ? JSON.parse(job.job_dna) : job.job_dna) || {};
+
+  document.getElementById("jobTitle").textContent = job.title;
+  document.getElementById("jobCode").textContent = job.company_code;
+  document.getElementById("jobLocation").textContent = job.location || "Not specified";
+  document.getElementById("jobRemote").textContent = job.remote_ok ? "Remote available" : "On-site only";
+  document.getElementById("jobDescription").textContent = job.description || "No description provided";
+
+  // Core skills
+  const coreSkills = (dna.core_skills || job.required_skills || []).filter(Boolean);
+  document.getElementById("coreSkills").innerHTML = coreSkills.length
+    ? coreSkills.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No skills identified</p>";
+
+  // Requirements
+  const requirements = (dna.must_have || []).filter(Boolean);
+  document.getElementById("requirements").innerHTML = requirements.length
+    ? requirements.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No specific requirements identified</p>";
+
+  // Nice to have
+  const nice = (dna.nice_to_have || job.nice_to_have || []).filter(Boolean);
+  document.getElementById("niceToHave").innerHTML = nice.length
+    ? nice.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No optional skills identified</p>";
+
+  // Experience areas
+  const experience = (dna.experience_areas || []).filter(Boolean);
+  document.getElementById("experienceAreas").innerHTML = experience.length
+    ? experience.map(s => `<span class="skill-tag">${esc(s)}</span>`).join("")
+    : "<p style='color: var(--ink-2); margin: 0;'>No specific areas identified</p>";
+
+  // Responsibilities
+  const resp = (dna.key_responsibilities || []).filter(Boolean);
+  document.getElementById("responsibilities").innerHTML = resp.length
+    ? resp.map(r => `<li>${esc(r)}</li>`).join("")
+    : "<li style='color: var(--ink-2);'>No responsibilities listed</li>";
+}
+
+async function deleteJobAndReturn() {
+  if (!currentJob || !confirm(`Delete "${currentJob.title}"? This cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      alert("Please sign in first");
+      return;
+    }
+
+    const r = await fetch(API + "?action=jobdelete", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: currentJob.id })
+    });
+
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to delete job");
+    }
+
+    window.location.href = "/employer-dashboard.html";
+  } catch (e) {
+    alert("Error: " + (e.message || "Failed to delete job"));
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const ok = await initAuth();
+  if (ok) {
+    loadJobDetail();
+  }
+});
+</script>
+</body>
+</html>
