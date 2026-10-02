@@ -348,12 +348,15 @@ async function initAuth() {
 
 async function loadJobDetail() {
   try {
-    const jobId = new URLSearchParams(window.location.search).get("id");
-    console.log("Loading job ID:", jobId);
+    const params = new URLSearchParams(window.location.search);
+    const jobId = params.get("id");
 
     if (!jobId) {
-      throw new Error("No job ID in URL");
+      showOnPage("❌ No job ID in URL");
+      return;
     }
+
+    showOnPage("🔄 Loading job " + jobId.substring(0, 8) + "...");
 
     const { data: job, error } = await sb
       .from("job_postings")
@@ -361,17 +364,45 @@ async function loadJobDetail() {
       .eq("id", jobId)
       .single();
 
-    if (error || !job) {
-      throw new Error(error?.message || "Job not found");
+    if (error) {
+      showOnPage("❌ Database error: " + error.message);
+      return;
     }
 
-    console.log("Job loaded from Supabase:", job.title);
+    if (!job) {
+      showOnPage("❌ Job not found in database");
+      return;
+    }
+
+    showOnPage("✅ Loaded: " + job.title);
+
+    // Debug: show what we got
+    if (!job.title) showOnPage("⚠️ WARNING: Job has no title!");
+    if (!job.company_code) showOnPage("⚠️ WARNING: Job has no company_code!");
+
     currentJob = job;
     displayJobDetail(job);
+
+    // Hide status after a moment
+    setTimeout(() => {
+      const status = document.getElementById("loadStatus");
+      if (status) status.style.display = "none";
+    }, 2000);
   } catch (e) {
-    console.error("loadJobDetail error:", e);
-    document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h1>Error: ${esc(e.message)}</h1><p><a href="/employer-dashboard.html" style="color: var(--blue);">← Back to Dashboard</a></p></div>`;
+    showOnPage("❌ Error: " + e.message);
   }
+}
+
+function showOnPage(msg) {
+  let status = document.getElementById("loadStatus");
+  if (!status) {
+    status = document.createElement("div");
+    status.id = "loadStatus";
+    status.style.cssText = "position: fixed; top: 20px; left: 20px; right: 20px; background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; font-size: 13px; z-index: 9999;";
+    document.body.insertBefore(status, document.body.firstChild);
+  }
+  status.textContent = msg;
+  status.style.display = "block";
 }
 
 function displayJobDetail(job) {
