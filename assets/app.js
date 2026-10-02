@@ -1166,7 +1166,7 @@ function renderTailored(){
     r.blanks.map((b, i) => '<div><label for="tb' + i + '">' + esc(b.question) + ' <span style="color:var(--brass)">[' + esc(b.placeholder) + ']</span></label><input class="input" id="tb' + i + '" data-ph="' + esc(b.placeholder) + '" type="text" maxlength="80"></div>').join("") + "</div></div>";
   h += '<div class="o-sec"><h3>Your tailored resume</h3><div class="paper" id="paper">' + resumeBody(r, "html") + "</div></div>";
   h += feedbackHTML("tailor");
-  h += '<div class="o-foot"><button class="btn btn-primary" type="button" id="tWord">Download Word file</button><button class="btn btn-quiet" type="button" id="tPdf">Save as PDF</button><button class="btn btn-quiet" type="button" id="tCopy">Copy text</button><button class="btn btn-quiet" type="button" id="tAgain">Tailor for another role</button></div>';
+  h += '<div class="o-foot"><button class="btn btn-primary" type="button" id="tSaveChanges">Save Changes to Career DNA</button><button class="btn btn-quiet" type="button" id="tWord">Download Word file</button><button class="btn btn-quiet" type="button" id="tPdf">Save as PDF</button><button class="btn btn-quiet" type="button" id="tCopy">Copy text</button><button class="btn btn-quiet" type="button" id="tAgain">Tailor for another role</button></div>';
   h += '<p class="o-note" id="oNote" role="status" aria-live="polite"></p>';
   openOverlay("Tailor my DNA", h);
   const body = $("oBody");
@@ -1174,6 +1174,30 @@ function renderTailored(){
   body.querySelectorAll("[data-ph]").forEach(inp => inp.oninput = () => { st.values[inp.dataset.ph] = inp.value; $("paper").innerHTML = resumeBody(r, "html"); });
   const left = () => { const n = (resumeText(r).match(/\[[^\]]{1,60}\]/g) || []).length; return n ? " " + n + (n === 1 ? " blank is" : " blanks are") + " still marked in [brackets]." : ""; };
   const fileBase = (r.name || "Resume") + " - " + (st.role || "tailored");
+  $("tSaveChanges").onclick = () => {
+    try {
+      // Update the profile with tailored data
+      const updatedProfile = { ...st.p };
+      updatedProfile.headline = r.name || st.p.headline;
+      updatedProfile.tailoredFor = st.role;
+      updatedProfile.tailoredResume = r;
+      updatedProfile.lastUpdated = new Date().toISOString();
+
+      // Save to localStorage
+      if (saveProfile(updatedProfile)) {
+        $("oNote").textContent = "✓ Changes saved! Your Career DNA now reflects your tailored resume for " + esc(st.role) + ".";
+        setTimeout(() => {
+          closeOverlay();
+          showProfile(updatedProfile, false);
+        }, 1500);
+      } else {
+        $("oNote").textContent = "Could not save changes. Your browser may have blocked it.";
+      }
+    } catch (e) {
+      console.error("Error saving changes:", e);
+      $("oNote").textContent = "Error saving changes: " + e.message;
+    }
+  };
   $("tWord").onclick = () => {
     const blob = resumeDocx(r);
     const url = URL.createObjectURL(blob), a = document.createElement("a");
