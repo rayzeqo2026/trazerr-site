@@ -514,10 +514,47 @@
   window.closeJobModal = closeJobModal;
   window.applyForJob = applyForJob;
 
+  // Attach event listeners even if initialization fails
+  function setupEventListeners() {
+    const resumeFile = document.getElementById("resumeFile");
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+
+    if (resumeFile && !resumeFile.hasAttribute("data-listener-attached")) {
+      resumeFile.addEventListener("change", handleResumeUpload);
+      resumeFile.setAttribute("data-listener-attached", "true");
+      console.log("✓ Resume upload handler attached (fallback)");
+    }
+
+    if (searchBtn && !searchBtn.hasAttribute("data-listener-attached")) {
+      searchBtn.addEventListener("click", performSearch);
+      searchBtn.setAttribute("data-listener-attached", "true");
+      console.log("✓ Search button handler attached (fallback)");
+    }
+
+    if (searchInput && !searchInput.hasAttribute("data-listener-attached")) {
+      searchInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") performSearch();
+      });
+      searchInput.setAttribute("data-listener-attached", "true");
+      console.log("✓ Search input handler attached (fallback)");
+    }
+  }
+
   // Initialize immediately if DOM is already loaded, otherwise wait for event
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize);
+    document.addEventListener("DOMContentLoaded", () => {
+      setupEventListeners();
+      initialize().catch(e => {
+        console.error("Initialization failed:", e);
+        setupEventListeners(); // Try again as fallback
+      });
+    });
   } else {
-    initialize();
+    setupEventListeners();
+    initialize().catch(e => {
+      console.error("Initialization failed:", e);
+      setupEventListeners(); // Try again as fallback
+    });
   }
 })();
