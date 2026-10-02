@@ -38,6 +38,29 @@
       const { data } = await sb.auth.getSession();
       if (/access_token=|error_description=/.test(location.hash)) history.replaceState(null, "", location.pathname);
       try { localStorage.removeItem("trazerr.signinReturn"); } catch (e) {}
+
+      // Set up button handlers now that sb is initialized
+      const profileBtn = $("empProfileBtn");
+      if (profileBtn) {
+        profileBtn.onclick = async () => {
+          profileBtn.disabled = true;
+          try {
+            hideLanding();
+            showSignIn();
+          } catch (e) {
+            getApp().innerHTML = '<p class="status err">Failed to load. Check your connection and try again.</p>';
+          }
+          profileBtn.disabled = false;
+        };
+      }
+      const signInLink = $("empSignInLink");
+      if (signInLink) {
+        signInLink.onclick = (e) => {
+          e.preventDefault();
+          if (profileBtn) profileBtn.click();
+        };
+      }
+
       if (!data || !data.session) return showSignIn();
       hideLanding();
       $("empSignOut").hidden = false;
@@ -189,37 +212,6 @@
     if (!me.requests.length) { box.innerHTML = '<p class="hint">None yet. Find candidates above, then choose "Ask to talk".</p>'; return; }
     box.innerHTML = '<ul class="acct-alerts">' + me.requests.map(r => "<li><div><b>" + esc(r.headline) + "</b><small>" + esc(r.jobTitle) + " · " + esc(fmtDate(r.createdAt)) + "</small></div><span class=\"emp-state " + esc(r.status) + "\">" +
       (r.status === "accepted" ? "Accepted: " + esc([r.name, r.email].filter(Boolean).join(", ")) : r.status === "declined" ? "Declined" : "Waiting for a reply") + "</span></li>").join("") + "</ul>";
-  }
-
-  // Handle "Add Your Profile" button on the main page
-  const profileBtn = $("empProfileBtn");
-  if (profileBtn) {
-    profileBtn.onclick = async () => {
-      profileBtn.disabled = true;
-      try {
-        hideLanding();
-        const app = getApp();
-        if (!sb) {
-          const cfg = await fetch(API + "?action=authconfig").then(r => { if (!r.ok) throw new Error(); return r.json(); });
-          if (!window.supabase) await loadScript(SB_LIB, SB_LIB_SRI);
-          sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { storageKey: "trazerr.auth", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } });
-        }
-        showSignIn();
-      } catch (e) {
-        getApp().innerHTML = '<p class="status err">Failed to load. Check your connection and try again.</p>';
-      }
-      profileBtn.disabled = false;
-    };
-  }
-
-  // Handle "Sign in here" link
-  const signInLink = $("empSignInLink");
-  if (signInLink) {
-    signInLink.onclick = (e) => {
-      e.preventDefault();
-      const btn = profileBtn;
-      if (btn) btn.click();
-    };
   }
 
   start();
