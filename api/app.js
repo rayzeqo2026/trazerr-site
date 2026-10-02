@@ -84,7 +84,7 @@ async function getSession(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobdelete: 10, jobmatch: 30, appAlert: 20 };
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobdelete: 100, jobmatch: 30, appAlert: 20 };
 const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe", "employerme", "myrequests", "adminemployers"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
