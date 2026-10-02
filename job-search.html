@@ -2,285 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Trazerr Match · Find Your Perfect Role</title>
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/site.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trazerr Match</title>
 <style>
-body { margin: 0; padding: 0; }
-.tm-header {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  border-bottom: 1px solid #d0d7e0;
-  padding: 40px 20px;
-  margin-bottom: 40px;
-}
-.tm-header h1 {
-  max-width: 1400px;
-  margin: 0 auto;
-  font-size: 36px;
-  font-weight: 800;
-  color: #0e1628;
-}
-.tm-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-.tm-jobs-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-.tm-jobs-header h2 {
-  margin: 0;
-  font-size: 24px;
-  color: #0e1628;
-}
-.tm-jobs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-.tm-job-card {
-  border: 1px solid #d0d7e0;
-  border-radius: 12px;
-  padding: 20px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.tm-job-card:hover {
-  border-color: #0066e0;
-  box-shadow: 0 4px 12px rgba(0, 102, 224, 0.1);
-  transform: translateY(-2px);
-}
-.tm-job-title {
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #0e1628;
-}
-.tm-job-meta {
-  font-size: 14px;
-  color: #5f6b7c;
-  margin: 0 0 12px;
-}
-.tm-job-description {
-  font-size: 14px;
-  color: #5f6b7c;
-  margin: 0 0 12px;
-  line-height: 1.5;
-}
-.tm-job-skills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.tm-skill-tag {
-  background: #e8ecf1;
-  color: #0e1628;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-}
-.tm-match-badge {
-  display: inline-block;
-  background: #4CAF50;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-}
-.tm-empty {
-  text-align: center;
-  padding: 40px;
-  color: #5f6b7c;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
+.header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; border-bottom: 1px solid #ddd; }
+.header h1 { max-width: 1200px; margin: 0 auto; font-size: 32px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.jobs-title { font-size: 20px; margin: 20px 0; font-weight: 600; }
+.jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.job-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; cursor: pointer; }
+.job-card:hover { border-color: #0066e0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.job-title { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
+.job-meta { font-size: 13px; color: #666; margin: 0 0 10px; }
+.job-desc { font-size: 13px; color: #555; margin: 0 0 10px; line-height: 1.4; }
+.job-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.skill { background: #e8ecf1; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+.job-match { display: inline-block; background: #4CAF50; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
 </style>
 </head>
 <body>
 
-<div class="tm-header">
+<div class="header">
   <h1>Find Your Perfect Role</h1>
 </div>
 
-<div class="tm-content">
-  <div class="tm-jobs-header">
-    <h2 id="jobsTitle">Loading jobs...</h2>
-  </div>
-
-  <div id="jobsContainer" class="tm-jobs-grid"></div>
-  <div id="emptyState" class="tm-empty" style="display: none;">
-    <p>No jobs found. Try adjusting your filters.</p>
-  </div>
+<div class="container">
+  <div class="jobs-title" id="title">Loading...</div>
+  <div class="jobs-grid" id="jobs"></div>
 </div>
 
 <script>
-let allJobs = [];
-let candidateSkills = [];
+// Jobs data
+const jobs = [
+  { id: 1, title: 'Senior Frontend Engineer', company: 'TechCorp', location: 'SF', remote: true, desc: 'Build web apps with React and TypeScript', skills: ['javascript', 'react', 'typescript'] },
+  { id: 2, title: 'Product Manager', company: 'InnovateLabs', location: 'NYC', remote: true, desc: 'Drive product strategy for AI platform', skills: ['product management', 'data analysis'] },
+  { id: 3, title: 'Full Stack Engineer', company: 'StartupHub', location: 'Remote', remote: true, desc: 'Build full-stack features with Node and React', skills: ['javascript', 'node.js', 'react', 'sql'] },
+  { id: 4, title: 'Data Analyst', company: 'Analytics Pro', location: 'Boston', remote: false, desc: 'Start your analytics career - we train!', skills: ['sql', 'python', 'data analysis'] },
+  { id: 5, title: 'DevOps Engineer', company: 'CloudSystems', location: 'Seattle', remote: true, desc: 'Architect AWS infrastructure', skills: ['aws', 'docker', 'kubernetes', 'python'] }
+];
 
-// Load sample jobs immediately
-function initializePage() {
-  console.log('=== INITIALIZING TRAZERR MATCH ===');
+// Get skills from localStorage
+let userSkills = [];
+try {
+  const saved = localStorage.getItem('trazerr.skills');
+  if (saved) userSkills = JSON.parse(saved);
+} catch (e) {}
 
-  // Load candidate skills from localStorage
-  try {
-    const saved = localStorage.getItem('trazerr.skills');
-    if (saved) candidateSkills = JSON.parse(saved);
-    console.log('Loaded skills:', candidateSkills);
-  } catch (e) {
-    console.error('Error loading skills:', e);
-  }
-
-  // Load sample jobs
-  loadSampleJobs();
+// Calculate match
+function getMatch(jobSkills) {
+  if (!userSkills.length) return 0;
+  const matched = jobSkills.filter(s => userSkills.some(u => u.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(u.toLowerCase()))).length;
+  return Math.round(matched / jobSkills.length * 100);
 }
 
-function loadSampleJobs() {
-  console.log('Loading sample jobs...');
+// Render
+function render() {
+  const titleEl = document.getElementById('title');
+  const jobsEl = document.getElementById('jobs');
 
-  allJobs = [
-    {
-      id: 'job-1',
-      title: 'Senior Frontend Engineer',
-      company: 'TechCorp Inc.',
-      location: 'San Francisco, CA',
-      remote_ok: true,
-      description: 'Build beautiful web applications with React and TypeScript. 5+ years required.',
-      required_skills: ['javascript', 'react', 'typescript', 'css', 'leadership']
-    },
-    {
-      id: 'job-2',
-      title: 'Product Manager',
-      company: 'InnovateLabs',
-      location: 'New York, NY',
-      remote_ok: true,
-      description: 'Drive product strategy for our AI platform. 3-5 years PM experience required.',
-      required_skills: ['product management', 'data analysis', 'communication', 'strategy']
-    },
-    {
-      id: 'job-3',
-      title: 'Full Stack Engineer',
-      company: 'StartupHub',
-      location: 'Remote',
-      remote_ok: true,
-      description: 'Build full-stack features with Node.js, React, and PostgreSQL.',
-      required_skills: ['javascript', 'node.js', 'react', 'sql', 'rest api']
-    },
-    {
-      id: 'job-4',
-      title: 'Data Analyst',
-      company: 'Analytics Pro',
-      location: 'Boston, MA',
-      remote_ok: false,
-      description: 'Start your data analytics career. We will train you!',
-      required_skills: ['sql', 'python', 'data analysis', 'tableau']
-    },
-    {
-      id: 'job-5',
-      title: 'DevOps Engineer',
-      company: 'CloudSystems',
-      location: 'Seattle, WA',
-      remote_ok: true,
-      description: 'Architect cloud infrastructure on AWS. 5+ years required.',
-      required_skills: ['aws', 'docker', 'kubernetes', 'python', 'ci/cd']
-    }
-  ];
+  titleEl.textContent = jobs.length + ' jobs available';
 
-  console.log('Sample jobs loaded:', allJobs.length);
-  renderJobs();
-}
-
-function calculateMatch(job) {
-  if (!candidateSkills || candidateSkills.length === 0) return 0;
-
-  let jobSkills = job.required_skills || [];
-  if (typeof jobSkills === 'string') {
-    try {
-      jobSkills = JSON.parse(jobSkills);
-    } catch {
-      jobSkills = jobSkills.split(',').map(s => s.trim());
-    }
-  }
-
-  if (!Array.isArray(jobSkills)) jobSkills = [];
-  if (jobSkills.length === 0) return 0;
-
-  const matched = jobSkills.filter(skill =>
-    candidateSkills.some(cs =>
-      skill.toLowerCase().includes(cs.toLowerCase()) ||
-      cs.toLowerCase().includes(skill.toLowerCase())
-    )
-  ).length;
-
-  return Math.round((matched / jobSkills.length) * 100);
-}
-
-function renderJobs() {
-  console.log('Rendering jobs...');
-
-  const container = document.getElementById('jobsContainer');
-  const emptyState = document.getElementById('emptyState');
-  const title = document.getElementById('jobsTitle');
-
-  if (allJobs.length === 0) {
-    container.innerHTML = '';
-    emptyState.style.display = 'block';
-    title.textContent = 'No jobs available';
-    return;
-  }
-
-  emptyState.style.display = 'none';
-  title.textContent = allJobs.length + ' job' + (allJobs.length !== 1 ? 's' : '') + ' available';
-
-  container.innerHTML = allJobs.map(job => {
-    const match = calculateMatch(job);
-    const skillsHtml = (job.required_skills || [])
-      .slice(0, 5)
-      .map(s => `<span class="tm-skill-tag">${s}</span>`)
-      .join('');
-
-    return `
-      <div class="tm-job-card" onclick="showDetails('${job.id}')">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-          <div>
-            <h3 class="tm-job-title">${job.title}</h3>
-            <div class="tm-job-meta">${job.company} · ${job.location}${job.remote_ok ? ' · 🌐 Remote' : ''}</div>
-          </div>
-          <div class="tm-match-badge">${match}%</div>
+  jobsEl.innerHTML = jobs.map(job => `
+    <div class="job-card">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+        <div>
+          <div class="job-title">${job.title}</div>
+          <div class="job-meta">${job.company} · ${job.location}${job.remote ? ' · Remote' : ''}</div>
         </div>
-        <p class="tm-job-description">${job.description.substring(0, 100)}...</p>
-        <div class="tm-job-skills">${skillsHtml}</div>
+        <div class="job-match">${getMatch(job.skills)}%</div>
       </div>
-    `;
-  }).join('');
-
-  console.log('Rendered', allJobs.length, 'jobs');
+      <div class="job-desc">${job.desc}</div>
+      <div class="job-skills">${job.skills.map(s => `<span class="skill">${s}</span>`).join('')}</div>
+    </div>
+  `).join('');
 }
 
-function showDetails(jobId) {
-  const job = allJobs.find(j => j.id === jobId);
-  if (!job) return;
-
-  alert(`${job.title} at ${job.company}\n\n${job.description}`);
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initializePage);
-
-// Also initialize immediately in case DOMContentLoaded already fired
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializePage);
-} else {
-  initializePage();
-}
+// Run immediately
+render();
 </script>
 
 </body>
