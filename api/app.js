@@ -1491,7 +1491,7 @@ async function jobpost(req, res) {
     if (!insertR.ok) {
       const detail = await insertR.text().catch(() => "");
       console.error("Supabase insert error:", insertR.status, detail);
-      const userMsg = detail.includes("permission denied") ? "Permission denied - check RLS policies" : detail.includes("violates") ? "Job posting already exists" : detail || "Supabase error " + insertR.status;
+      const userMsg = "Database error: " + (detail || "HTTP " + insertR.status);
       throw new UserError(502, userMsg, "jobpost: Supabase " + insertR.status + ": " + detail.slice(0, 200));
     }
 
