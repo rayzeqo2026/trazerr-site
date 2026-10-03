@@ -107,7 +107,7 @@ async function performSearch() {
   showResults('<div class="tm-loading"><p>Searching job database...</p></div>');
 
   try {
-    const url = '/api/app?action=jobjsearch&q=' + encodeURIComponent(query);
+    const url = '/api/app?action=searchjobs&q=' + encodeURIComponent(query);
     console.log('Searching for:', query, 'URL:', url);
     const response = await fetch(url);
     console.log('Search response status:', response.status);

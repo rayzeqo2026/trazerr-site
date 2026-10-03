@@ -1885,9 +1885,92 @@ async function health(req, res) {
   return res.status(ok ? 200 : 503).json({ ok, checks });
 }
 
+/* ---------------- Employer Jobs (Simple Redis Storage) ---------------- */
+
+async function postjob(req, res) {
+  const cfg = redisConfig();
+  if (!cfg) throw new UserError(503, "Job posting storage isn't available right now.");
+
+  const body = getBody(req) || {};
+  const title = str(body.title, 120);
+  const company = str(body.company, 100);
+  const description = str(body.description, 3000);
+  const location = str(body.location, 100);
+
+  if (!title || !company) throw new UserError(400, "Job title and company name required.");
+
+  try {
+    const jobId = "job-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+    const job = {
+      id: jobId,
+      title,
+      company,
+      description,
+      location: location || "Remote",
+      postedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+    };
+
+    await redisPipeline(cfg, [
+      ["HSET", "trazerr:jobs", jobId, JSON.stringify(job)],
+      ["ZADD", "trazerr:jobs:time", Date.now(), jobId],
+      ["EXPIRE", "trazerr:jobs", 30 * 24 * 60 * 60] // Auto-expire after 30 days
+    ]);
+
+    return res.status(201).json({ job, message: "Job posted successfully!" });
+  } catch (e) {
+    console.error("Job posting error", e.message);
+    throw new UserError(502, "Couldn't save the job. Try again.");
+  }
+}
+
+async function searchjobs(req, res) {
+  const cfg = redisConfig();
+  if (!cfg) throw new UserError(503, "Job search isn't available right now.");
+
+  const query = str((getQuery(req).q || ""), 200).toLowerCase();
+
+  try {
+    const jobIds = await redisPipeline(cfg, [["HKEYS", "trazerr:jobs"]]);
+    const allJobs = [];
+
+    if (jobIds[0]?.result && Array.isArray(jobIds[0].result)) {
+      for (const jobId of jobIds[0].result) {
+        const result = await redisPipeline(cfg, [["HGET", "trazerr:jobs", jobId]]);
+        if (result[0]?.result) {
+          try {
+            const job = JSON.parse(result[0].result);
+            // Check if job has expired
+            if (new Date(job.expiresAt) > new Date()) {
+              allJobs.push(job);
+            }
+          } catch (e) {
+            console.error("Job parse error", e);
+          }
+        }
+      }
+    }
+
+    // Filter by query
+    const filtered = query ? allJobs.filter(j =>
+      j.title.toLowerCase().includes(query) ||
+      j.company.toLowerCase().includes(query) ||
+      j.description.toLowerCase().includes(query)
+    ) : allJobs;
+
+    // Sort by newest first
+    filtered.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
+
+    return res.status(200).json({ jobs: filtered.slice(0, 50), total: filtered.length });
+  } catch (e) {
+    console.error("Job search error", e.message);
+    throw new UserError(502, "Search failed. Try again.");
+  }
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, jobpost, jobdelete, jobmatch, jobjsearch, appAlert };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, postjob, searchjobs, jobdelete, jobmatch, jobjsearch, appAlert };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);

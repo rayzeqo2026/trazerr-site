@@ -1,9 +1,5 @@
 const API = "/api/app";
-const SB_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js";
-const SB_LIB_SRI = "sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok";
 
-let sb = null;
-let currentEmployer = null;
 let selectedFile = null;
 
 function showError(msg) {
@@ -22,17 +18,6 @@ function showSuccess(msg) {
   Toast.success(msg, "Success");
 }
 
-function loadScript(src, integrity) {
-  return new Promise((res, rej) => {
-    const s = document.createElement("script");
-    s.src = src;
-    if (integrity) s.integrity = integrity;
-    s.crossOrigin = "anonymous";
-    s.onload = res;
-    s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
 
 async function handleFileSelect(event) {
   const file = event.target.files[0];
@@ -142,52 +127,11 @@ function clearForm() {
 
 async function initAuth() {
   try {
-    const cfg = await fetch(API + "?action=authconfig").then(r => {
-      if (!r.ok) throw new Error("Failed to get auth config");
-      return r.json();
-    });
-
-    if (!window.supabase) await loadScript(SB_LIB, SB_LIB_SRI);
-
-    sb = window.supabase.createClient(cfg.url, cfg.anonKey, {
-      auth: {
-        storageKey: "trazerr.auth",
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        flowType: "implicit"
-      }
-    });
-
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      showError("You need to sign in first. Redirecting...");
-      setTimeout(() => window.location.href = "/employers.html", 2000);
-      return false;
-    }
-
-    // Load employer profile
-    const { data: employer, error } = await sb
-      .from("employers")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .single();
-
-    if (error || !employer) {
-      showError("Could not load your employer profile. Please go to employers page first.");
-      setTimeout(() => window.location.href = "/employers.html", 2000);
-      return false;
-    }
-
-    if (employer.status !== "approved") {
-      showError("Your employer profile is not yet approved. Please wait for admin approval.");
-      return false;
-    }
-
-    currentEmployer = employer;
+    // For Redis-based job posting, we don't need complex auth
+    // Just verify the form is ready to use
     return true;
   } catch (e) {
-    showError("Auth error: " + (e.message || e));
+    showError("Error: " + (e.message || e));
     return false;
   }
 }
@@ -198,13 +142,12 @@ async function extractAndPost() {
     const desc = document.getElementById("jobDesc").value.trim();
     const title = document.getElementById("jobTitle").value.trim();
     const location = document.getElementById("location").value.trim();
-    const remoteOk = document.getElementById("remoteOk").checked;
+    const company = "Your Company";
     const btn = document.getElementById("extractBtn");
     const btnText = document.getElementById("btnText");
 
-    console.log("Form values:", { desc: desc.length, title, location, remoteOk, hasFile: !!selectedFile });
+    console.log("Form values:", { desc: desc.length, title, location });
 
-    // Only title is required - description is optional, AI will extract from whatever we have
     if (!title) {
       showError("Please enter a job title");
       return;
@@ -216,110 +159,69 @@ async function extractAndPost() {
     }
 
     btn.disabled = true;
-    btnText.innerHTML = '<span class="loading-spinner"></span> Analyzing with AI...';
+    btnText.innerHTML = '<span class="loading-spinner"></span> Posting job...';
     console.log("Button disabled, starting API call...");
 
-    console.log("Checking session...");
-    const { data: { session } } = await sb.auth.getSession();
-    console.log("Session:", session ? "found" : "not found");
-
-    if (!session) {
-      showError("Session expired. Redirecting...");
-      setTimeout(() => window.location.href = "/employers.html", 2000);
-      return;
-    }
-
-    const token = session.access_token;
-    console.log("Token found, generating company code...");
-    const companyCode = generateCompanyCode(currentEmployer.company);
-    console.log("Company code:", companyCode);
-
-    // Call API to extract Job DNA and post job
-    console.log("Calling API...");
-    const r = await fetch(API + "?action=jobpost", {
+    // Call API to post job to Redis
+    console.log("Calling postjob API...");
+    const r = await fetch(API + "?action=postjob", {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + token,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        company_code: companyCode,
         title,
+        company,
         description: desc,
-        location,
-        remote_ok: remoteOk,
-        required_skills: [],
-        nice_to_have: [],
-        document_name: selectedFile ? selectedFile.name : null
+        location: location || "Remote"
       })
     });
 
     console.log("API response status:", r.status);
-    const job = await r.json();
-    console.log("API response body:", JSON.stringify(job));
+    const result = await r.json();
+    console.log("API response body:", JSON.stringify(result));
 
     if (!r.ok) {
-      const errorMsg = job.error || job.message || JSON.stringify(job) || "Failed to post job";
+      const errorMsg = result.error || result.message || "Failed to post job";
       console.error("API error response:", errorMsg);
-      console.error("Full error details:", job);
       showError("Error: " + errorMsg);
       throw new Error(errorMsg);
     }
 
-    // Show extracted skills - try both job_dna and top-level fields
-    const jobDna = job.job_dna || {};
-    const requiredSkills = job.required_skills || jobDna.core_skills || jobDna.must_have || [];
-    const niceToHave = job.nice_to_have || jobDna.nice_to_have || [];
-    console.log("Skills extracted:", { requiredSkills, niceToHave, jobDna });
-
+    const job = result.job || {};
     let html = `<div class="skills-display">
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
         <div>
-          <h3 style="margin: 0 0 8px; font-size: 18px;">🎯 AI-Extracted Skills</h3>
-          <p style="color: var(--ink-2); font-size: 13px; margin: 0;">Here's what we found in your job description:</p>
+          <h3 style="margin: 0 0 8px; font-size: 18px;">✅ Job Posted Successfully!</h3>
+          <p style="color: var(--ink-2); font-size: 13px; margin: 0;">Your job is now searchable by candidates</p>
         </div>
-        <div class="company-badge">${escapeHtml(companyCode)}</div>
       </div>`;
 
-    if (requiredSkills && requiredSkills.length) {
-      html += `<div class="skills-section">
-        <div class="skills-title">✓ Required Skills</div>`;
-      requiredSkills.forEach(s => {
-        html += `<span class="skill-tag">${escapeHtml(s)}</span>`;
-      });
-      html += `</div>`;
-    }
-
-    if (niceToHave && niceToHave.length) {
-      html += `<div class="skills-section">
-        <div class="skills-title">★ Nice to Have</div>`;
-      niceToHave.forEach(s => {
-        html += `<span class="skill-tag">${escapeHtml(s)}</span>`;
-      });
-      html += `</div>`;
-    }
-
-    if (job.experience_level) {
-      html += `<div class="skills-section">
-        <div class="skills-title">📊 Experience Level</div>
-        <span class="skill-tag">${escapeHtml(job.experience_level)}</span>
-      </div>`;
-    }
+    html += `<div class="skills-section">
+      <div class="skills-title">Job Details</div>
+      <div style="margin-top: 12px; padding: 12px; background: #f5f7fa; border-radius: 6px;">
+        <p style="margin: 4px 0;"><strong>Title:</strong> ${escapeHtml(job.title || title)}</p>
+        <p style="margin: 4px 0;"><strong>Location:</strong> ${escapeHtml(job.location || location || 'Remote')}</p>
+        <p style="margin: 4px 0;"><strong>Posted:</strong> ${job.postedAt ? new Date(job.postedAt).toLocaleDateString() : 'Just now'}</p>
+        <p style="margin: 4px 0; font-size: 12px; color: #666;"><strong>Expires:</strong> ${job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : 'In 30 days'}</p>
+      </div>
+    </div>`;
 
     html += `<div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
       <p style="margin: 0; color: var(--ink-2); font-size: 13px;">
-        <strong>Job posted successfully!</strong><br>
-        Candidates can search for jobs using the company code <strong>${escapeHtml(companyCode)}</strong>
+        <strong>Candidates can find this job by searching:</strong><br>
+        • Job title: "${escapeHtml(title)}"<br>
+        • Company/keywords in the description
       </p>
     </div></div>`;
 
     document.getElementById("skillsDisplay").innerHTML = html;
-    showSuccess("✨ Perfect! Your job has been posted. Candidates can now search and apply.");
+    showSuccess("✨ Your job has been posted! Candidates can now search and find it.");
 
-    // Clear form after 1.5 seconds
+    // Clear form after 2 seconds
     setTimeout(() => {
       clearForm();
-    }, 1500);
+    }, 2000);
 
   } catch (e) {
     console.error("Error in extractAndPost:", e);
