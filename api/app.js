@@ -1995,9 +1995,11 @@ async function searchjobs(req, res) {
     }
 
     // Fall back to Supabase for legacy jobs
+    console.log("Checking Supabase for jobs. Redis jobs found:", allJobs.length);
     if (allJobs.length === 0) {
       try {
         const sbCfg = supabaseConfig();
+        console.log("Supabase config available:", !!sbCfg);
         if (sbCfg && sbCfg.anon) {
           const sb = { url: sbCfg.url, anonKey: sbCfg.anon };
           let url = sb.url + "/rest/v1/job_postings?select=*";
@@ -2011,7 +2013,7 @@ async function searchjobs(req, res) {
           }
 
           url += "&limit=50&order=created_at.desc";
-          console.log("Searching Supabase:", url.split("?")[0] + "?" + url.split("?")[1].split("&")[0]);
+          console.log("Searching Supabase URL:", url);
 
           const r = await fetch(url, {
             headers: { apikey: sb.anonKey, "Accept": "application/json" }
@@ -2023,6 +2025,7 @@ async function searchjobs(req, res) {
             console.log("Supabase returned", jobs.length || 0, "jobs");
             if (Array.isArray(jobs)) {
               jobs.forEach(job => {
+                console.log("Adding job:", job.title);
                 allJobs.push({
                   id: job.id,
                   title: job.title || "",
@@ -2035,8 +2038,10 @@ async function searchjobs(req, res) {
             }
           } else {
             const text = await r.text();
-            console.error("Supabase error response:", text.slice(0, 500));
+            console.error("Supabase error response status:", r.status, "text:", text.slice(0, 500));
           }
+        } else {
+          console.log("Supabase not configured or no anon key");
         }
       } catch (e) {
         console.error("Supabase fallback error:", e.message);
