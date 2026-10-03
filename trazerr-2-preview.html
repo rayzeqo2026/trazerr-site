@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trazerr 2.0 Preview</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    :root {
+      --purple: #7c3aed;
+      --emerald: #10b981;
+    }
+
+    body { background: linear-gradient(135deg, var(--night) 0%, var(--navy) 100%); color: var(--paper); min-height: 100vh; }
+
+    .hero {
+      padding: 80px 20px; text-align: center;
+      background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+    }
+    .hero h1 {
+      font-size: clamp(36px, 8vw, 56px); font-weight: 900; margin: 0 0 16px;
+      font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.03em;
+    }
+    .hero p { font-size: 20px; color: var(--ink-2); margin: 0 0 40px; }
+
+    .tagline {
+      font-size: 18px; color: var(--purple); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+    .flows {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 60px 0;
+      max-width: 1000px; margin: 0 auto;
+    }
+
+    .flow {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px; padding: 40px; cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .flow:hover {
+      border-color: var(--purple); background: rgba(124, 58, 237, 0.1);
+      transform: translateY(-4px);
+    }
+
+    .flow.match:hover { border-color: var(--emerald); background: rgba(16, 185, 129, 0.1); }
+
+    .flow h2 { font-size: 28px; margin: 0 0 12px; font-family: 'Instrument Sans', sans-serif; }
+    .flow .subtitle { font-size: 14px; color: var(--purple); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; }
+    .flow.match .subtitle { color: var(--emerald); }
+
+    .flow p { font-size: 14px; color: var(--ink-2); line-height: 1.6; margin: 0 0 24px; }
+
+    .steps { list-style: none; padding: 0; margin: 24px 0; }
+    .steps li {
+      padding: 12px 0; font-size: 14px; color: var(--paper);
+      display: flex; align-items: center;
+    }
+    .steps li::before {
+      content: '→'; font-weight: 700; color: var(--purple); margin-right: 12px; font-size: 18px;
+    }
+    .flow.match .steps li::before { color: var(--emerald); }
+
+    .btn {
+      display: inline-block; padding: 14px 32px; background: var(--purple); color: white;
+      border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #6d28d9; }
+    .flow.match .btn { background: var(--emerald); }
+    .flow.match .btn:hover { background: #059669; }
+
+    .demo { display: none; padding: 60px 20px; min-height: 100vh; }
+    .demo.active { display: block; }
+
+    .demo-header { text-align: center; margin-bottom: 40px; }
+    .demo-header h2 { font-size: 42px; margin: 0 0 12px; font-family: 'Instrument Sans', sans-serif; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95); color: var(--ink);
+      border-radius: 16px; padding: 40px; margin: 20px auto;
+      max-width: 600px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h3 { font-size: 24px; margin: 0 0 16px; font-family: 'Instrument Sans', sans-serif; color: var(--night); }
+    .card p { font-size: 14px; color: var(--ink); margin: 0 0 16px; line-height: 1.6; }
+
+    .dna-box {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+      border: 2px solid var(--purple); border-radius: 12px; padding: 24px; margin: 24px 0;
+    }
+    .match .dna-box { border-color: var(--emerald); }
+
+    .dna-item {
+      display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .dna-item:last-child { border-bottom: none; }
+    .dna-label { font-weight: 600; color: var(--night); }
+    .dna-value { color: var(--purple); font-weight: 700; }
+    .match .dna-value { color: var(--emerald); }
+
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--night); }
+    .input-group input {
+      width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: inherit;
+    }
+
+    .back-btn {
+      display: inline-block; margin-bottom: 20px; padding: 10px 20px;
+      background: var(--ink-2); color: white; border: none; border-radius: 6px;
+      cursor: pointer; font-weight: 600; font-size: 13px;
+    }
+    .back-btn:hover { background: var(--ink); }
+
+    .match .back-btn { background: var(--emerald); }
+    .match .back-btn:hover { background: var(--emerald); opacity: 0.8; }
+
+    .comparison {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0;
+    }
+    .comparison-col { background: #f9fafb; padding: 16px; border-radius: 8px; }
+    .comparison-col h4 { margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--night); }
+    .comparison-col p { font-size: 13px; color: var(--ink-2); margin: 0; line-height: 1.5; }
+
+    .score {
+      font-size: 32px; font-weight: 900; color: var(--emerald); margin: 20px 0;
+      text-align: center; font-family: 'Instrument Sans', sans-serif;
+    }
+
+    @media (max-width: 768px) {
+      .flows { grid-template-columns: 1fr; gap: 20px; padding: 40px 0; }
+      .comparison { grid-template-columns: 1fr; }
+      .hero { padding: 50px 20px; }
+      .hero h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="home active">
+  <div class="hero">
+    <div class="container">
+      <div class="tagline">Trazerr 2.0</div>
+      <h1>BUILD YOUR CAREER DNA</h1>
+      <p>Intelligent career insights powered by evidence-based analysis</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="flows">
+      <!-- TRAZERR FIT -->
+      <div class="flow" onclick="showDemo('fit')">
+        <div class="subtitle">→ Self-Guided</div>
+        <h2>Trazerr Fit</h2>
+        <p>Understand your professional identity. Build your Career DNA independently and benchmark against the job market.</p>
+        <ul class="steps">
+          <li>Upload Resume</li>
+          <li>Generate Career DNA</li>
+          <li>Explore Career Paths</li>
+          <li>Compare Market Jobs</li>
+          <li>Version & Export</li>
+        </ul>
+        <button class="btn">Start Fit →</button>
+      </div>
+
+      <!-- TRAZERR MATCH -->
+      <div class="flow match" onclick="showDemo('match')">
+        <div class="subtitle">→ Employer-Invited</div>
+        <h2>Trazerr Match</h2>
+        <p>See exactly how you match the job. An employer has invited you to compare your background against their specific role.</p>
+        <ul class="steps">
+          <li>Enter Match Code</li>
+          <li>Upload Resume</li>
+          <li>View Job DNA</li>
+          <li>See Evidence-Based Analysis</li>
+          <li>Interview Prep</li>
+        </ul>
+        <button class="btn">Enter Code →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRAZERR FIT DEMO -->
+<div id="fit" class="demo fit">
+  <button class="back-btn" onclick="showHome()">← Back to Home</button>
+
+  <div class="demo-header">
+    <h2>Trazerr Fit</h2>
+    <p>Build your Career DNA</p>
+  </div>
+
+  <div class="card">
+    <h3>Step 1: Upload Your Resume</h3>
+    <div class="input-group">
+      <label>Resume (PDF, DOCX, or TXT)</label>
+      <input type="file" id="fitResume" accept=".pdf,.docx,.txt">
+    </div>
+    <button class="btn" onclick="completeFitStep1()" style="width: 100%;">Analyze Resume →</button>
+  </div>
+
+  <div id="fitStep2" style="display: none;">
+    <div class="card">
+      <h3>Step 2: Your Career DNA</h3>
+      <p style="color: var(--ink-2);">Based on your resume, Trazerr has extracted and structured your professional identity:</p>
+
+      <div class="dna-box">
+        <div class="dna-item">
+          <span class="dna-label">Core Skills</span>
+          <span class="dna-value">Leadership, Product Strategy, AI/ML</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Experience Level</span>
+          <span class="dna-value">Senior (8+ years)</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Industry Background</span>
+          <span class="dna-value">SaaS, Technology, Startups</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Education</span>
+          <span class="dna-value">Computer Science, MBA</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Certifications</span>
+          <span class="dna-value">AWS Solutions Architect</span>
+        </div>
+      </div>
+
+      <button class="btn" onclick="showFitStep3()" style="width: 100%;">Continue to Career Paths →</button>
+    </div>
+  </div>
+
+  <div id="fitStep3" style="display: none;">
+    <div class="card">
+      <h3>Step 3: Career Paths & Market Comparison</h3>
+      <p style="color: var(--ink-2);">Your Career DNA is now ready to benchmark against market opportunities:</p>
+
+      <div class="dna-box">
+        <div style="padding: 16px 0;">
+          <div style="font-weight: 700; color: var(--night); margin-bottom: 12px;">Recommended Career Paths</div>
+          <div style="font-size: 14px; color: var(--ink); line-height: 1.8;">
+            • VP Product at Series B/C SaaS<br>
+            • Head of AI/ML Engineering<br>
+            • Chief Technology Officer<br>
+            • Startup Founder (AI/ML focused)
+          </div>
+        </div>
+      </div>
+
+      <p style="color: var(--ink-2); font-size: 13px; margin-top: 20px;">
+        <strong>Next:</strong> Browse external job opportunities to see how your Career DNA compares. Export your profile to PDF for interviews. Version your resume as you make improvements.
+      </p>
+
+      <button class="btn" onclick="alert('✓ Career DNA saved to your account!')" style="width: 100%; background: var(--emerald); margin-top: 20px;">Save Career DNA</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRAZERR MATCH DEMO -->
+<div id="match" class="demo match">
+  <button class="back-btn" onclick="showHome()">← Back to Home</button>
+
+  <div class="demo-header">
+    <h2>Trazerr Match</h2>
+    <p>See how you match this specific job</p>
+  </div>
+
+  <div class="card">
+    <h3>Step 1: Enter Match Code</h3>
+    <p style="color: var(--ink-2); font-size: 13px; margin-bottom: 12px;">An employer has shared a Match Code for this job opportunity. Enter it below:</p>
+    <div class="input-group">
+      <label>Match Code (e.g., ACME-2024-JAN-001)</label>
+      <input type="text" id="matchCode" placeholder="Enter the code from your employer..." value="ACME-2024-JAN-001">
+    </div>
+    <button class="btn" onclick="completeMatchStep1()" style="width: 100%; background: var(--emerald);">Confirm Code →</button>
+  </div>
+
+  <div id="matchStep2" style="display: none;">
+    <div class="card">
+      <h3>Step 2: Job Details</h3>
+      <div class="dna-box" style="border-color: var(--emerald);">
+        <div class="dna-item">
+          <span class="dna-label">Position</span>
+          <span class="dna-value">VP Product</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Company</span>
+          <span class="dna-value">ACME Intelligence</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Location</span>
+          <span class="dna-value">San Francisco, CA</span>
+        </div>
+        <div class="dna-item">
+          <span class="dna-label">Experience Required</span>
+          <span class="dna-value">7-10 years at Director+ level</span>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 24px;">
+        <label>Your Resume</label>
+        <input type="file" id="matchResume" accept=".pdf,.docx,.txt">
+      </div>
+
+      <button class="btn" onclick="completeMatchStep2()" style="width: 100%; background: var(--emerald);">Compare Career DNA ↔ Job DNA →</button>
+    </div>
+  </div>
+
+  <div id="matchStep3" style="display: none;">
+    <div class="card">
+      <h3>Step 3: Match Analysis</h3>
+
+      <div class="score">92%</div>
+      <p style="text-align: center; color: var(--emerald); font-weight: 700; font-size: 16px;">Strong Match</p>
+
+      <div class="comparison">
+        <div class="comparison-col">
+          <h4>Your Career DNA</h4>
+          <p>VP-level experience, AI/ML product strategy, SaaS background, team leadership</p>
+        </div>
+        <div class="comparison-col">
+          <h4>Job DNA Required</h4>
+          <p>VP+ product role, AI product strategy, SaaS context, led 20+ person teams</p>
+        </div>
+      </div>
+
+      <div class="dna-box" style="border-color: var(--emerald); background: rgba(16, 185, 129, 0.05);">
+        <div style="font-weight: 700; color: var(--night); margin-bottom: 12px;">Evidence-Based Fit Analysis</div>
+        <div style="font-size: 14px; color: var(--ink); line-height: 1.8;">
+          <div style="margin-bottom: 8px;"><span style="color: var(--emerald); font-weight: 700;">✓ Strengths:</span> Product strategy alignment, AI/ML expertise, team scaling experience</div>
+          <div style="margin-bottom: 8px;"><span style="color: #f59e0b; font-weight: 700;">? Areas to clarify:</span> Direct GTM experience, profitability focus, specific ML team size</div>
+          <div><span style="color: #ef4444; font-weight: 700;">○ Gaps:</span> None critical</div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="completeMatchStep3()" style="width: 100%; background: var(--emerald); margin-top: 20px;">Get Interview Prep →</button>
+    </div>
+  </div>
+
+  <div id="matchStep4" style="display: none;">
+    <div class="card">
+      <h3>Interview Preparation</h3>
+      <p style="color: var(--ink-2); margin-bottom: 20px;">Based on your 92% match and areas to clarify, here are your interview focus areas:</p>
+
+      <div class="dna-box" style="border-color: var(--emerald); background: rgba(16, 185, 129, 0.05);">
+        <div style="font-weight: 700; color: var(--night); margin-bottom: 16px;">Key Interview Topics</div>
+        <div style="font-size: 14px; color: var(--ink); line-height: 2;">
+          1. <strong>GTM Strategy:</strong> Walk through your approach to launching a major feature<br>
+          2. <strong>AI/ML Scale:</strong> Describe your largest ML team and product impact<br>
+          3. <strong>Profitability:</strong> How do you balance growth with unit economics?<br>
+          4. <strong>Team Building:</strong> Your experience scaling product teams from 5 to 50+<br>
+          5. <strong>ACME's Vision:</strong> Your take on their AI product direction
+        </div>
+      </div>
+
+      <button class="btn" onclick="alert('✓ Interview prep downloaded!')" style="width: 100%; background: var(--emerald);">Download Full Scorecard & Prep</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showDemo(type) {
+  document.getElementById('home').classList.remove('active');
+  document.getElementById(type).classList.add('active');
+  document.body.style.background = type === 'fit'
+    ? 'linear-gradient(135deg, var(--night) 0%, var(--navy) 100%)'
+    : 'linear-gradient(135deg, var(--night) 0%, var(--navy) 100%)';
+}
+
+function showHome() {
+  document.getElementById('home').classList.add('active');
+  document.getElementById('fit').classList.remove('active');
+  document.getElementById('match').classList.remove('active');
+  document.getElementById('fitStep2').style.display = 'none';
+  document.getElementById('fitStep3').style.display = 'none';
+  document.getElementById('matchStep2').style.display = 'none';
+  document.getElementById('matchStep3').style.display = 'none';
+  document.getElementById('matchStep4').style.display = 'none';
+}
+
+function completeFitStep1() {
+  if (!document.getElementById('fitResume').files[0]) {
+    alert('Please select a resume file');
+    return;
+  }
+  document.getElementById('fitStep2').style.display = 'block';
+}
+
+function showFitStep3() {
+  document.getElementById('fitStep3').style.display = 'block';
+}
+
+function completeMatchStep1() {
+  if (!document.getElementById('matchCode').value) {
+    alert('Please enter a Match Code');
+    return;
+  }
+  document.getElementById('matchStep2').style.display = 'block';
+}
+
+function completeMatchStep2() {
+  if (!document.getElementById('matchResume').files[0]) {
+    alert('Please select a resume file');
+    return;
+  }
+  document.getElementById('matchStep3').style.display = 'block';
+}
+
+function completeMatchStep3() {
+  document.getElementById('matchStep4').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
