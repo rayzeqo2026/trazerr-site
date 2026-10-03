@@ -56,6 +56,7 @@
   <div class="tm-search-box">
     <input type="text" id="searchInput" placeholder="Search by company code (e.g., WM.1001) or job title...">
     <button onclick="performSearch()">Search Database</button>
+    <button onclick="alert('JS works!')" style="margin-left: 8px; padding: 14px 16px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;">Test</button>
   </div>
 
   <div id="results" class="tm-results"></div>
@@ -305,9 +306,16 @@ function showResults(html) {
 
 init();
 
-document.getElementById('searchInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') performSearch();
-});
+try {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') performSearch();
+    });
+  }
+} catch (e) {
+  console.error('Error setting up search input listener:', e);
+}
 </script>
 
 </body>
