@@ -18,8 +18,8 @@
 
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
-const FALLBACK_MODEL = process.env.ANTHROPIC_FALLBACK_MODEL || "claude-sonnet-5-5";
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+const FALLBACK_MODEL = process.env.ANTHROPIC_FALLBACK_MODEL || "claude-opus-5-5";
 const AI_DAILY_LIMIT = parseInt(process.env.AI_DAILY_LIMIT, 10) || 500;
 
 /* ---------------- helpers ---------------- */
