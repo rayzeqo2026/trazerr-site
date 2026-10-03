@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trazerr Match · AI Job Matching</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    .tm-page { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    .tm-header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; margin: -40px -20px 40px; }
+    .tm-header h1 { margin: 0; font-size: 36px; font-weight: 800; }
+    .tm-header p { margin: 8px 0 0; color: #666; font-size: 16px; }
+    .tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; }
+    .tm-search-box input { flex: 1; padding: 14px 16px; border: 1px solid #d0d7e0; border-radius: 8px; font-size: 14px; }
+    .tm-search-box button { padding: 14px 28px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .tm-results { margin-top: 30px; }
+    .tm-job { border: 1px solid #d0d7e0; border-radius: 12px; padding: 24px; background: white; margin-bottom: 16px; }
+    .tm-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .tm-job-info h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+    .tm-job-meta { font-size: 14px; color: #666; }
+    .tm-job-desc { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 12px; }
+    .tm-error { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #856404; }
+    .tm-info { background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #0c5460; }
+    .tm-loading { text-align: center; padding: 40px; color: #999; }
+  </style>
+</head>
+<body>
+
+<div class="tm-header">
+  <div class="tm-page">
+    <h1>Trazerr Match</h1>
+    <p>Find jobs from employers and see your AI-powered compatibility</p>
+  </div>
+</div>
+
+<div class="tm-page">
+  <form method="GET" action="/search.html" style="display: contents;">
+    <div class="tm-search-box">
+      <input type="text" name="q" placeholder="Search by company code (e.g., WM.1001) or job title..." value="">
+      <button type="submit">Search Database</button>
+    </div>
+  </form>
+
+  <div id="results"></div>
+</div>
+
+<script>
+(async function() {
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get('q');
+
+  if (!query) {
+    return;
+  }
+
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '<div class="tm-loading"><p>Searching for: ' + query + '</p></div>';
+
+  try {
+    const response = await fetch('/api/app?action=searchjobs&q=' + encodeURIComponent(query));
+    const data = await response.json();
+
+    if (!data.jobs || data.jobs.length === 0) {
+      resultsDiv.innerHTML = '<div class="tm-error">No jobs found matching "' + query + '". Try searching with different keywords.</div>';
+      return;
+    }
+
+    let html = '<div class="tm-results">';
+    data.jobs.forEach(job => {
+      html += `
+        <div class="tm-job">
+          <div class="tm-job-header">
+            <div class="tm-job-info">
+              <h3>${job.title}</h3>
+              <div class="tm-job-meta">${job.company} · ${job.location || 'Remote'}</div>
+            </div>
+          </div>
+          <div class="tm-job-desc">${job.description || 'No description available'}</div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+  } catch (e) {
+    resultsDiv.innerHTML = '<div class="tm-error">Search error: ' + e.message + '</div>';
+  }
+})();
+</script>
+
+</body>
+</html>
