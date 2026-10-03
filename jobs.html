@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trazerr Match · Browse Jobs</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    body { background: var(--paper); }
+    .tm-header { background: var(--night); padding: 60px 20px 40px; position: relative; overflow: hidden; }
+    .tm-header::before { content: ''; position: absolute; top: 0; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, var(--blue-soft) 0%, transparent 70%); opacity: 0.15; z-index: 0; }
+    .tm-header > div { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+    .tm-header h1 { margin: 0; font-size: clamp(28px, 8vw, 42px); font-weight: 800; color: var(--paper); font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.02em; }
+    .tm-header p { margin: 12px 0 0; color: var(--ink-2); font-size: clamp(14px, 2vw, 16px); }
+
+    .tm-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 120px; }
+
+    .tm-jobs { display: grid; gap: 20px; }
+    .tm-job { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+    .tm-job:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(0, 102, 224, 0.1); transform: translateY(-2px); }
+
+    .tm-job-title { font-size: 20px; font-weight: 600; color: var(--ink); font-family: 'Instrument Sans', sans-serif; margin: 0 0 8px; }
+    .tm-job-company { font-size: 14px; color: var(--ink-2); margin: 0 0 4px; }
+    .tm-job-location { font-size: 13px; color: var(--ink-2); margin: 0 0 16px; }
+    .tm-job-desc { font-size: 14px; color: var(--ink); line-height: 1.6; }
+
+    .tm-empty { text-align: center; padding: 60px 20px; color: var(--ink-2); }
+    .tm-empty p { font-size: 18px; margin: 0; }
+
+    @media (max-width: 640px) {
+      .tm-container { padding: 20px 16px 120px; }
+      .tm-header { padding: 40px 16px 30px; }
+      .tm-job { padding: 16px; }
+      .tm-job-title { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="tm-header">
+  <div>
+    <h1>Jobs at Trazerr</h1>
+    <p>Browse all available opportunities</p>
+  </div>
+</div>
+
+<div class="tm-container">
+  <div id="jobsList" class="tm-jobs"></div>
+  <div id="empty" class="tm-empty" style="display: none;">
+    <p>No jobs available yet.</p>
+  </div>
+</div>
+
+<script>
+// Sample job data
+const jobs = [
+  {
+    id: 1,
+    title: "Senior Product Manager",
+    company: "Tech Innovation Labs",
+    location: "San Francisco, CA",
+    description: "We're looking for an experienced Product Manager to lead our core product initiatives. You'll work with engineers, designers, and stakeholders to ship products that matter. Requirements: 5+ years PM experience, strong communication skills, data-driven mindset."
+  },
+  {
+    id: 2,
+    title: "Full Stack Engineer",
+    company: "StartupXYZ",
+    location: "Remote",
+    description: "Join our fast-growing team as a Full Stack Engineer. We build modern web applications using React and Node.js. You'll have ownership of features end-to-end. Ideal candidate: 3+ years experience, comfortable with both frontend and backend, passionate about clean code."
+  },
+  {
+    id: 3,
+    title: "UX/UI Designer",
+    company: "Creative Studios",
+    location: "New York, NY",
+    description: "We're seeking a talented UX/UI Designer to shape the future of our digital products. Design intuitive interfaces, conduct user research, and collaborate with product and engineering teams. Experience with design systems and prototyping tools required."
+  },
+  {
+    id: 4,
+    title: "Data Scientist",
+    company: "Analytics Pro",
+    location: "Boston, MA",
+    description: "Help us build the next generation of machine learning models. You'll work on large-scale data pipelines, build predictive models, and present insights to stakeholders. Must have: Python, SQL, ML experience, strong statistical knowledge."
+  },
+  {
+    id: 5,
+    title: "Marketing Manager",
+    company: "Growth Ventures",
+    location: "Austin, TX",
+    description: "Lead our marketing strategy and grow our brand presence. Develop campaigns, manage social media, and work with our product team. You'll own P&L for marketing initiatives. Looking for: 4+ years marketing experience, analytical mindset, creative thinking."
+  }
+];
+
+function renderJobs() {
+  const jobsList = document.getElementById('jobsList');
+  const empty = document.getElementById('empty');
+
+  if (jobs.length === 0) {
+    empty.style.display = 'block';
+    jobsList.style.display = 'none';
+    return;
+  }
+
+  jobsList.innerHTML = jobs.map(job => `
+    <div class="tm-job">
+      <h2 class="tm-job-title">${escapeHtml(job.title)}</h2>
+      <div class="tm-job-company">${escapeHtml(job.company)}</div>
+      <div class="tm-job-location">📍 ${escapeHtml(job.location)}</div>
+      <div class="tm-job-desc">${escapeHtml(job.description)}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Render on load
+document.addEventListener('DOMContentLoaded', renderJobs);
+</script>
+
+</body>
+</html>
