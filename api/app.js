@@ -1960,25 +1960,38 @@ async function searchjobs(req, res) {
       try {
         const sbCfg = supabaseConfig();
         if (sbCfg && sbCfg.anon) {
-          const { createClient } = await import("@supabase/supabase-js");
-          const sb = createClient(sbCfg.url, sbCfg.anon);
-          const { data: jobs, error } = await sb
-            .from("jobs")
-            .select("*")
-            .limit(100);
+          const sb = { url: sbCfg.url, anonKey: sbCfg.anon };
+          let url = sb.url + "/rest/v1/job_postings?select=*&status=eq.open";
 
-          if (jobs && Array.isArray(jobs)) {
-            jobs.forEach(job => {
-              const jobObj = {
-                id: job.id,
-                title: job.title,
-                company: job.company || "Unknown",
-                description: job.description || "",
-                location: job.location || "Remote",
-                postedAt: job.created_at || new Date().toISOString()
-              };
-              allJobs.push(jobObj);
-            });
+          // Try to match company code (e.g., WM.1001) or search by title/company
+          const queryStr = getQuery(req).q || "";
+          if (queryStr && queryStr.match(/^[A-Z]{2}\.\d+$/)) {
+            url += "&company_code=eq." + encodeURIComponent(queryStr);
+          } else if (queryStr) {
+            url += "&or=(title.ilike.%25" + encodeURIComponent(queryStr) + "%25,company.ilike.%25" + encodeURIComponent(queryStr) + "%25)";
+          }
+
+          url += "&limit=50&order=created_at.desc";
+
+          const r = await fetch(url, {
+            headers: { apikey: sb.anonKey, "Accept": "application/json" },
+            signal: AbortSignal.timeout(10000)
+          });
+
+          if (r.ok) {
+            const jobs = await r.json();
+            if (Array.isArray(jobs)) {
+              jobs.forEach(job => {
+                allJobs.push({
+                  id: job.id,
+                  title: job.title || "",
+                  company: job.company || "",
+                  description: job.description || "",
+                  location: job.location || "Remote",
+                  postedAt: job.created_at || new Date().toISOString()
+                });
+              });
+            }
           }
         }
       } catch (e) {
@@ -1986,17 +1999,10 @@ async function searchjobs(req, res) {
       }
     }
 
-    // Filter by query
-    const filtered = query ? allJobs.filter(j =>
-      (j.title || "").toLowerCase().includes(query) ||
-      (j.company || "").toLowerCase().includes(query) ||
-      (j.description || "").toLowerCase().includes(query)
-    ) : allJobs;
+    // Sort by newest first and limit results
+    allJobs.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0));
 
-    // Sort by newest first
-    filtered.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0));
-
-    return res.status(200).json({ jobs: filtered.slice(0, 50), total: filtered.length });
+    return res.status(200).json({ jobs: allJobs.slice(0, 50), total: allJobs.length });
   } catch (e) {
     console.error("Job search error", e.message);
     throw new UserError(502, "Search failed. Try again.");
