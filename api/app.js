@@ -1888,9 +1888,6 @@ async function health(req, res) {
 /* ---------------- Employer Jobs (Simple Redis Storage) ---------------- */
 
 async function postjob(req, res) {
-  const cfg = redisConfig();
-  if (!cfg) throw new UserError(503, "Job posting storage isn't available right now.");
-
   const body = getBody(req) || {};
   const title = str(body.title, 120);
   const company = str(body.company, 100);
@@ -1908,16 +1905,45 @@ async function postjob(req, res) {
       description,
       location: location || "Remote",
       postedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
 
-    await redisPipeline(cfg, [
-      ["HSET", "trazerr:jobs", jobId, JSON.stringify(job)],
-      ["ZADD", "trazerr:jobs:time", Date.now(), jobId],
-      ["EXPIRE", "trazerr:jobs", 30 * 24 * 60 * 60] // Auto-expire after 30 days
-    ]);
+    // Try Redis first
+    const redisCfg = redisConfig();
+    if (redisCfg) {
+      try {
+        await redisPipeline(redisCfg, [
+          ["HSET", "trazerr:jobs", jobId, JSON.stringify(job)],
+          ["ZADD", "trazerr:jobs:time", Date.now(), jobId],
+          ["EXPIRE", "trazerr:jobs", 30 * 24 * 60 * 60]
+        ]);
+        return res.status(201).json({ job, message: "Job posted successfully!" });
+      } catch (e) {
+        console.error("Redis save failed, trying Supabase:", e.message);
+      }
+    }
 
-    return res.status(201).json({ job, message: "Job posted successfully!" });
+    // Fall back to Supabase
+    const sbCfg = supabaseConfig();
+    if (sbCfg && sbCfg.anon) {
+      const url = sbCfg.url + "/rest/v1/job_postings";
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { apikey: sbCfg.anon, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          company,
+          description,
+          location: location || "Remote",
+          status: "open"
+        })
+      });
+      if (r.ok) {
+        return res.status(201).json({ job, message: "Job posted successfully!" });
+      }
+    }
+
+    throw new UserError(503, "Job storage not available");
   } catch (e) {
     console.error("Job posting error", e.message);
     throw new UserError(502, "Couldn't save the job. Try again.");
