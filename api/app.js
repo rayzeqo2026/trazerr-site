@@ -1923,16 +1923,17 @@ async function postjob(req, res) {
       }
     }
 
-    // Fall back to Supabase
+    // Fall back to Supabase - try jobs table
     const sbCfg = supabaseConfig();
     console.log("Supabase config available:", !!sbCfg);
     if (sbCfg && sbCfg.anon) {
       try {
-        const url = sbCfg.url + "/rest/v1/job_postings";
-        console.log("Posting to Supabase:", url);
-        const r = await fetch(url, {
+        // Try job_postings table first
+        let url = sbCfg.url + "/rest/v1/job_postings";
+        console.log("Posting to Supabase job_postings:", url);
+        let r = await fetch(url, {
           method: "POST",
-          headers: { apikey: sbCfg.anon, "Content-Type": "application/json" },
+          headers: { apikey: sbCfg.anon, "Content-Type": "application/json", "Prefer": "return=minimal" },
           body: JSON.stringify({
             title,
             company,
@@ -1941,13 +1942,32 @@ async function postjob(req, res) {
             status: "open"
           })
         });
-        console.log("Supabase response status:", r.status);
+        console.log("Supabase job_postings response status:", r.status);
         const text = await r.text();
-        console.log("Supabase response:", text);
-        if (r.ok) {
+        console.log("Supabase job_postings response:", text);
+
+        if (r.ok || r.status === 201) {
+          console.log("Job saved successfully to job_postings");
           return res.status(201).json({ job, message: "Job posted successfully!" });
         } else {
-          console.error("Supabase error:", text);
+          console.error("job_postings failed, trying jobs table. Error:", text);
+
+          // Try jobs table as alternative
+          url = sbCfg.url + "/rest/v1/jobs";
+          console.log("Posting to Supabase jobs table:", url);
+          r = await fetch(url, {
+            method: "POST",
+            headers: { apikey: sbCfg.anon, "Content-Type": "application/json", "Prefer": "return=minimal" },
+            body: JSON.stringify({ title, company, description, location: location || "Remote" })
+          });
+          console.log("Supabase jobs response status:", r.status);
+          const text2 = await r.text();
+          console.log("Supabase jobs response:", text2);
+
+          if (r.ok || r.status === 201) {
+            console.log("Job saved successfully to jobs table");
+            return res.status(201).json({ job, message: "Job posted successfully!" });
+          }
         }
       } catch (sbError) {
         console.error("Supabase fallback error:", sbError.message);
@@ -1994,7 +2014,7 @@ async function searchjobs(req, res) {
       }
     }
 
-    // Fall back to Supabase for legacy jobs
+    // Fall back to Supabase for jobs
     console.log("Checking Supabase for jobs. Redis jobs found:", allJobs.length);
     if (allJobs.length === 0) {
       try {
@@ -2002,49 +2022,53 @@ async function searchjobs(req, res) {
         console.log("Supabase config available:", !!sbCfg);
         if (sbCfg && sbCfg.anon) {
           const sb = { url: sbCfg.url, anonKey: sbCfg.anon };
-          let url = sb.url + "/rest/v1/job_postings?select=*";
-
-          // Try to match company code (e.g., WM.1001) or search by title/company
           const queryStr = getQuery(req).q || "";
-          if (queryStr && queryStr.match(/^[A-Z]{2}\.\d+$/)) {
-            url += "&company_code=eq." + encodeURIComponent(queryStr);
-          } else if (queryStr) {
-            url += "&or=(title.ilike.%25" + encodeURIComponent(queryStr) + "%25,company.ilike.%25" + encodeURIComponent(queryStr) + "%25)";
-          }
 
-          url += "&limit=50&order=created_at.desc";
-          console.log("Searching Supabase URL:", url);
+          // Try both job_postings and jobs tables
+          for (const table of ["job_postings", "jobs"]) {
+            try {
+              let url = sb.url + "/rest/v1/" + table + "?select=*";
 
-          const r = await fetch(url, {
-            headers: { apikey: sb.anonKey, "Accept": "application/json" }
-          });
+              if (queryStr && queryStr.match(/^[A-Z]{2}\.\d+$/)) {
+                url += "&company_code=eq." + encodeURIComponent(queryStr);
+              } else if (queryStr) {
+                url += "&or=(title.ilike.%25" + encodeURIComponent(queryStr) + "%25,company.ilike.%25" + encodeURIComponent(queryStr) + "%25)";
+              }
 
-          console.log("Supabase response status:", r.status);
-          if (r.ok) {
-            const jobs = await r.json();
-            console.log("Supabase returned", jobs.length || 0, "jobs");
-            if (Array.isArray(jobs)) {
-              jobs.forEach(job => {
-                console.log("Adding job:", job.title);
-                allJobs.push({
-                  id: job.id,
-                  title: job.title || "",
-                  company: job.company || "",
-                  description: job.description || "",
-                  location: job.location || "Remote",
-                  postedAt: job.created_at || new Date().toISOString()
-                });
+              url += "&limit=50&order=created_at.desc";
+              console.log("Searching Supabase table:", table);
+
+              const r = await fetch(url, {
+                headers: { apikey: sb.anonKey, "Accept": "application/json" }
               });
+
+              console.log("Supabase " + table + " response status:", r.status);
+              if (r.ok) {
+                const jobs = await r.json();
+                console.log("Table " + table + " returned", jobs.length || 0, "jobs");
+                if (Array.isArray(jobs)) {
+                  jobs.forEach(job => {
+                    console.log("Adding job from " + table + ":", job.title);
+                    allJobs.push({
+                      id: job.id,
+                      title: job.title || "",
+                      company: job.company || "",
+                      description: job.description || "",
+                      location: job.location || "Remote",
+                      postedAt: job.created_at || new Date().toISOString()
+                    });
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("Error searching " + table + ":", e.message);
             }
-          } else {
-            const text = await r.text();
-            console.error("Supabase error response status:", r.status, "text:", text.slice(0, 500));
           }
         } else {
           console.log("Supabase not configured or no anon key");
         }
       } catch (e) {
-        console.error("Supabase fallback error:", e.message);
+        console.error("Supabase search error:", e.message);
       }
     }
 
