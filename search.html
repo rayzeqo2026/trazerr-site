@@ -13,13 +13,20 @@
     .tm-header > div { position: relative; z-index: 1; }
     .tm-header h1 { margin: 0; font-size: clamp(28px, 8vw, 42px); font-weight: 800; color: var(--paper); font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.02em; }
     .tm-header p { margin: 12px 0 0; color: var(--ink-2); font-size: clamp(14px, 2vw, 16px); }
-    .tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
-    .tm-search-box input { flex: 1; min-width: 180px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 14px; color: var(--ink); font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; align-items: stretch; }
+    .tm-search-box input { flex: 1; min-width: 160px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 16px; color: var(--ink); font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     .tm-search-box input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
     .tm-search-box input::placeholder { color: var(--ink-2); }
-    .tm-search-box button { padding: 12px 28px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tm-search-box button { padding: 14px 24px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; }
     .tm-search-box button:hover { background: var(--blue-deep); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 102, 224, 0.3); }
     .tm-search-box button:active { transform: translateY(0); }
+    .tm-search-box button:disabled { background: var(--ink-2); cursor: not-allowed; }
+
+    @media (max-width: 640px) {
+      .tm-search-box { flex-direction: column; gap: 10px; }
+      .tm-search-box input { font-size: 16px; padding: 14px 16px; }
+      .tm-search-box button { width: 100%; padding: 16px 20px; font-size: 15px; font-weight: 700; }
+    }
     .tm-results { margin-top: 30px; }
     .tm-job { border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: var(--surface); margin-bottom: 16px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     .tm-job:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(0, 102, 224, 0.1); }
@@ -35,7 +42,9 @@
     @media (max-width: 640px) {
       .tm-page { padding: 20px 16px 120px; }
       .tm-header { padding: 40px 16px 30px; margin: -20px -16px 30px; }
-      .tm-search-box { gap: 10px; }
+      .tm-search-box { flex-direction: column; gap: 10px; }
+      .tm-search-box input { width: 100%; font-size: 16px; padding: 14px 16px; }
+      .tm-search-box button { width: 100%; padding: 16px 20px; font-size: 15px; font-weight: 700; }
       .tm-job { padding: 16px; margin-bottom: 12px; }
       .tm-job-info h3 { font-size: 16px; }
       .tm-job-desc { font-size: 13px; }
