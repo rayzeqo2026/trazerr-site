@@ -1925,22 +1925,35 @@ async function postjob(req, res) {
 
     // Fall back to Supabase
     const sbCfg = supabaseConfig();
+    console.log("Supabase config available:", !!sbCfg);
     if (sbCfg && sbCfg.anon) {
-      const url = sbCfg.url + "/rest/v1/job_postings";
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { apikey: sbCfg.anon, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          company,
-          description,
-          location: location || "Remote",
-          status: "open"
-        })
-      });
-      if (r.ok) {
-        return res.status(201).json({ job, message: "Job posted successfully!" });
+      try {
+        const url = sbCfg.url + "/rest/v1/job_postings";
+        console.log("Posting to Supabase:", url);
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { apikey: sbCfg.anon, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            company,
+            description,
+            location: location || "Remote",
+            status: "open"
+          })
+        });
+        console.log("Supabase response status:", r.status);
+        const text = await r.text();
+        console.log("Supabase response:", text);
+        if (r.ok) {
+          return res.status(201).json({ job, message: "Job posted successfully!" });
+        } else {
+          console.error("Supabase error:", text);
+        }
+      } catch (sbError) {
+        console.error("Supabase fallback error:", sbError.message);
       }
+    } else {
+      console.log("Supabase not configured");
     }
 
     throw new UserError(503, "Job storage not available");
