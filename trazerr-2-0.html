@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Trazerr 2.0 — Career DNA</title>
+<style>
+:root{
+  --navy:#12213f; --blue:#165dcc; --blue2:#0b78ee; --red:#a8322b;
+  --ink:#17233b; --muted:#687286; --paper:#f7f6f1; --white:#fff;
+  --line:#d9dce2; --soft:#eef2f8; --gold:#c7a34b;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
+a{text-decoration:none;color:inherit}.container{max-width:1180px;margin:auto;padding:0 28px}
+.nav{height:76px;background:#fff;border-bottom:1px solid #e6e6e6;display:flex;align-items:center;position:sticky;top:0;z-index:20}
+.navin{display:flex;align-items:center;justify-content:space-between;width:100%}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:23px;letter-spacing:-.7px}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#0c315f,#1d72d5);position:relative}
+.logo:after{content:"";position:absolute;left:9px;top:7px;width:15px;height:20px;border-left:3px solid #fff;border-right:3px solid #fff;transform:skew(-12deg)}
+.links{display:flex;gap:25px;align-items:center;font-size:14px;color:#28324a}
+.links a.active{color:var(--blue);border-bottom:2px solid var(--blue);padding:27px 0 24px}
+.actions{display:flex;gap:10px;align-items:center}.icon{width:40px;height:40px;border:1px solid #d9dce2;border-radius:50%;display:grid;place-items:center;background:#fff}
+.btn{border:0;border-radius:7px;padding:13px 20px;font-weight:750;cursor:pointer}
+.primary{background:var(--blue);color:#fff;box-shadow:0 4px 14px #165dcc25}.secondary{background:#fff;border:1px solid #b8c0cf;color:var(--ink)}
+.kicker{font-size:12px;font-weight:800;letter-spacing:1.8px;color:var(--red);text-transform:uppercase}
+.hero{padding:82px 0 72px;background:#fbfaf7;position:relative;overflow:hidden}
+.hero h1{font-size:clamp(42px,6vw,76px);line-height:.98;letter-spacing:-3.5px;max-width:780px;margin:18px 0}
+.hero h1 em{color:var(--red);font-style:italic}
+.hero p.lead{font-size:19px;line-height:1.6;color:#596477;max-width:680px}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.upload-card{background:#fff;border:1px solid #d9dce2;border-radius:12px;padding:22px;box-shadow:0 20px 55px #17233b12}
+.upload-card h3{margin:0 0 8px;font-size:22px}.drop{margin-top:14px;border:1px dashed #aeb6c5;border-radius:8px;padding:30px;text-align:center;color:#687286;background:#fafbfc}
+textarea{width:100%;min-height:110px;border:1px solid #cdd2db;border-radius:8px;padding:13px;font:inherit;resize:vertical}
+.section{padding:90px 0}.section.alt{background:#fff}.section-head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end}.section h2{font-size:clamp(34px,4vw,56px);line-height:1.02;letter-spacing:-2px;margin:10px 0 18px}.section-head p{color:#687286;line-height:1.6}
+.steps{display:flex;gap:8px;margin:24px 0;flex-wrap:wrap}.pill{border:1px solid #cfd5df;background:#fff;border-radius:999px;padding:9px 14px;font-size:13px}.pill.active{border-color:var(--blue);box-shadow:inset 0 -2px var(--blue)}
+.dna-wrap{display:grid;grid-template-columns:160px 1fr;gap:32px;align-items:center;margin-top:40px}
+.dna{height:500px;position:relative;background:repeating-linear-gradient(to bottom,transparent 0 48px,#dfe4ec 49px 50px);border-radius:50%}
+.dna:before,.dna:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 20%,var(--blue) 20%,var(--blue) 22%,transparent 22%,transparent 78%,var(--red) 78%,var(--red) 80%,transparent 80%);border-radius:50%;transform:skewY(-8deg) rotate(8deg)}
+.dna:after{transform:skewY(8deg) rotate(-8deg);opacity:.85}
+.evidence{display:grid;gap:15px}.evidence-row{display:flex;gap:16px;align-items:center;padding:14px;border-bottom:1px solid #e1e4e9}.dot{width:34px;height:34px;border-radius:50%;border:1px solid #ccd4e0;display:grid;place-items:center;color:var(--blue);font-weight:800}
+.paths{display:flex;justify-content:space-between;gap:18px;margin-top:35px}.path{flex:1;text-align:center;border-top:2px solid var(--red);padding-top:12px}.path strong{display:block}.path small{color:var(--red);font-weight:700}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}.feature-list{display:grid;gap:22px;margin:25px 0}.feature{display:grid;grid-template-columns:34px 1fr;gap:12px}.feature p{margin:5px 0 0;color:#687286;line-height:1.5}.dna-card{background:#fff;border:1px solid #d8dce4;border-top:3px solid var(--red);border-radius:10px;padding:24px;box-shadow:0 16px 35px #17233b0b}.score{float:right;width:62px;height:62px;border-radius:50%;border:7px solid #e8edf5;display:grid;place-items:center;font-weight:800;color:var(--blue);font-size:20px}.tag{display:inline-block;background:#edf3ff;color:#24539b;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800}
+.result{margin-top:18px;padding:16px;background:#fff0eb;border-radius:8px;border-left:3px solid var(--red)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:35px}.card{background:#fff;border:1px solid #d9dce2;border-radius:10px;padding:22px;min-height:210px}.card h3{font-size:17px}.card p{color:#687286;line-height:1.5;font-size:14px}
+.jobs{background:#f2f5fb}.jobbox{background:#fff;border:1px solid #d9dce2;border-radius:12px;padding:24px}.search{display:grid;grid-template-columns:1fr 180px 130px;gap:10px}input{width:100%;border:1px solid #cdd2db;border-radius:8px;padding:14px;font:inherit}
+.employer{display:grid;grid-template-columns:1fr 1fr;gap:20px}.scorecard{background:#fff;border:1px solid #d9dce2;border-radius:10px;padding:24px}.meter{height:6px;background:#e9edf3;border-radius:9px;overflow:hidden}.meter span{display:block;height:100%;background:var(--blue)}
+.footer-cta{background:var(--navy);color:#fff;padding:60px 0}.footer-cta .container{display:flex;justify-content:space-between;gap:30px;align-items:center}.footer{background:#fff;padding:30px 0;color:#687286;font-size:13px}
+@media(max-width:850px){.links{display:none}.hero-grid,.section-head,.split,.employer{grid-template-columns:1fr}.dna-wrap{grid-template-columns:95px 1fr}.cards{grid-template-columns:1fr 1fr}.search{grid-template-columns:1fr}.footer-cta .container{display:block}.hero{padding-top:55px}.hero h1{letter-spacing:-2px}.container{padding:0 18px}}
+@media(max-width:520px){.cards{grid-template-columns:1fr}.paths{display:grid;grid-template-columns:1fr}.nav{height:64px}.actions .icon{display:none}.brand{font-size:19px}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="container navin">
+  <a class="brand" href="#"><span class="logo"></span>Trazerr</a>
+  <nav class="links"><a class="active" href="#dna">Career DNA</a><a href="#tailor">Tailor my DNA</a><a href="#jobs">Trazerr Match</a><a href="#employers">For employers</a><a href="#about">About</a></nav>
+  <div class="actions"><span class="icon">◯</span><span class="icon">☾</span><button class="btn primary">Try it free</button></div>
+</div></header>
+
+<main>
+<section class="hero"><div class="container hero-grid">
+  <div><div class="kicker">Career intelligence, built from evidence</div><h1>What could your career <em>become?</em></h1>
+  <p class="lead">Upload your resume. Trazerr turns what you've actually done into your Career DNA, then connects it to jobs, career paths, and opportunities that fit.</p>
+  <button class="btn primary">Build my Career DNA →</button></div>
+  <div class="upload-card"><h3>See your Career DNA</h3><p>Start with your resume. Trazerr reads the evidence before it makes a recommendation.</p><textarea placeholder="Paste your resume here..."></textarea><div class="drop">↑ &nbsp; Or upload a file (PDF, Word)</div><br><button class="btn primary" style="width:100%">Build my Career DNA</button></div>
+</div></section>
+
+<section class="section" id="dna"><div class="container">
+  <div class="section-head"><div><div class="kicker">How Trazerr reads a resume</div><h2>From resume to <em style="color:var(--red)">Career DNA</em> in three steps.</h2></div><p>Each piece of evidence becomes a signal. Trazerr separates what your resume proves, what it suggests, and what is worth exploring next.</p></div>
+  <div class="steps"><span class="pill">1 &nbsp; Your Resume</span><span class="pill">2 &nbsp; The Highlights</span><span class="pill active">3 &nbsp; Your Career DNA</span></div>
+  <div class="dna-wrap"><div class="dna"></div><div class="evidence">
+    <div class="evidence-row"><span class="dot">01</span><div><b>Territory development</b><small>On resume · Opened and grew a new territory</small></div></div>
+    <div class="evidence-row"><span class="dot">02</span><div><b>Quota performance</b><small>On resume · Reached 118% of annual quota</small></div></div>
+    <div class="evidence-row"><span class="dot">03</span><div><b>Training & onboarding</b><small>On resume · Trained new sales hires</small></div></div>
+    <div class="evidence-row"><span class="dot">04</span><div><b>Early team leadership</b><small>Between the lines · Evidence suggests leadership</small></div></div>
+    <div class="evidence-row"><span class="dot">05</span><div><b>Negotiation</b><small>Between the lines · Repeated enterprise deal exposure</small></div></div>
+  </div></div>
+  <div class="paths"><div class="path"><strong>Senior Sales Rep</strong><small>WHERE YOU ARE</small></div><div class="path"><strong>Sales Team Lead</strong><small>WORTH EXPLORING</small></div><div class="path"><strong>Sales Enablement</strong><small>WORTH EXPLORING</small></div></div>
+</div></section>
+
+<section class="section alt"><div class="container split"><div><div class="kicker">What you get</div><h2>Real strengths, not a pep talk.</h2><p class="lead">Your Career DNA puts every strength next to the line in your resume that shows it, and points to roles your record already supports.</p>
+<div class="feature-list"><div class="feature"><div class="dot">✓</div><div><b>On your resume</b><p>Every strength points to something you wrote.</p></div></div><div class="feature"><div class="dot">↗</div><div><b>Between the lines</b><p>What your experience suggests, even if your resume doesn't say it outright.</p></div></div><div class="feature"><div class="dot">✦</div><div><b>Worth exploring</b><p>New directions are ideas to explore, not labels.</p></div></div></div><button class="btn primary">Build my Career DNA</button></div>
+<div class="dna-card"><span class="score">78</span><div class="kicker">Example · Career DNA</div><h2 style="font-size:27px;margin:10px 0">Dana Whitfield</h2><p>7 years in B2B sales · Newark, NJ</p><p>A sales representative whose record reads closer to a sales leader than the title suggests.</p>
+<div class="feature-list"><div><b>Quota performance</b><p>"Reached 118% of annual quota in 2023 and 2024."</p><span class="tag">On resume</span></div><div><b>Training and onboarding</b><p>"Trained four new sales hires in their first 90 days."</p><span class="tag">On resume</span></div><div><b>Early team leadership</b><p>Based on training new hires and covering for the regional manager.</p><span class="tag">Between the lines</span></div></div><div class="result"><b>Worth exploring · Sales team lead</b><br><small>Next step: show a result from a team you guided.</small></div></div></div></section>
+
+<section class="section jobs" id="tailor"><div class="container"><div class="section-head"><div><div class="kicker">01 · Tailor my DNA</div><h2>Your resume, shaped for the job you want.</h2></div><p>Pick a role or paste a job posting. Trazerr rebuilds your resume around your real evidence—never inventing experience.</p></div><div class="jobbox"><b>Example · Dana's fit for Sales Team Lead</b><p>Before <strong>61</strong> &nbsp; ━━━━━━━━━ &nbsp; After <strong>84</strong></p><p>Same experience, told for the role. Nothing added that she hasn't done.</p><button class="btn primary">Tailor my resume →</button></div></div></section>
+
+<section class="section" id="jobs"><div class="container"><div class="section-head"><div><div class="kicker">02 · Live jobs</div><h2>Find jobs, then see how you fit.</h2></div><p>Search live openings and see an evidence-based fit check for each one.</p></div><div class="jobbox"><div class="search"><input placeholder="Job title or keyword"/><input placeholder="Location"/><button class="btn primary">Search jobs</button></div><p>From your Career DNA: <span class="tag">Medical Device Sales Representative</span> <span class="tag">Sales Manager</span> <span class="tag">Business Development</span></p></div></div></section>
+
+<section class="section alt" id="employers"><div class="container"><div class="section-head"><div><div class="kicker">03 · For employers</div><h2>Job DNA creates matches you can explain.</h2></div><p>Paste a job posting and Trazerr identifies what the role truly requires, then finds candidates based on evidence.</p></div><div class="employer"><div class="scorecard"><span class="score">82</span><h3>Example candidate fit</h3><p>Regional Sales Manager</p><hr><b>Experience</b><p>6 years in role scope, territory and account ownership</p><div class="meter"><span style="width:82%"></span></div><br><b>Skills</b><p>Negotiation and CRM use, backed by resume evidence</p><div class="meter"><span style="width:90%"></span></div><br><b>Leadership</b><p>Suggested by training and onboarding work</p><div class="meter"><span style="width:75%"></span></div></div>
+<div class="scorecard"><h3>Try Job DNA</h3><p>Paste or upload any job posting.</p><textarea placeholder="Paste the full job posting here..."></textarea><div class="drop">↑ &nbsp; Or upload the posting (PDF, Word)</div><br><button class="btn primary">Build Job DNA</button><button class="btn secondary" style="margin-left:8px">Check my fit</button></div></div></div></section>
+
+<section class="section" id="about"><div class="container"><div class="kicker">04 · Why Trazerr exists</div><h2>Resumes undersell people.<br>Hiring tools reward keywords.<br>Trazerr reads a career the way a good mentor would: <em style="color:var(--red)">carefully, honestly, and on your side.</em></h2>
+<div class="cards"><div class="card"><h3>Your word first</h3><p>We take your resume at its word. Every strength points to something you wrote.</p></div><div class="card"><h3>Honest about gaps</h3><p>What your resume doesn't show is named, not hidden. No invented skills or numbers.</p></div><div class="card"><h3>Yours to keep</h3><p>Your Career DNA stays private unless you choose to use it for matching.</p></div><div class="card"><h3>Explainable matching</h3><p>See why a job or candidate fits instead of receiving a mysterious score.</p></div></div></div></section>
+
+<section class="footer-cta"><div class="container"><div><div class="kicker" style="color:#ff8074">Start with what you've already done</div><h2 style="font-size:42px;margin:12px 0">Your resume says more than you think.<br>Find out what.</h2><p style="color:#bfc9dc">Free to start. Nothing is invented. Your Career DNA is built from evidence.</p></div><button class="btn" style="background:#fff;color:var(--navy);padding:16px 24px">Upload my resume →</button></div></section>
+<footer class="footer"><div class="container">© 2026 Trazerr · Career intelligence, built on evidence.</div></footer>
+</main>
+</body>
+</html>
