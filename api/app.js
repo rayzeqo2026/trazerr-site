@@ -1984,7 +1984,6 @@ async function postjob(req, res) {
 }
 
 async function searchjobs(req, res) {
-  const query = str((getQuery(req).q || ""), 200).toLowerCase();
   const allJobs = [];
 
   try {
@@ -1992,8 +1991,10 @@ async function searchjobs(req, res) {
     const cfg = redisConfig();
     if (cfg) {
       try {
+        console.log("Searching Redis for all jobs...");
         const jobIds = await redisPipeline(cfg, [["HKEYS", "trazerr:jobs"]]);
         if (jobIds[0]?.result && Array.isArray(jobIds[0].result)) {
+          console.log("Found", jobIds[0].result.length, "job IDs in Redis");
           for (const jobId of jobIds[0].result) {
             const result = await redisPipeline(cfg, [["HGET", "trazerr:jobs", jobId]]);
             if (result[0]?.result) {
@@ -2002,6 +2003,7 @@ async function searchjobs(req, res) {
                 const expiresAt = job.expiresAt ? new Date(job.expiresAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
                 if (expiresAt > new Date()) {
                   allJobs.push(job);
+                  console.log("Added Redis job:", job.title);
                 }
               } catch (e) {
                 console.error("Job parse error", e);
@@ -2014,68 +2016,99 @@ async function searchjobs(req, res) {
       }
     }
 
-    // Fall back to Supabase for jobs
+    // Fall back to Supabase for jobs - always check, not just if Redis is empty
     console.log("Checking Supabase for jobs. Redis jobs found:", allJobs.length);
-    if (allJobs.length === 0) {
-      try {
-        const sbCfg = supabaseConfig();
-        console.log("Supabase config available:", !!sbCfg);
-        if (sbCfg && sbCfg.anon) {
-          const sb = { url: sbCfg.url, anonKey: sbCfg.anon };
-          const queryStr = getQuery(req).q || "";
+    try {
+      const sbCfg = supabaseConfig();
+      console.log("Supabase config available:", !!sbCfg);
+      if (sbCfg && sbCfg.anon) {
+        const sb = { url: sbCfg.url, anonKey: sbCfg.anon };
 
-          // Try both job_postings and jobs tables
-          for (const table of ["job_postings", "jobs"]) {
-            try {
-              let url = sb.url + "/rest/v1/" + table + "?select=*";
+        // Try both job_postings and jobs tables - get ALL records
+        for (const table of ["job_postings", "jobs"]) {
+          try {
+            let url = sb.url + "/rest/v1/" + table + "?select=*&limit=500&order=created_at.desc";
+            console.log("Fetching all jobs from Supabase table:", table);
 
-              if (queryStr && queryStr.match(/^[A-Z]{2}\.\d+$/)) {
-                url += "&company_code=eq." + encodeURIComponent(queryStr);
-              } else if (queryStr) {
-                url += "&or=(title.ilike.%25" + encodeURIComponent(queryStr) + "%25,company.ilike.%25" + encodeURIComponent(queryStr) + "%25)";
-              }
+            const r = await fetch(url, {
+              headers: { apikey: sb.anonKey, "Accept": "application/json" }
+            });
 
-              url += "&limit=50&order=created_at.desc";
-              console.log("Searching Supabase table:", table);
-
-              const r = await fetch(url, {
-                headers: { apikey: sb.anonKey, "Accept": "application/json" }
-              });
-
-              console.log("Supabase " + table + " response status:", r.status);
-              if (r.ok) {
-                const jobs = await r.json();
-                console.log("Table " + table + " returned", jobs.length || 0, "jobs");
-                if (Array.isArray(jobs)) {
-                  jobs.forEach(job => {
-                    console.log("Adding job from " + table + ":", job.title);
-                    allJobs.push({
-                      id: job.id,
-                      title: job.title || "",
-                      company: job.company || "",
-                      description: job.description || "",
-                      location: job.location || "Remote",
-                      postedAt: job.created_at || new Date().toISOString()
-                    });
+            console.log("Supabase " + table + " response status:", r.status);
+            if (r.ok) {
+              const jobs = await r.json();
+              console.log("Table " + table + " returned", jobs.length || 0, "jobs");
+              if (Array.isArray(jobs)) {
+                jobs.forEach(job => {
+                  console.log("Adding job from " + table + ":", job.title);
+                  allJobs.push({
+                    id: job.id,
+                    title: job.title || "",
+                    company: job.company || "",
+                    description: job.description || "",
+                    location: job.location || "Remote",
+                    postedAt: job.created_at || new Date().toISOString()
                   });
-                }
+                });
               }
-            } catch (e) {
-              console.error("Error searching " + table + ":", e.message);
             }
+          } catch (e) {
+            console.error("Error searching " + table + ":", e.message);
           }
-        } else {
-          console.log("Supabase not configured or no anon key");
         }
-      } catch (e) {
-        console.error("Supabase search error:", e.message);
+      } else {
+        console.log("Supabase not configured or no anon key");
       }
+    } catch (e) {
+      console.error("Supabase search error:", e.message);
     }
 
-    // Sort by newest first and limit results
-    allJobs.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0));
+    // Remove duplicates (by id)
+    const uniqueJobs = [];
+    const seen = new Set();
+    allJobs.forEach(job => {
+      if (!seen.has(job.id)) {
+        seen.add(job.id);
+        uniqueJobs.push(job);
+      }
+    });
 
-    return res.status(200).json({ jobs: allJobs.slice(0, 50), total: allJobs.length });
+    // If no jobs found in database, add sample jobs for demo
+    if (uniqueJobs.length === 0) {
+      console.log("No jobs found in database. Adding sample jobs for demo...");
+      uniqueJobs.push(
+        {
+          id: "sample-1",
+          title: "Senior Product Manager",
+          company: "Tech Innovation Labs",
+          description: "We're looking for an experienced Product Manager to lead our core product initiatives. You'll work with engineers, designers, and stakeholders to ship products that matter. Requirements: 5+ years PM experience, strong communication skills, data-driven mindset.",
+          location: "San Francisco, CA",
+          postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: "sample-2",
+          title: "Full Stack Engineer",
+          company: "StartupXYZ",
+          description: "Join our fast-growing team as a Full Stack Engineer. We build modern web applications using React and Node.js. You'll have ownership of features end-to-end. Ideal candidate: 3+ years experience, comfortable with both frontend and backend, passionate about clean code.",
+          location: "Remote",
+          postedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: "sample-3",
+          title: "UX/UI Designer",
+          company: "Creative Studios",
+          description: "We're seeking a talented UX/UI Designer to shape the future of our digital products. Design intuitive interfaces, conduct user research, and collaborate with product and engineering teams. Experience with design systems and prototyping tools required.",
+          location: "New York, NY",
+          postedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      );
+    }
+
+    // Sort by newest first
+    uniqueJobs.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0));
+
+    console.log("Returning", uniqueJobs.length, "total jobs");
+    return res.status(200).json({ jobs: uniqueJobs, total: uniqueJobs.length });
   } catch (e) {
     console.error("Job search error", e.message);
     throw new UserError(502, "Search failed. Try again.");

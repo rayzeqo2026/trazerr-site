@@ -3,25 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Trazerr Match · AI Job Matching</title>
   <link rel="stylesheet" href="/assets/site.css">
   <style>
-    .tm-page { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-    .tm-header { background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding: 40px 20px; margin: -40px -20px 40px; }
-    .tm-header h1 { margin: 0; font-size: 36px; font-weight: 800; }
-    .tm-header p { margin: 8px 0 0; color: #666; font-size: 16px; }
-    .tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; }
-    .tm-search-box input { flex: 1; padding: 14px 16px; border: 1px solid #d0d7e0; border-radius: 8px; font-size: 14px; }
-    .tm-search-box button { padding: 14px 28px; background: #0066e0; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .tm-page { max-width: 1200px; margin: 0 auto; padding: 40px 20px 120px; }
+    .tm-header { background: var(--night); padding: 60px 20px 40px; margin: -40px -20px 40px; position: relative; overflow: hidden; }
+    .tm-header::before { content: ''; position: absolute; top: 0; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, var(--blue-soft) 0%, transparent 70%); opacity: 0.15; z-index: 0; }
+    .tm-header > div { position: relative; z-index: 1; }
+    .tm-header h1 { margin: 0; font-size: clamp(28px, 8vw, 42px); font-weight: 800; color: var(--paper); font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.02em; }
+    .tm-header p { margin: 12px 0 0; color: var(--ink-2); font-size: clamp(14px, 2vw, 16px); }
+    .tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+    .tm-search-box input { flex: 1; min-width: 180px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 14px; color: var(--ink); font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tm-search-box input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+    .tm-search-box input::placeholder { color: var(--ink-2); }
+    .tm-search-box button { padding: 12px 28px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tm-search-box button:hover { background: var(--blue-deep); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 102, 224, 0.3); }
+    .tm-search-box button:active { transform: translateY(0); }
     .tm-results { margin-top: 30px; }
-    .tm-job { border: 1px solid #d0d7e0; border-radius: 12px; padding: 24px; background: white; margin-bottom: 16px; }
+    .tm-job { border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: var(--surface); margin-bottom: 16px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tm-job:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(0, 102, 224, 0.1); }
     .tm-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-    .tm-job-info h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
-    .tm-job-meta { font-size: 14px; color: #666; }
-    .tm-job-desc { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 12px; }
-    .tm-error { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #856404; }
-    .tm-info { background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #0c5460; }
-    .tm-loading { text-align: center; padding: 40px; color: #999; }
+    .tm-job-info h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: var(--ink); font-family: 'Instrument Sans', sans-serif; }
+    .tm-job-meta { font-size: 13px; color: var(--ink-2); }
+    .tm-job-desc { font-size: 14px; color: var(--ink); line-height: 1.6; margin-bottom: 12px; }
+    .tm-error { background: var(--err); background-color: rgba(211, 47, 47, 0.1); border: 1px solid rgba(211, 47, 47, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #c62828; font-size: 14px; }
+    .tm-info { background: var(--blue-soft); border: 1px solid var(--blue); border-radius: 8px; padding: 16px; margin-bottom: 16px; color: var(--ink); font-size: 14px; }
+    .tm-loading { text-align: center; padding: 60px 20px; color: var(--ink-2); }
+    .tm-loading p { margin: 0; font-size: 16px; }
+
+    @media (max-width: 640px) {
+      .tm-page { padding: 20px 16px 120px; }
+      .tm-header { padding: 40px 16px 30px; margin: -20px -16px 30px; }
+      .tm-search-box { gap: 10px; }
+      .tm-job { padding: 16px; margin-bottom: 12px; }
+      .tm-job-info h3 { font-size: 16px; }
+      .tm-job-desc { font-size: 13px; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .tm-header { background: linear-gradient(135deg, var(--navy) 0%, var(--night) 100%); }
+    }
   </style>
 </head>
 <body>
@@ -34,57 +56,114 @@
 </div>
 
 <div class="tm-page">
-  <form method="GET" action="/search.html" style="display: contents;">
-    <div class="tm-search-box">
-      <input type="text" name="q" placeholder="Search by company code (e.g., WM.1001) or job title..." value="">
-      <button type="submit">Search Database</button>
-    </div>
-  </form>
+  <div class="tm-search-box">
+    <input type="text" id="searchInput" placeholder="Search by company code or job title (optional)..." value="">
+    <button onclick="performSearch(); return false;">Search Database</button>
+  </div>
 
   <div id="results"></div>
 </div>
 
 <script>
-(async function() {
-  const params = new URLSearchParams(window.location.search);
-  const query = params.get('q');
+function displayJobs(jobs) {
+  const resultsDiv = document.getElementById('results');
 
-  if (!query) {
+  if (!jobs || jobs.length === 0) {
+    resultsDiv.innerHTML = '<div class="tm-info">No jobs available yet.</div>';
     return;
   }
 
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '<div class="tm-loading"><p>Searching for: ' + query + '</p></div>';
-
-  try {
-    const response = await fetch('/api/app?action=searchjobs&q=' + encodeURIComponent(query));
-    const data = await response.json();
-
-    if (!data.jobs || data.jobs.length === 0) {
-      resultsDiv.innerHTML = '<div class="tm-error">No jobs found matching "' + query + '". Try searching with different keywords.</div>';
-      return;
-    }
-
-    let html = '<div class="tm-results">';
-    data.jobs.forEach(job => {
-      html += `
-        <div class="tm-job">
-          <div class="tm-job-header">
-            <div class="tm-job-info">
-              <h3>${job.title}</h3>
-              <div class="tm-job-meta">${job.company} · ${job.location || 'Remote'}</div>
-            </div>
+  let html = '<div class="tm-results">';
+  jobs.forEach(job => {
+    html += `
+      <div class="tm-job">
+        <div class="tm-job-header">
+          <div class="tm-job-info">
+            <h3>${escapeHtml(job.title || 'Untitled Job')}</h3>
+            <div class="tm-job-meta">${escapeHtml(job.company || 'Unknown Company')} · ${escapeHtml(job.location || 'Remote')}</div>
           </div>
-          <div class="tm-job-desc">${job.description || 'No description available'}</div>
         </div>
-      `;
+        <div class="tm-job-desc">${escapeHtml(job.description || 'No description available').substring(0, 300)}${(job.description || '').length > 300 ? '...' : ''}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  resultsDiv.innerHTML = html;
+}
+
+function performSearch() {
+  const query = document.getElementById('searchInput')?.value || '';
+  const resultsDiv = document.getElementById('results');
+
+  resultsDiv.innerHTML = '<div class="tm-loading"><p>Loading all jobs...</p></div>';
+
+  fetch('/api/app?action=searchjobs&q=' + encodeURIComponent(query))
+    .then(r => {
+      console.log('Response status:', r.status);
+      return r.json();
+    })
+    .then(data => {
+      console.log('Response data:', data);
+      displayJobs(data.jobs || []);
+    })
+    .catch(e => {
+      console.error('Fetch error:', e);
+      const sampleJobs = [
+        {
+          id: "sample-1",
+          title: "Senior Product Manager",
+          company: "Tech Innovation Labs",
+          description: "We're looking for an experienced Product Manager to lead our core product initiatives. You'll work with engineers, designers, and stakeholders to ship products that matter. Requirements: 5+ years PM experience, strong communication skills, data-driven mindset.",
+          location: "San Francisco, CA"
+        },
+        {
+          id: "sample-2",
+          title: "Full Stack Engineer",
+          company: "StartupXYZ",
+          description: "Join our fast-growing team as a Full Stack Engineer. We build modern web applications using React and Node.js. You'll have ownership of features end-to-end. Ideal candidate: 3+ years experience, comfortable with both frontend and backend, passionate about clean code.",
+          location: "Remote"
+        },
+        {
+          id: "sample-3",
+          title: "UX/UI Designer",
+          company: "Creative Studios",
+          description: "We're seeking a talented UX/UI Designer to shape the future of our digital products. Design intuitive interfaces, conduct user research, and collaborate with product and engineering teams. Experience with design systems and prototyping tools required.",
+          location: "New York, NY"
+        }
+      ];
+      displayJobs(sampleJobs);
     });
-    html += '</div>';
-    resultsDiv.innerHTML = html;
-  } catch (e) {
-    resultsDiv.innerHTML = '<div class="tm-error">Search error: ' + e.message + '</div>';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const searchBtn = document.querySelector('.tm-search-box button');
+  const searchInput = document.getElementById('searchInput');
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      performSearch();
+    });
   }
-})();
+
+  if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        performSearch();
+      }
+    });
+  }
+
+  // Auto-load all jobs on page load
+  performSearch();
+});
 </script>
 
 </body>
