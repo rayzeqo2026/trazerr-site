@@ -7,91 +7,226 @@
   <title>Trazerr Match · AI Job Matching</title>
   <link rel="stylesheet" href="/assets/site.css">
   <style>
-    .tm-page { max-width: 1200px; margin: 0 auto; padding: 40px 20px 120px; }
-    .tm-header { background: var(--night); padding: 60px 20px 40px; margin: -40px -20px 40px; position: relative; overflow: hidden; }
-    .tm-header::before { content: ''; position: absolute; top: 0; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, var(--blue-soft) 0%, transparent 70%); opacity: 0.15; z-index: 0; }
-    .tm-header > div { position: relative; z-index: 1; }
-    .tm-header h1 { margin: 0; font-size: clamp(28px, 8vw, 42px); font-weight: 800; color: var(--paper); font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.02em; }
-    .tm-header p { margin: 12px 0 0; color: var(--ink-2); font-size: clamp(14px, 2vw, 16px); }
-    .tm-search-box { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; align-items: stretch; }
-    .tm-search-box input { flex: 1; min-width: 160px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 16px; color: var(--ink); font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    .tm-search-box input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+    body { background: var(--paper); }
+
+    .tm-header {
+      background: linear-gradient(135deg, var(--night) 0%, #1a2744 100%);
+      padding: 60px 20px 40px; position: relative; overflow: hidden;
+    }
+    .tm-header::before {
+      content: ''; position: absolute; top: 0; right: -20%; width: 500px; height: 500px;
+      background: radial-gradient(circle, var(--blue-soft) 0%, transparent 70%);
+      opacity: 0.1; z-index: 0;
+    }
+    .tm-header-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+
+    .tm-header h1 {
+      margin: 0; font-size: clamp(32px, 8vw, 48px); font-weight: 900;
+      color: white; font-family: 'Instrument Sans', sans-serif; letter-spacing: -0.02em;
+    }
+    .tm-header h1 .highlight { color: var(--blue); }
+
+    .tm-header p {
+      margin: 12px 0 0; color: rgba(255, 255, 255, 0.7);
+      font-size: clamp(14px, 2vw, 16px); font-weight: 400;
+    }
+
+    .tm-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 120px; }
+
+    .tm-search-section { margin-bottom: 40px; }
+
+    .tm-search-box {
+      display: flex; align-items: center; gap: 12px;
+      background: white; border: 1px solid var(--line); border-radius: 12px;
+      padding: 14px 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tm-search-box:focus-within {
+      border-color: var(--blue); box-shadow: 0 8px 24px rgba(0, 102, 224, 0.12);
+    }
+
+    .tm-search-icon { color: var(--ink-2); font-size: 18px; flex-shrink: 0; }
+
+    .tm-search-box input {
+      flex: 1; border: none; background: transparent;
+      font-size: 16px; color: var(--ink); font-family: inherit;
+      outline: none; padding: 0;
+    }
     .tm-search-box input::placeholder { color: var(--ink-2); }
-    .tm-search-box button { padding: 14px 24px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; font-family: inherit; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; }
-    .tm-search-box button:hover { background: var(--blue-deep); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 102, 224, 0.3); }
-    .tm-search-box button:active { transform: translateY(0); }
-    .tm-search-box button:disabled { background: var(--ink-2); cursor: not-allowed; }
 
-    @media (max-width: 640px) {
-      .tm-search-box { flex-direction: column; gap: 10px; }
-      .tm-search-box input { font-size: 16px; padding: 14px 16px; }
-      .tm-search-box button { width: 100%; padding: 16px 20px; font-size: 15px; font-weight: 700; }
+    .tm-search-btn {
+      padding: 12px 24px; background: var(--blue); color: white;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-weight: 600; font-size: 14px; font-family: inherit;
+      white-space: nowrap; transition: all 0.2s;
+      display: flex; align-items: center; gap: 8px;
     }
-    .tm-results { margin-top: 30px; }
-    .tm-job { border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: var(--surface); margin-bottom: 16px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    .tm-job:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(0, 102, 224, 0.1); }
-    .tm-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-    .tm-job-info h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: var(--ink); font-family: 'Instrument Sans', sans-serif; }
-    .tm-job-meta { font-size: 13px; color: var(--ink-2); }
-    .tm-job-desc { font-size: 14px; color: var(--ink); line-height: 1.6; margin-bottom: 12px; }
-    .tm-error { background: var(--err); background-color: rgba(211, 47, 47, 0.1); border: 1px solid rgba(211, 47, 47, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; color: #c62828; font-size: 14px; }
-    .tm-info { background: var(--blue-soft); border: 1px solid var(--blue); border-radius: 8px; padding: 16px; margin-bottom: 16px; color: var(--ink); font-size: 14px; }
+    .tm-search-btn:hover { background: var(--blue-deep); transform: translateY(-1px); }
+    .tm-search-btn:active { transform: translateY(0); }
+
+    .tm-suggested { margin-top: 20px; }
+    .tm-suggested-label {
+      font-size: 13px; font-weight: 600; color: var(--ink-2);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;
+    }
+
+    .tm-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .tm-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; background: var(--paper); border: 1px solid var(--line);
+      border-radius: 20px; cursor: pointer; font-size: 14px; color: var(--ink-2);
+      transition: all 0.2s;
+    }
+    .tm-tag:hover {
+      border-color: var(--blue); background: rgba(0, 102, 224, 0.05); color: var(--blue);
+    }
+    .tm-tag svg { width: 16px; height: 16px; }
+
+    .tm-results { margin-top: 40px; }
+
+    .tm-job {
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 24px; background: white; margin-bottom: 16px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tm-job:hover {
+      border-color: var(--blue); box-shadow: 0 8px 24px rgba(0, 102, 224, 0.1);
+    }
+
+    .tm-job-title {
+      font-size: 18px; font-weight: 600; color: var(--ink);
+      margin: 0 0 8px; font-family: 'Instrument Sans', sans-serif;
+    }
+    .tm-job-company { font-size: 14px; color: var(--ink-2); margin: 0; }
+    .tm-job-desc {
+      font-size: 14px; color: var(--ink); line-height: 1.6;
+      margin: 12px 0 0;
+    }
+
+    .tm-empty {
+      text-align: center; padding: 80px 20px; color: var(--ink-2);
+    }
+    .tm-empty-icon {
+      font-size: 80px; margin-bottom: 20px; opacity: 0.5;
+    }
+    .tm-empty h3 {
+      font-size: 24px; color: var(--ink); margin: 0 0 12px;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .tm-empty p { font-size: 14px; margin: 0; color: var(--ink-2); }
+
     .tm-loading { text-align: center; padding: 60px 20px; color: var(--ink-2); }
-    .tm-loading p { margin: 0; font-size: 16px; }
+    .tm-loading p { font-size: 16px; margin: 0; }
 
     @media (max-width: 640px) {
-      .tm-page { padding: 20px 16px 120px; }
-      .tm-header { padding: 40px 16px 30px; margin: -20px -16px 30px; }
-      .tm-search-box { flex-direction: column; gap: 10px; }
-      .tm-search-box input { width: 100%; font-size: 16px; padding: 14px 16px; }
-      .tm-search-box button { width: 100%; padding: 16px 20px; font-size: 15px; font-weight: 700; }
-      .tm-job { padding: 16px; margin-bottom: 12px; }
-      .tm-job-info h3 { font-size: 16px; }
-      .tm-job-desc { font-size: 13px; }
-    }
+      .tm-container { padding: 20px 16px 120px; }
+      .tm-header { padding: 40px 16px 30px; }
 
-    @media (prefers-color-scheme: dark) {
-      .tm-header { background: linear-gradient(135deg, var(--navy) 0%, var(--night) 100%); }
+      .tm-search-box {
+        flex-wrap: wrap;
+        padding: 12px 14px;
+      }
+      .tm-search-btn {
+        width: 100%; justify-content: center;
+        padding: 14px 20px; font-weight: 700; margin-top: 10px;
+      }
+
+      .tm-tags { gap: 8px; }
+      .tm-tag { font-size: 13px; padding: 8px 14px; }
+
+      .tm-job { padding: 16px; margin-bottom: 12px; }
+      .tm-job-title { font-size: 16px; }
+
+      .tm-empty { padding: 60px 20px; }
+      .tm-empty-icon { font-size: 60px; }
+      .tm-empty h3 { font-size: 20px; }
     }
   </style>
 </head>
 <body>
 
 <div class="tm-header">
-  <div class="tm-page">
-    <h1>Trazerr Match</h1>
+  <div class="tm-header-content">
+    <h1>Trazerr <span class="highlight">Match</span></h1>
     <p>Find jobs from employers and see your AI-powered compatibility</p>
   </div>
 </div>
 
-<div class="tm-page">
-  <div class="tm-search-box">
-    <input type="text" id="searchInput" placeholder="Search by company code or job title (optional)..." value="">
-    <button onclick="performSearch(); return false;">Search Database</button>
+<div class="tm-container">
+  <div class="tm-search-section">
+    <div class="tm-search-box">
+      <span class="tm-search-icon">🔍</span>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by company code (e.g. WM.1001) or job title..."
+      >
+      <button class="tm-search-btn" onclick="performSearch()">
+        <span>🔍</span>
+        <span>Search Database</span>
+      </button>
+    </div>
+
+    <div class="tm-suggested" id="suggestedTags">
+      <div class="tm-suggested-label">Try searching for:</div>
+      <div class="tm-tags">
+        <button class="tm-tag" onclick="setSearch('Sales Representative')">
+          <span>🔍</span>
+          <span>Sales Representative</span>
+        </button>
+        <button class="tm-tag" onclick="setSearch('Account Manager')">
+          <span>🔍</span>
+          <span>Account Manager</span>
+        </button>
+        <button class="tm-tag" onclick="setSearch('WM.1001')">
+          <span>🔍</span>
+          <span>WM.1001</span>
+        </button>
+        <button class="tm-tag" onclick="setSearch('Marketing')">
+          <span>🔍</span>
+          <span>Marketing</span>
+        </button>
+        <button class="tm-tag" onclick="setSearch('Remote')">
+          <span>🔍</span>
+          <span>Remote</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div id="results"></div>
 </div>
 
 <script>
+function setSearch(query) {
+  document.getElementById('searchInput').value = query;
+  performSearch();
+}
+
 function displayJobs(jobs) {
   const resultsDiv = document.getElementById('results');
+  const suggestedTags = document.getElementById('suggestedTags');
 
   if (!jobs || jobs.length === 0) {
-    resultsDiv.innerHTML = '<div class="tm-info">No jobs available yet.</div>';
+    suggestedTags.style.display = 'block';
+    resultsDiv.innerHTML = `
+      <div class="tm-empty">
+        <div class="tm-empty-icon">🔎</div>
+        <h3>Search for jobs</h3>
+        <p>Enter a company code or job title above to find<br>opportunities and see your AI-powered match.</p>
+      </div>
+    `;
     return;
   }
 
+  suggestedTags.style.display = 'none';
   let html = '<div class="tm-results">';
   jobs.forEach(job => {
     html += `
       <div class="tm-job">
-        <div class="tm-job-header">
-          <div class="tm-job-info">
-            <h3>${escapeHtml(job.title || 'Untitled Job')}</h3>
-            <div class="tm-job-meta">${escapeHtml(job.company || 'Unknown Company')} · ${escapeHtml(job.location || 'Remote')}</div>
-          </div>
-        </div>
+        <h3 class="tm-job-title">${escapeHtml(job.title || 'Untitled Job')}</h3>
+        <div class="tm-job-company">${escapeHtml(job.company || 'Unknown Company')} · ${escapeHtml(job.location || 'Remote')}</div>
         <div class="tm-job-desc">${escapeHtml(job.description || 'No description available').substring(0, 300)}${(job.description || '').length > 300 ? '...' : ''}</div>
       </div>
     `;
@@ -101,10 +236,10 @@ function displayJobs(jobs) {
 }
 
 function performSearch() {
-  const query = document.getElementById('searchInput')?.value || '';
+  const query = document.getElementById('searchInput').value.trim();
   const resultsDiv = document.getElementById('results');
 
-  resultsDiv.innerHTML = '<div class="tm-loading"><p>Loading all jobs...</p></div>';
+  resultsDiv.innerHTML = '<div class="tm-loading"><p>Loading jobs...</p></div>';
 
   fetch('/api/app?action=searchjobs&q=' + encodeURIComponent(query))
     .then(r => {
@@ -122,22 +257,22 @@ function performSearch() {
           id: "sample-1",
           title: "Senior Product Manager",
           company: "Tech Innovation Labs",
-          description: "We're looking for an experienced Product Manager to lead our core product initiatives. You'll work with engineers, designers, and stakeholders to ship products that matter. Requirements: 5+ years PM experience, strong communication skills, data-driven mindset.",
-          location: "San Francisco, CA"
+          location: "San Francisco, CA",
+          description: "We're looking for an experienced Product Manager to lead our core product initiatives. You'll work with engineers, designers, and stakeholders to ship products that matter."
         },
         {
           id: "sample-2",
           title: "Full Stack Engineer",
           company: "StartupXYZ",
-          description: "Join our fast-growing team as a Full Stack Engineer. We build modern web applications using React and Node.js. You'll have ownership of features end-to-end. Ideal candidate: 3+ years experience, comfortable with both frontend and backend, passionate about clean code.",
-          location: "Remote"
+          location: "Remote",
+          description: "Join our fast-growing team as a Full Stack Engineer. We build modern web applications using React and Node.js. You'll have ownership of features end-to-end."
         },
         {
           id: "sample-3",
           title: "UX/UI Designer",
           company: "Creative Studios",
-          description: "We're seeking a talented UX/UI Designer to shape the future of our digital products. Design intuitive interfaces, conduct user research, and collaborate with product and engineering teams. Experience with design systems and prototyping tools required.",
-          location: "New York, NY"
+          location: "New York, NY",
+          description: "We're seeking a talented UX/UI Designer to shape the future of our digital products. Design intuitive interfaces and collaborate with product and engineering teams."
         }
       ];
       displayJobs(sampleJobs);
@@ -151,15 +286,7 @@ function escapeHtml(str) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const searchBtn = document.querySelector('.tm-search-box button');
   const searchInput = document.getElementById('searchInput');
-
-  if (searchBtn) {
-    searchBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      performSearch();
-    });
-  }
 
   if (searchInput) {
     searchInput.addEventListener('keypress', (e) => {
@@ -170,8 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Auto-load all jobs on page load
-  performSearch();
+  displayJobs([]);
 });
 </script>
 
