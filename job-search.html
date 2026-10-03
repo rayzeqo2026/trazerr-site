@@ -109,28 +109,30 @@ async function performSearch() {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error('Search failed with status', response.status, ':', text.slice(0, 500));
+      console.error('Search failed with status', response.status, ':', text);
       try {
         const data = JSON.parse(text);
-        showError(data.error || 'Search failed (HTTP ' + response.status + ')');
+        showError((data.error || data.message || 'Search failed') + ' (HTTP ' + response.status + ')');
       } catch {
-        showError('Search failed: Server error (HTTP ' + response.status + ')');
+        showError('Search failed: Server error (HTTP ' + response.status + '). ' + text.slice(0, 200));
       }
       return;
     }
 
     const data = await response.json();
+    console.log('Search response:', JSON.stringify(data));
     console.log('Search returned', data.jobs?.length || 0, 'jobs');
 
     if (!data.jobs || data.jobs.length === 0) {
-      showResults('<div class="tm-job"><p>No jobs found matching "' + query + '". Try another search.</p></div>');
+      showResults('<div class="tm-job"><p>No jobs found matching "' + query + '". Try searching with different keywords or check back later.</p></div>');
       return;
     }
 
+    console.log('Found', data.jobs.length, 'jobs, analyzing...');
     await analyzeJobsForUser(data.jobs);
   } catch (e) {
     console.error('Search error:', e);
-    showError('Search failed: ' + e.message);
+    showError('Search failed: ' + (e.message || String(e)));
   }
 }
 
