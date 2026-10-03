@@ -93,13 +93,17 @@ async function init() {
 }
 
 async function performSearch() {
+  console.log('performSearch called');
   const query = document.getElementById('searchInput').value.trim();
+  console.log('Query:', query);
+
   if (!query) {
     showError('Please enter a company code or job title to search.');
     return;
   }
 
-  showResults('<div class="tm-loading"><p>Searching job database...</p></div>');
+  console.log('Showing loading state...');
+  showResults('<div class="tm-loading"><p>Searching job database for: ' + query + '</p></div>');
 
   try {
     const url = '/api/app?action=searchjobs&q=' + encodeURIComponent(query);
