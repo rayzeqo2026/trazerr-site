@@ -1925,41 +1925,76 @@ async function postjob(req, res) {
 }
 
 async function searchjobs(req, res) {
-  const cfg = redisConfig();
-  if (!cfg) throw new UserError(503, "Job search isn't available right now.");
-
   const query = str((getQuery(req).q || ""), 200).toLowerCase();
+  const allJobs = [];
 
   try {
-    const jobIds = await redisPipeline(cfg, [["HKEYS", "trazerr:jobs"]]);
-    const allJobs = [];
-
-    if (jobIds[0]?.result && Array.isArray(jobIds[0].result)) {
-      for (const jobId of jobIds[0].result) {
-        const result = await redisPipeline(cfg, [["HGET", "trazerr:jobs", jobId]]);
-        if (result[0]?.result) {
-          try {
-            const job = JSON.parse(result[0].result);
-            // Check if job has expired
-            if (new Date(job.expiresAt) > new Date()) {
-              allJobs.push(job);
+    // Try Redis first
+    const cfg = redisConfig();
+    if (cfg) {
+      try {
+        const jobIds = await redisPipeline(cfg, [["HKEYS", "trazerr:jobs"]]);
+        if (jobIds[0]?.result && Array.isArray(jobIds[0].result)) {
+          for (const jobId of jobIds[0].result) {
+            const result = await redisPipeline(cfg, [["HGET", "trazerr:jobs", jobId]]);
+            if (result[0]?.result) {
+              try {
+                const job = JSON.parse(result[0].result);
+                const expiresAt = job.expiresAt ? new Date(job.expiresAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                if (expiresAt > new Date()) {
+                  allJobs.push(job);
+                }
+              } catch (e) {
+                console.error("Job parse error", e);
+              }
             }
-          } catch (e) {
-            console.error("Job parse error", e);
           }
         }
+      } catch (e) {
+        console.error("Redis search error:", e.message);
+      }
+    }
+
+    // Fall back to Supabase for legacy jobs
+    if (allJobs.length === 0) {
+      try {
+        const sbCfg = supabaseConfig();
+        if (sbCfg && sbCfg.anon) {
+          const { createClient } = await import("@supabase/supabase-js");
+          const sb = createClient(sbCfg.url, sbCfg.anon);
+          const { data: jobs, error } = await sb
+            .from("jobs")
+            .select("*")
+            .limit(100);
+
+          if (jobs && Array.isArray(jobs)) {
+            jobs.forEach(job => {
+              const jobObj = {
+                id: job.id,
+                title: job.title,
+                company: job.company || "Unknown",
+                description: job.description || "",
+                location: job.location || "Remote",
+                postedAt: job.created_at || new Date().toISOString()
+              };
+              allJobs.push(jobObj);
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Supabase fallback error:", e.message);
       }
     }
 
     // Filter by query
     const filtered = query ? allJobs.filter(j =>
-      j.title.toLowerCase().includes(query) ||
-      j.company.toLowerCase().includes(query) ||
-      j.description.toLowerCase().includes(query)
+      (j.title || "").toLowerCase().includes(query) ||
+      (j.company || "").toLowerCase().includes(query) ||
+      (j.description || "").toLowerCase().includes(query)
     ) : allJobs;
 
     // Sort by newest first
-    filtered.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
+    filtered.sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0));
 
     return res.status(200).json({ jobs: filtered.slice(0, 50), total: filtered.length });
   } catch (e) {
