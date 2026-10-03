@@ -1961,7 +1961,7 @@ async function searchjobs(req, res) {
         const sbCfg = supabaseConfig();
         if (sbCfg && sbCfg.anon) {
           const sb = { url: sbCfg.url, anonKey: sbCfg.anon };
-          let url = sb.url + "/rest/v1/job_postings?select=*&status=eq.open";
+          let url = sb.url + "/rest/v1/job_postings?select=*";
 
           // Try to match company code (e.g., WM.1001) or search by title/company
           const queryStr = getQuery(req).q || "";
@@ -1972,14 +1972,16 @@ async function searchjobs(req, res) {
           }
 
           url += "&limit=50&order=created_at.desc";
+          console.log("Searching Supabase:", url.split("?")[0] + "?" + url.split("?")[1].split("&")[0]);
 
           const r = await fetch(url, {
-            headers: { apikey: sb.anonKey, "Accept": "application/json" },
-            signal: AbortSignal.timeout(10000)
+            headers: { apikey: sb.anonKey, "Accept": "application/json" }
           });
 
+          console.log("Supabase response status:", r.status);
           if (r.ok) {
             const jobs = await r.json();
+            console.log("Supabase returned", jobs.length || 0, "jobs");
             if (Array.isArray(jobs)) {
               jobs.forEach(job => {
                 allJobs.push({
@@ -1992,6 +1994,9 @@ async function searchjobs(req, res) {
                 });
               });
             }
+          } else {
+            const text = await r.text();
+            console.error("Supabase error response:", text.slice(0, 500));
           }
         }
       } catch (e) {
