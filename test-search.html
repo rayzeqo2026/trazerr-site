@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Search</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input { padding: 10px; width: 200px; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; margin-left: 10px; }
+    #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+  </style>
+</head>
+<body>
+
+<h1>Test Search Page</h1>
+
+<input type="text" id="query" placeholder="Type here...">
+<button onclick="testSearch()">Search</button>
+
+<div id="result"></div>
+
+<script>
+function testSearch() {
+  const query = document.getElementById('query').value;
+  const resultDiv = document.getElementById('result');
+
+  if (!query) {
+    resultDiv.innerHTML = '<p style="color: red;">Please enter a search term</p>';
+    return;
+  }
+
+  resultDiv.innerHTML = '<p style="color: blue;">Searching for: ' + query + '</p>';
+
+  fetch('/api/app?action=searchjobs&q=' + encodeURIComponent(query))
+    .then(r => {
+      resultDiv.innerHTML = '<p>Response status: ' + r.status + '</p>';
+      return r.json();
+    })
+    .then(data => {
+      if (data.jobs && data.jobs.length > 0) {
+        let html = '<p style="color: green;">Found ' + data.jobs.length + ' jobs:</p><ul>';
+        data.jobs.forEach(job => {
+          html += '<li>' + job.title + ' at ' + job.company + '</li>';
+        });
+        html += '</ul>';
+        resultDiv.innerHTML = html;
+      } else {
+        resultDiv.innerHTML = '<p style="color: orange;">No jobs found</p>';
+      }
+    })
+    .catch(e => {
+      resultDiv.innerHTML = '<p style="color: red;">Error: ' + e.message + '</p>';
+    });
+}
+</script>
+
+</body>
+</html>
