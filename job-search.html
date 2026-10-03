@@ -99,11 +99,6 @@ async function performSearch() {
     return;
   }
 
-  if (!userProfile) {
-    showError('Please build your Career DNA first.');
-    return;
-  }
-
   showResults('<div class="tm-loading"><p>Searching job database...</p></div>');
 
   try {
@@ -140,6 +135,23 @@ async function performSearch() {
 }
 
 async function analyzeJobsForUser(jobs) {
+  // If no Career DNA, just show job listings without AI matching
+  if (!userProfile) {
+    const results = jobs.map(job => `
+      <div class="tm-job">
+        <div class="tm-job-header">
+          <div class="tm-job-info">
+            <h3>${job.title}</h3>
+            <div class="tm-job-meta">${job.company} · ${job.location || 'Remote'}</div>
+          </div>
+        </div>
+        <div class="tm-job-desc">${job.description || 'No description available'}</div>
+      </div>
+    `);
+    showResults('<div class="tm-results">' + results.join('') + '</div>');
+    return;
+  }
+
   showResults('<div class="tm-loading"><p>Analyzing ' + jobs.length + ' job(s) against your Career DNA...</p></div>');
 
   const results = [];
