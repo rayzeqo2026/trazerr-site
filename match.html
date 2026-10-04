@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Trazerr Match — Find Your Fit</title>
+<style>
+:root {
+  --navy: #12213f;
+  --blue: #165dcc;
+  --red: #a8322b;
+  --ink: #17233b;
+  --muted: #687286;
+  --paper: #f7f6f1;
+  --white: #fff;
+  --line: #d9dce2;
+  --soft: #eef2f8;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.6;
+}
+
+.container { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+/* ===== Header ===== */
+.header {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #0d315d, #1d73d5);
+}
+
+.progress-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.step {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: all 0.3s;
+}
+
+.step.active {
+  background: var(--blue);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, #1a2744 100%);
+  color: #fff;
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(22, 93, 204, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.hero h1 {
+  font-size: clamp(42px, 6vw, 64px);
+  line-height: 1.1;
+  letter-spacing: -2px;
+  margin: 0 0 20px;
+}
+
+.hero p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 500px;
+  margin: 0;
+}
+
+/* ===== Match Code Card ===== */
+.match-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.match-card h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  color: var(--ink);
+}
+
+.match-card p {
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.code-input {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: monospace;
+  margin-bottom: 16px;
+  transition: all 0.3s;
+}
+
+.code-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--soft);
+}
+
+.btn {
+  background: var(--blue);
+  color: #fff;
+  border: 0;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.btn:hover {
+  background: #1468db;
+  transform: translateY(-2px);
+}
+
+/* ===== Job Preview ===== */
+.section {
+  padding: 80px 0;
+  border-top: 1px solid var(--line);
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: end;
+  margin-bottom: 40px;
+}
+
+.section h2 {
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin: 0;
+}
+
+.section-head p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.kicker {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ===== Job Preview Card ===== */
+.job-preview {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.job-info h3 {
+  margin: 0 0 4px;
+  font-size: 32px;
+  color: var(--ink);
+}
+
+.job-company {
+  color: var(--muted);
+  font-size: 16px;
+  margin: 0 0 20px;
+}
+
+.job-description {
+  color: var(--ink);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.job-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: var(--soft);
+  color: var(--blue);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.job-meta {
+  display: grid;
+  gap: 20px;
+}
+
+.meta-item {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
+.meta-item:last-child {
+  border: 0;
+}
+
+.meta-label {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.meta-value {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ===== Match Analysis ===== */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.dna-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.dna-panel h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+.evidence-item {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--soft);
+}
+
+.evidence-item:last-child {
+  border: 0;
+}
+
+.mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid var(--blue);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mark.verified {
+  background: var(--blue);
+  border: 0;
+}
+
+.mark.inferred {
+  background: transparent;
+}
+
+.mark.potential {
+  border-style: dashed;
+  border-color: var(--red);
+}
+
+.evidence-title {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.evidence-desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.evidence-label {
+  display: inline-block;
+  background: var(--soft);
+  color: var(--blue);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* ===== Match Score ===== */
+.score-section {
+  background: linear-gradient(135deg, var(--navy) 0%, #1a2744 100%);
+  color: #fff;
+  padding: 60px 0;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.score-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.score-number {
+  font-size: 56px;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.score-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.score-insight {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 8px;
+}
+
+/* ===== Questions Section ===== */
+.questions-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.questions-section h3 {
+  margin: 0 0 24px;
+  font-size: 20px;
+}
+
+.question-item {
+  padding: 20px;
+  border-left: 3px solid var(--blue);
+  background: var(--soft);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.question-item:last-child {
+  margin-bottom: 0;
+}
+
+.question-text {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.question-hint {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ===== Scorecard ===== */
+.scorecard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.scorecard {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.scorecard h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scorecard-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--soft);
+}
+
+.scorecard-row:last-child {
+  border: 0;
+}
+
+.scorecard-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.scorecard-value {
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.meter {
+  height: 6px;
+  background: var(--soft);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+}
+
+/* ===== CTA Section ===== */
+.cta {
+  background: var(--navy);
+  color: #fff;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.cta h2 {
+  font-size: 36px;
+  margin: 0 0 16px;
+}
+
+.cta p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 32px;
+}
+
+.cta-btns {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--navy);
+  border: 0;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .hero-inner,
+  .job-preview,
+  .analysis-grid,
+  .scorecard-grid,
+  .section-head {
+    grid-template-columns: 1fr;
+  }
+
+  .score-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-btns {
+    flex-direction: column;
+  }
+
+  .container {
+    padding: 0 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .header-inner {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .progress-bar {
+    margin-left: 0;
+  }
+
+  .hero {
+    padding: 50px 0;
+  }
+
+  .section {
+    padding: 50px 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="container header-inner">
+    <div class="logo">
+      <div class="logo-icon"></div>
+      Trazerr Match
+    </div>
+    <div class="progress-bar">
+      <div class="step active"></div>
+      <div class="step"></div>
+      <div class="step"></div>
+      <div class="step"></div>
+      <div class="step"></div>
+    </div>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div>
+      <h1>You're invited to explore a <em style="color: #5CA8FF;">perfect fit.</em></h1>
+      <p>An employer found your profile and thinks you'd be great for an open role. Enter your match code below to see the evidence-based fit.</p>
+    </div>
+    <div class="match-card">
+      <h2>Enter Match Code</h2>
+      <p>Your unique code from the employer</p>
+      <input type="text" class="code-input" placeholder="e.g., TZ-2024-ABC123" maxlength="20">
+      <button class="btn">Unlock Match</button>
+      <p style="color: var(--muted); font-size: 13px; margin: 12px 0 0; text-align: center;">Takes about 30 seconds</p>
+    </div>
+  </div>
+</section>
+
+<!-- Job Preview Section -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">The opportunity</p>
+        <h2>Regional Sales Manager</h2>
+      </div>
+      <p>This role is looking for someone with your proven track record in territory management and team leadership. We've matched you based on real evidence from your resume.</p>
+    </div>
+
+    <div class="job-preview">
+      <div class="job-info">
+        <h3>Regional Sales Manager</h3>
+        <p class="job-company">TechVenture Inc. • San Francisco, CA</p>
+        <p class="job-description">Lead a high-performing sales team to drive revenue growth across the Western region. You'll manage a team of 8-12 reps, own the P&L, and develop long-term strategic partnerships with enterprise clients.</p>
+        <div class="job-tags">
+          <span class="tag">Enterprise Sales</span>
+          <span class="tag">Team Leadership</span>
+          <span class="tag">5+ Years Exp</span>
+          <span class="tag">Relocation OK</span>
+        </div>
+      </div>
+      <div class="job-meta">
+        <div class="meta-item">
+          <div class="meta-label">Experience Required</div>
+          <div class="meta-value">5+ years in sales leadership</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Key Skills</div>
+          <div class="meta-value">Territory management, team building, negotiation, CRM expertise</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Salary Range</div>
+          <div class="meta-value">$120K – $180K + commission</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Posted</div>
+          <div class="meta-value">October 2, 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Job DNA vs Career DNA -->
+<section class="section" style="background: #fff;">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">The comparison</p>
+        <h2>Your fit breakdown</h2>
+      </div>
+      <p>Here's how your real experience aligns with what this role needs. We only compare what you've proven.</p>
+    </div>
+
+    <div class="analysis-grid">
+      <div class="dna-panel">
+        <h3>What the role needs</h3>
+        <div class="evidence-item">
+          <div class="mark verified"></div>
+          <div>
+            <p class="evidence-title">Territory ownership</p>
+            <p class="evidence-desc">Manage and grow an assigned region</p>
+            <span class="evidence-label">Required</span>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="mark verified"></div>
+          <div>
+            <p class="evidence-title">Team leadership</p>
+            <p class="evidence-desc">Build and scale a sales team</p>
+            <span class="evidence-label">Required</span>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="mark verified"></div>
+          <div>
+            <p class="evidence-title">Enterprise sales</p>
+            <p class="evidence-desc">Close deals with large accounts</p>
+            <span class="evidence-label">Required</span>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="mark inferred"></div>
+          <div>
+            <p class="evidence-title">Strategic planning</p>
+            <p class="evidence-desc">Long-term market strategy</p>
+            <span class="evidence-label">Implied</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dna-panel">
+        <h3>What you bring</h3>
+        <div class="evidence-item">
+          <div class="mark verified"></div>
+          <div>
+            <p class="evidence-title">Quota performance</p>
+            <p class="evidence-desc">"Reached 118% of quota for 3 consecutive years"</p>
+            <span class="evidence-label">On resume</span>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="mark verified"></div>
+          <div>
+            <p class="evidence-title">Team training</p>
+            <p class="evidence-desc">"Trained 4 new sales reps in their first 90 days"</p>
+            <span class="evidence-label">On resume</span>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="mark verified"></div>
+          <div>
+            <p class="evidence-title">Territory expansion</p>
+            <p class="evidence-desc">"Grew territory by 45% year-over-year"</p>
+            <span class="evidence-label">On resume</span>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="mark inferred"></div>
+          <div>
+            <p class="evidence-title">Strategic thinking</p>
+            <p class="evidence-desc">Implied by consistent growth and leadership</p>
+            <span class="evidence-label">Between lines</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Match Score -->
+<section class="score-section">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <p class="kicker" style="color: #E0B070;">Your fit analysis</p>
+      <h2 style="font-size: 36px; margin: 0;">You're a strong match</h2>
+    </div>
+
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-number">82%</div>
+        <p class="score-label">Overall Match</p>
+        <p class="score-insight">Strong alignment across key areas</p>
+      </div>
+      <div class="score-card">
+        <div class="score-number">8/10</div>
+        <p class="score-label">Experience</p>
+        <p class="score-insight">Territory & team leadership proven</p>
+      </div>
+      <div class="score-card">
+        <div class="score-number">2</div>
+        <p class="score-label">Unknowns</p>
+        <p class="score-insight">Budget ownership & enterprise size scale</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interview Questions -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">Interview prep</p>
+        <h2>Questions to expect</h2>
+      </div>
+      <p>Based on your experience and this role's focus areas, here are the questions likely to come up—and how to show your fit.</p>
+    </div>
+
+    <div class="questions-section">
+      <div class="question-item">
+        <p class="question-text">1. Tell us about a time you grew a territory. What was your process?</p>
+        <p class="question-hint">💡 Hint: Reference your 45% YoY growth. Walk through your approach to prospecting, relationship building, and account expansion.</p>
+      </div>
+
+      <div class="question-item">
+        <p class="question-text">2. Describe your leadership style and how you've developed your team members.</p>
+        <p class="question-hint">💡 Hint: Your resume shows you trained 4 new hires. Explain your onboarding process and what made them successful.</p>
+      </div>
+
+      <div class="question-item">
+        <p class="question-text">3. How do you approach managing a P&L? What metrics do you track?</p>
+        <p class="question-hint">💡 This is an unknown area. Be honest: "I've managed individual quota and team performance. I'm eager to learn P&L management at scale."</p>
+      </div>
+
+      <div class="question-item">
+        <p class="question-text">4. What's your experience with enterprise-level deals? How is that different from your current work?</p>
+        <p class="question-hint">💡 Show what you know, ask what you don't. "I've worked with large accounts and longer sales cycles. How do enterprise deals differ here?"</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scorecards -->
+<section class="section" style="background: #fff;">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">The scorecards</p>
+        <h2>How you both match</h2>
+      </div>
+      <p>Your fit isn't one-sided. Here's how the employer evaluates this role, and what we see from your background.</p>
+    </div>
+
+    <div class="scorecard-grid">
+      <div class="scorecard">
+        <h3>🎯 Employer priorities</h3>
+        <div class="scorecard-row">
+          <span class="scorecard-label">Territory ownership</span>
+          <span class="scorecard-value">9/10</span>
+        </div>
+        <div class="meter"><span style="width: 90%;"></span></div>
+
+        <div class="scorecard-row">
+          <span class="scorecard-label">Team leadership</span>
+          <span class="scorecard-value">8/10</span>
+        </div>
+        <div class="meter"><span style="width: 80%;"></span></div>
+
+        <div class="scorecard-row">
+          <span class="scorecard-label">Enterprise sales</span>
+          <span class="scorecard-value">7/10</span>
+        </div>
+        <div class="meter"><span style="width: 70%;"></span></div>
+
+        <div class="scorecard-row">
+          <span class="scorecard-label">Strategic mindset</span>
+          <span class="scorecard-value">8/10</span>
+        </div>
+        <div class="meter"><span style="width: 80%;"></span></div>
+      </div>
+
+      <div class="scorecard">
+        <h3>✅ Your strengths</h3>
+        <div class="scorecard-row">
+          <span class="scorecard-label">Quota performance</span>
+          <span class="scorecard-value">9/10</span>
+        </div>
+        <div class="meter"><span style="width: 90%;"></span></div>
+
+        <div class="scorecard-row">
+          <span class="scorecard-label">Territory expansion</span>
+          <span class="scorecard-value">9/10</span>
+        </div>
+        <div class="meter"><span style="width: 90%;"></span></div>
+
+        <div class="scorecard-row">
+          <span class="scorecard-label">Team development</span>
+          <span class="scorecard-value">8/10</span>
+        </div>
+        <div class="meter"><span style="width: 80%;"></span></div>
+
+        <div class="scorecard-row">
+          <span class="scorecard-label">Long-term thinking</span>
+          <span class="scorecard-value">7/10</span>
+        </div>
+        <div class="meter"><span style="width: 70%;"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="container">
+    <h2>Ready to take the next step?</h2>
+    <p>You're a strong match for this role. The employer is ready to learn more about you.</p>
+    <div class="cta-btns">
+      <button class="btn">Respond to this match</button>
+      <button class="btn-secondary">Share feedback</button>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
