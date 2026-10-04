@@ -905,6 +905,12 @@ function supabaseConfig() {
   return url ? { url: url.replace(/\/$/, ""), key, anon } : null;
 }
 
+function getBaseUrl(req) {
+  const proto = req.headers["x-forwarded-proto"] || req.headers["x-proto"] || (req.url?.startsWith("https") ? "https" : "http");
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost:3000";
+  return proto + "://" + host;
+}
+
 async function dbstatus(req, res) {
   const cfg = supabaseConfig();
   let reachable = false, detail = "not configured";
@@ -2232,7 +2238,8 @@ async function uploadresume(req, res) {
 
   try {
     // Step 1: Generate Career DNA using analyze endpoint
-    const analyzeRes = await fetch("http://localhost:3000/api/app?action=analyze", {
+    const baseUrl = getBaseUrl(req);
+    const analyzeRes = await fetch(baseUrl + "/api/app?action=analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -2514,13 +2521,14 @@ async function unlockmatch(req, res) {
     }
 
     // Call the jobmatch endpoint to calculate detailed match score
+    const baseUrl = getBaseUrl(req);
     const matchBody = {
       careerProfile: tryParse(careerDna.ai_analysis) || {},
       jobDescription: job.description,
       jobTitle: job.title
     };
 
-    const jobmatchRes = await fetch("http://localhost:3000/api/app?action=jobmatch", {
+    const jobmatchRes = await fetch(baseUrl + "/api/app?action=jobmatch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(matchBody)
