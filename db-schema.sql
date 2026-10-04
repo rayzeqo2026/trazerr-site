@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS job_dna (
 -- Match Codes (invitation system)
 CREATE TABLE IF NOT EXISTS match_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  code TEXT UNIQUE NOT NULL, -- TZ-XXXX-XXXXXX format
+  code TEXT UNIQUE NOT NULL, -- TZ-XXXX format (7 chars total)
   job_id UUID NOT NULL REFERENCES job_postings(id) ON DELETE CASCADE,
   candidate_id UUID REFERENCES candidates(id) ON DELETE SET NULL, -- NULL until matched
   employer_id UUID NOT NULL REFERENCES employers(id) ON DELETE CASCADE,

@@ -633,7 +633,7 @@ body {
     <div class="match-card">
       <h2>Enter Match Code</h2>
       <p>Your unique code from the employer</p>
-      <input type="text" id="matchCodeInput" class="code-input" placeholder="e.g., TZ-2024-ABC123" maxlength="20">
+      <input type="text" id="matchCodeInput" class="code-input" placeholder="e.g., TZ-A1B2" maxlength="8">
       <button class="btn" id="unlockBtn" onclick="unlockMatch()">Unlock Match</button>
       <p id="codeStatus" style="color: var(--muted); font-size: 13px; margin: 12px 0 0; text-align: center;">Takes about 30 seconds</p>
     </div>
@@ -932,8 +932,8 @@ function unlockMatch() {
     return;
   }
 
-  if (!code.match(/^[A-Z0-9]{3,}[-]?[A-Z0-9]{3,}$/)) {
-    statusEl.textContent = '⚠️ Invalid code format (e.g., TZ-2024-ABC123)';
+  if (!code.match(/^TZ-[A-Z0-9]{4}$/i)) {
+    statusEl.textContent = '⚠️ Invalid code format (e.g., TZ-A1B2)';
     statusEl.style.color = '#a8322b';
     return;
   }
