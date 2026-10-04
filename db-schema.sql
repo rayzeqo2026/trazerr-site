@@ -10,14 +10,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Candidates (extend auth.users)
 CREATE TABLE IF NOT EXISTS candidates (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   name TEXT,
   location TEXT,
   headline TEXT,
   about TEXT,
   avatar_url TEXT,
-  "current_role" TEXT,
+  role TEXT,
   years_experience INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS candidates (
 
 -- Employers (extend auth.users)
 CREATE TABLE IF NOT EXISTS employers (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   company_name TEXT NOT NULL,
   company_website TEXT,
