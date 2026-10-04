@@ -84,8 +84,8 @@ async function getSession(req) {
 // instance; otherwise they're kept in memory. Visitors are identified by a one-way hash of their IP
 // address, and stored counters expire with the 10-minute window.
 const WINDOW_SEC = 600;
-const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobdelete: 100, jobmatch: 30, searchjobs: 60, appAlert: 20 };
-const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe", "employerme", "myrequests", "adminemployers", "searchjobs"]); // cheap requests; not worth a storage round trip
+const LIMITS = { analyze: 8, match: 20, jobdna: 12, path: 12, tailor: 16, jobs: 60, waitlist: 10, track: 200, stats: 30, feedback: 20, clienterror: 10, keepalive: 6, health: 30, sendalerts: 6, unsubscribe: 20, talentdraft: 6, employerjoin: 6, employerme: 60, searchtalent: 20, contactrequest: 30, myrequests: 60, respondrequest: 30, adminemployers: 60, jobpost: 10, jobdelete: 100, jobmatch: 30, searchjobs: 60, appAlert: 20, signup: 10, uploadresume: 5, getcareerdn: 60, generatematch: 20, unlockmatch: 30, getmatches: 60 };
+const MEMORY_ONLY = new Set(["track", "jobs", "authconfig", "clienterror", "keepalive", "health", "sendalerts", "unsubscribe", "employerme", "myrequests", "adminemployers", "searchjobs", "getcareerdn", "getmatches"]); // cheap requests; not worth a storage round trip
 const hits = new Map();
 
 function visitorId(req) {
@@ -2115,15 +2115,596 @@ async function searchjobs(req, res) {
   }
 }
 
+/* ---------------- Supabase authentication & matching system ---------------- */
+
+// Generate a random TZ-XXXX format match code
+function generateMatchCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "TZ-";
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+async function signup(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Accounts aren't available yet.");
+
+  const body = getBody(req) || {};
+  const email = str(body.email, 255).toLowerCase().trim();
+  const password = str(body.password, 255);
+  const name = str(body.name || body.company, 255);
+  const userType = body.role === "employer" ? "employer" : "candidate";
+
+  if (!email || !email.includes("@")) throw new UserError(400, "Valid email required.");
+  if (password.length < 8) throw new UserError(400, "Password must be at least 8 characters.");
+  if (!name) throw new UserError(400, "Name required.");
+
+  try {
+    // Create auth user in Supabase
+    const authUrl = cfg.url + "/auth/v1/signup";
+    const authRes = await fetch(authUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.anon
+      },
+      body: JSON.stringify({ email, password, data: { userType } })
+    });
+
+    if (!authRes.ok) {
+      const error = await authRes.json().catch(() => ({}));
+      if (authRes.status === 422) throw new UserError(400, "Email already in use.");
+      console.error("Supabase auth error:", error);
+      throw new UserError(500, "Signup failed. Please try again.");
+    }
+
+    const authData = await authRes.json();
+    const userId = authData.user?.id;
+    if (!userId) throw new UserError(500, "Failed to create account.");
+
+    // Save user profile to appropriate table
+    const table = userType === "employer" ? "employers" : "candidates";
+    const profileData = {
+      id: userId,
+      email,
+      name,
+      ...(userType === "employer" && { company_name: name })
+    };
+
+    const profileUrl = cfg.url + "/rest/v1/" + table;
+    const profileRes = await fetch(profileUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key,
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    if (!profileRes.ok && profileRes.status !== 409) {
+      const error = await profileRes.text().catch(() => "");
+      console.error("Profile save error:", error);
+      throw new UserError(500, "Couldn't save profile.");
+    }
+
+    // Return session token
+    return res.status(201).json({
+      user: {
+        id: userId,
+        email,
+        name,
+        userType
+      },
+      session: {
+        access_token: authData.session?.access_token || "",
+        user: authData.user
+      }
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Signup error:", err);
+    throw new UserError(500, "Signup failed.");
+  }
+}
+
+async function uploadresume(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Resume upload not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to upload a resume.");
+
+  // Verify user session
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const userId = user.id;
+
+  const body = getBody(req) || {};
+  if (body.kind !== "pdf" && body.kind !== "text") throw new UserError(400, "Send a PDF or resume text.");
+
+  try {
+    // Step 1: Generate Career DNA using analyze endpoint
+    const analyzeRes = await fetch("http://localhost:3000/api/app?action=analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!analyzeRes.ok) {
+      const error = await analyzeRes.json().catch(() => ({}));
+      throw new UserError(analyzeRes.status, error.error || "Resume analysis failed.");
+    }
+
+    const { profile } = await analyzeRes.json();
+
+    // Step 2: Upload resume to storage if it's a PDF
+    let resumeUrl = null;
+    if (body.kind === "pdf" && body.data) {
+      const storagePath = userId + "/resume-" + Date.now() + ".pdf";
+      const uploadUrl = cfg.url + "/storage/v1/object/resumes/" + storagePath;
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          apikey: cfg.anon,
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/pdf"
+        },
+        body: Buffer.from(body.data, "base64")
+      });
+
+      if (uploadRes.ok) {
+        resumeUrl = cfg.url + "/storage/v1/object/public/resumes/" + storagePath;
+      }
+    }
+
+    // Step 3: Save Career DNA to database
+    const careerDnaData = {
+      candidate_id: userId,
+      headline: profile.headline,
+      summary: profile.stage,
+      verified_skills: JSON.stringify(profile.strengths || []),
+      inferred_skills: JSON.stringify(profile.hiddenTalent || []),
+      potential_skills: JSON.stringify(profile.directions || []),
+      clarity_score: profile.evidenceScore,
+      strengths: JSON.stringify(profile.strengths || []),
+      gaps: JSON.stringify(profile.unknowns || []),
+      career_paths: JSON.stringify(profile.directions || []),
+      ai_analysis: JSON.stringify(profile)
+    };
+
+    const careerUrl = cfg.url + "/rest/v1/career_dna";
+    const careerRes = await fetch(careerUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key
+      },
+      body: JSON.stringify(careerDnaData)
+    });
+
+    if (!careerRes.ok) {
+      console.error("Career DNA save error:", careerRes.status);
+    }
+
+    return res.status(200).json({
+      profile,
+      resumeUrl,
+      message: "Resume analyzed successfully!"
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Upload resume error:", err);
+    throw new UserError(500, "Resume upload failed.");
+  }
+}
+
+async function getcareerdn(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Career DNA not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to view Career DNA.");
+
+  // Verify user session
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const userId = user.id;
+
+  try {
+    // Fetch latest Career DNA
+    const careerUrl = cfg.url + "/rest/v1/career_dna?candidate_id=eq." + userId + "&order=created_at.desc&limit=1";
+    const careerRes = await fetch(careerUrl, {
+      headers: {
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key
+      }
+    });
+
+    if (!careerRes.ok) throw new UserError(500, "Failed to fetch Career DNA.");
+
+    const data = await careerRes.json();
+    if (!data || data.length === 0) throw new UserError(404, "No Career DNA found. Upload a resume first.");
+
+    const careerDna = data[0];
+    return res.status(200).json({
+      careerDna: {
+        id: careerDna.id,
+        headline: careerDna.headline,
+        summary: careerDna.summary,
+        clarityScore: careerDna.clarity_score,
+        strengths: tryParse(careerDna.strengths),
+        gaps: tryParse(careerDna.gaps),
+        careerPaths: tryParse(careerDna.career_paths),
+        fullProfile: tryParse(careerDna.ai_analysis),
+        generatedAt: careerDna.generated_at
+      }
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Get Career DNA error:", err);
+    throw new UserError(500, "Failed to fetch Career DNA.");
+  }
+}
+
+async function generatematch(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Matching not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to generate match codes.");
+
+  // Verify employer session
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const employerId = user.id;
+
+  const body = getBody(req) || {};
+  const jobId = str(body.jobId, 36);
+  const candidateId = str(body.candidateId, 36);
+
+  if (!jobId) throw new UserError(400, "Job ID required.");
+  if (!candidateId) throw new UserError(400, "Candidate ID required.");
+
+  try {
+    // Generate unique code
+    let code = generateMatchCode();
+    let attempts = 0;
+    while (attempts < 10) {
+      const checkUrl = cfg.url + "/rest/v1/match_codes?code=eq." + code;
+      const checkRes = await fetch(checkUrl, {
+        headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+      });
+      const existing = await checkRes.json();
+      if (!existing || existing.length === 0) break;
+      code = generateMatchCode();
+      attempts++;
+    }
+
+    if (attempts >= 10) throw new UserError(500, "Failed to generate unique code.");
+
+    // Create match code record
+    const matchData = {
+      code,
+      job_id: jobId,
+      candidate_id: candidateId,
+      employer_id: employerId
+    };
+
+    const matchUrl = cfg.url + "/rest/v1/match_codes";
+    const matchRes = await fetch(matchUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key
+      },
+      body: JSON.stringify(matchData)
+    });
+
+    if (!matchRes.ok) throw new UserError(500, "Failed to create match code.");
+
+    return res.status(201).json({
+      code,
+      message: "Match code generated successfully!"
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Generate match error:", err);
+    throw new UserError(500, "Failed to generate match code.");
+  }
+}
+
+async function unlockmatch(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Matching not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to unlock a match.");
+
+  // Verify user session
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const candidateId = user.id;
+
+  const body = getBody(req) || {};
+  const code = str(body.code, 20).toUpperCase().trim();
+
+  if (!code) throw new UserError(400, "Match code required.");
+
+  try {
+    // Look up match code
+    const matchUrl = cfg.url + "/rest/v1/match_codes?code=eq." + code;
+    const matchRes = await fetch(matchUrl, {
+      headers: {
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key
+      }
+    });
+
+    if (!matchRes.ok) throw new UserError(500, "Failed to validate code.");
+
+    const matches = await matchRes.json();
+    if (!matches || matches.length === 0) throw new UserError(404, "Invalid match code.");
+
+    const matchCode = matches[0];
+    const jobId = matchCode.job_id;
+
+    // Check if code is expired
+    const expiresAt = new Date(matchCode.expires_at);
+    if (expiresAt < new Date()) throw new UserError(410, "This code has expired.");
+
+    // Get candidate Career DNA
+    const careerUrl = cfg.url + "/rest/v1/career_dna?candidate_id=eq." + candidateId + "&order=created_at.desc&limit=1";
+    const careerRes = await fetch(careerUrl, {
+      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+    });
+
+    if (!careerRes.ok) throw new UserError(500, "Failed to fetch Career DNA.");
+
+    const careerData = await careerRes.json();
+    if (!careerData || careerData.length === 0) throw new UserError(400, "Upload a resume first.");
+
+    const careerDna = careerData[0];
+
+    // Get job posting
+    const jobUrl = cfg.url + "/rest/v1/job_postings?id=eq." + jobId;
+    const jobRes = await fetch(jobUrl, {
+      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+    });
+
+    if (!jobRes.ok) throw new UserError(500, "Failed to fetch job.");
+
+    const jobs = await jobRes.json();
+    if (!jobs || jobs.length === 0) throw new UserError(404, "Job not found.");
+
+    const job = jobs[0];
+
+    // Get job DNA
+    const jobDnaUrl = cfg.url + "/rest/v1/job_dna?job_id=eq." + jobId + "&order=created_at.desc&limit=1";
+    const jobDnaRes = await fetch(jobDnaUrl, {
+      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+    });
+
+    let jobDna = null;
+    if (jobDnaRes.ok) {
+      const jobDnaData = await jobDnaRes.json();
+      if (jobDnaData && jobDnaData.length > 0) jobDna = jobDnaData[0];
+    }
+
+    // Call the jobmatch endpoint to calculate detailed match score
+    const matchBody = {
+      careerProfile: tryParse(careerDna.ai_analysis) || {},
+      jobDescription: job.description,
+      jobTitle: job.title
+    };
+
+    const jobmatchRes = await fetch("http://localhost:3000/api/app?action=jobmatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(matchBody)
+    });
+
+    let matchScore = null;
+    if (jobmatchRes.ok) {
+      const matchScoreData = await jobmatchRes.json();
+      matchScore = matchScoreData.score || 75;
+    } else {
+      matchScore = 75; // Default fallback
+    }
+
+    // Save match score to database
+    const scoreData = {
+      match_code_id: matchCode.id,
+      job_id: jobId,
+      candidate_id: candidateId,
+      overall_score: matchScore,
+      ai_analysis: JSON.stringify({
+        careerDna: tryParse(careerDna.ai_analysis),
+        jobDna: jobDna ? tryParse(jobDna.ai_analysis) : null,
+        matchScore
+      })
+    };
+
+    const scoreUrl = cfg.url + "/rest/v1/match_scores";
+    await fetch(scoreUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key,
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(scoreData)
+    }).catch(e => console.error("Score save error:", e));
+
+    // Mark match code as used
+    const updateUrl = cfg.url + "/rest/v1/match_codes?id=eq." + matchCode.id;
+    await fetch(updateUrl, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key,
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({ is_used: true, used_at: new Date().toISOString() })
+    }).catch(e => console.error("Code update error:", e));
+
+    return res.status(200).json({
+      match: {
+        matchCode: code,
+        jobId: job.id,
+        job: {
+          id: job.id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          description: job.description,
+          salary: job.salary_min && job.salary_max ? `$${job.salary_min}-$${job.salary_max}` : null,
+          posted: new Date(job.posted_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+        },
+        jobDna: jobDna ? {
+          summary: jobDna.summary,
+          level: jobDna.level,
+          mustHaves: tryParse(jobDna.must_haves),
+          niceToHaves: tryParse(jobDna.nice_to_haves)
+        } : null,
+        careerDna: {
+          headline: careerDna.headline,
+          summary: careerDna.summary,
+          clarityScore: careerDna.clarity_score,
+          strengths: tryParse(careerDna.strengths),
+          gaps: tryParse(careerDna.gaps)
+        },
+        matchScore,
+        experienceScore: Math.round(matchScore * 0.8 / 10),
+        message: "Match unlocked!"
+      }
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Unlock match error:", err);
+    throw new UserError(500, "Failed to unlock match.");
+  }
+}
+
+async function getmatches(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key || !cfg.anon) throw new UserError(503, "Matching not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to view matches.");
+
+  // Verify user session
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const candidateId = user.id;
+
+  try {
+    // Get all active match codes for this candidate
+    const matchUrl = cfg.url + "/rest/v1/match_codes?candidate_id=eq." + candidateId + "&is_used=eq.false&order=created_at.desc";
+    const matchRes = await fetch(matchUrl, {
+      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+    });
+
+    if (!matchRes.ok) throw new UserError(500, "Failed to fetch matches.");
+
+    const matchCodes = await matchRes.json();
+    if (!matchCodes || matchCodes.length === 0) {
+      return res.status(200).json({ matches: [] });
+    }
+
+    // Get match scores for these codes
+    const matches = [];
+    for (const mc of matchCodes) {
+      const scoreUrl = cfg.url + "/rest/v1/match_scores?match_code_id=eq." + mc.id;
+      const scoreRes = await fetch(scoreUrl, {
+        headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+      });
+
+      if (scoreRes.ok) {
+        const scores = await scoreRes.json();
+        if (scores && scores.length > 0) {
+          const score = scores[0];
+
+          // Get job details
+          const jobUrl = cfg.url + "/rest/v1/job_postings?id=eq." + mc.job_id;
+          const jobRes = await fetch(jobUrl, {
+            headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+          });
+
+          if (jobRes.ok) {
+            const jobs = await jobRes.json();
+            if (jobs && jobs.length > 0) {
+              const job = jobs[0];
+              matches.push({
+                match_code: mc.code,
+                job_id: job.id,
+                job_title: job.title,
+                company: job.company,
+                location: job.location,
+                score: score.overall_score || 0,
+                created_at: mc.created_at
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({ matches });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Get matches error:", err);
+    throw new UserError(500, "Failed to fetch matches.");
+  }
+}
+
+// Helper to safely parse JSON
+function tryParse(json) {
+  if (!json) return null;
+  try {
+    return typeof json === "string" ? JSON.parse(json) : json;
+  } catch {
+    return null;
+  }
+}
+
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, postjob, searchjobs, jobdelete, jobmatch, jobjsearch, appAlert };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, postjob, searchjobs, jobdelete, jobmatch, jobjsearch, appAlert, signup, uploadresume, getcareerdn, generatematch, unlockmatch, getmatches };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health", "sendalerts", "searchjobs"].includes(action) ? "GET" : "POST";
+  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health", "sendalerts", "searchjobs", "getcareerdn", "getmatches"].includes(action) ? "GET" : "POST";
   const allowed = action === "unsubscribe" || action === "adminemployers" ? ["GET", "POST"] : [method];
   if (!allowed.includes(req.method)) {
     res.setHeader("Allow", method);
