@@ -303,6 +303,14 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       throw new Error(data.error || 'Signup failed');
     }
 
+    // Save user data and token to session
+    if (data.session && data.session.access_token) {
+      sessionStorage.setItem('token', data.session.access_token);
+    }
+    if (data.user) {
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+    }
+
     successEl.textContent = 'Account created! Redirecting...';
     successEl.style.display = 'block';
 
