@@ -402,6 +402,46 @@
     </div>
   </div>
 
+  <!-- Generate Match Code Modal -->
+  <div class="modal" id="generateCodeModal">
+    <div class="modal-content">
+      <div class="modal-header">Generate Match Code</div>
+      <form id="generateCodeForm">
+        <div class="form-group" id="candidateSelect" style="display: none;">
+          <label>Select Candidate</label>
+          <select id="candidateId" required style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px;">
+            <option value="">Choose a candidate...</option>
+          </select>
+        </div>
+        <div style="background: #f7f6f1; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="margin: 0; color: var(--muted); font-size: 14px;">Match codes are one-time invitations for specific candidates to view and apply for this job.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeGenerateCodeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate Code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Match Code Display Modal -->
+  <div class="modal" id="codeDisplayModal">
+    <div class="modal-content">
+      <div class="modal-header">Match Code Generated</div>
+      <div style="text-align: center;">
+        <div style="background: var(--paper); padding: 24px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="color: var(--muted); margin: 0 0 8px; font-size: 14px;">Your unique match code:</p>
+          <div style="font-size: 36px; font-weight: 700; color: var(--blue); font-family: monospace; letter-spacing: 2px;" id="generatedCode"></div>
+        </div>
+        <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Share this code with the candidate to invite them to apply for this job.</p>
+        <div class="modal-footer" style="justify-content: center;">
+          <button type="button" class="btn btn-primary" onclick="copyCodeToClipboard()">Copy Code</button>
+          <button type="button" class="btn btn-secondary" onclick="closeCodeDisplayModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
 
@@ -505,7 +545,6 @@
     async function handleCreateJob(e) {
       e.preventDefault();
 
-      const employerId = sessionStorage.getItem('user_id');
       const title = document.getElementById('jobTitle').value.trim();
       const company = document.getElementById('jobCompany').value.trim();
       const location = document.getElementById('jobLocation').value.trim();
@@ -517,36 +556,43 @@
         return;
       }
 
+      const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
       try {
-        const { data, error } = await supabase
-          .from('job_postings')
-          .insert([{
-            employer_id: employerId,
+        const response = await fetch('/api/app?action=postjob', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
             title,
             company,
             location,
-            job_type: jobType,
-            description,
-            is_active: true
-          }])
-          .select();
+            jobType,
+            description
+          })
+        });
 
-        if (error) throw error;
-
-        // TODO: Call /jobdna endpoint to generate Job DNA analysis
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to create job');
 
         closeCreateJobModal();
         document.getElementById('createJobForm').reset();
         await loadDashboardData();
       } catch (error) {
         console.error('Error creating job:', error);
-        alert('Failed to create job');
+        alert('Failed to create job: ' + error.message);
       }
     }
 
     function generateMatchCode(jobId) {
-      alert('Match code generation coming soon!');
-      // TODO: Open modal to generate match code for this job
+      window.currentJobIdForCode = jobId;
+      document.getElementById('generateCodeModal').classList.add('show');
     }
 
     async function toggleJob(jobId, shouldActivate) {
@@ -574,6 +620,62 @@
       return div.innerHTML;
     }
 
+    async function handleGenerateCode(e) {
+      e.preventDefault();
+
+      const jobId = window.currentJobIdForCode;
+      const candidateId = document.getElementById('candidateId').value.trim();
+
+      if (!jobId || !candidateId) {
+        alert('Please select a candidate');
+        return;
+      }
+
+      const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/app?action=generatematch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            jobId,
+            candidateId
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to generate code');
+
+        document.getElementById('generatedCode').textContent = data.code;
+        window.currentGeneratedCode = data.code;
+
+        closeGenerateCodeModal();
+        document.getElementById('generateCodeForm').reset();
+
+        document.getElementById('codeDisplayModal').classList.add('show');
+        await loadDashboardData();
+      } catch (error) {
+        console.error('Error generating code:', error);
+        alert('Failed to generate match code: ' + error.message);
+      }
+    }
+
+    function copyCodeToClipboard() {
+      const code = window.currentGeneratedCode;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Code copied to clipboard!');
+      }).catch(() => {
+        alert('Could not copy code. You can manually copy: ' + code);
+      });
+    }
+
     window.openCreateJobModal = () => {
       document.getElementById('createJobModal').classList.add('show');
     };
@@ -582,14 +684,26 @@
       document.getElementById('createJobModal').classList.remove('show');
     };
 
+    window.closeGenerateCodeModal = () => {
+      document.getElementById('generateCodeModal').classList.remove('show');
+    };
+
+    window.closeCodeDisplayModal = () => {
+      document.getElementById('codeDisplayModal').classList.remove('show');
+    };
+
     window.generateMatchCode = generateMatchCode;
     window.toggleJob = toggleJob;
     window.editJob = editJob;
+    window.copyCodeToClipboard = copyCodeToClipboard;
 
     window.logout = () => {
       sessionStorage.clear();
       window.location.href = '/login.html';
     };
+
+    // Handle generate code form submission
+    document.getElementById('generateCodeForm').addEventListener('submit', handleGenerateCode);
   </script>
 </body>
 </html>

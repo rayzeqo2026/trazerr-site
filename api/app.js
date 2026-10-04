@@ -1894,97 +1894,104 @@ async function health(req, res) {
 /* ---------------- Employer Jobs (Simple Redis Storage) ---------------- */
 
 async function postjob(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Job posting not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to post a job.");
+
+  // Verify employer session
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const employerId = user.id;
+
   const body = getBody(req) || {};
   const title = str(body.title, 120);
   const company = str(body.company, 100);
   const description = str(body.description, 3000);
   const location = str(body.location, 100);
+  const jobType = str(body.jobType, 50);
 
-  if (!title || !company) throw new UserError(400, "Job title and company name required.");
+  if (!title || !company || !description) throw new UserError(400, "Job title, company, and description required.");
 
   try {
-    const jobId = "job-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
-    const job = {
-      id: jobId,
-      title,
-      company,
-      description,
-      location: location || "Remote",
-      postedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    };
+    // Insert job into job_postings table
+    const jobUrl = cfg.url + "/rest/v1/job_postings";
+    const jobRes = await fetch(jobUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key,
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify({
+        employer_id: employerId,
+        title,
+        company,
+        description,
+        location: location || "Remote",
+        job_type: jobType,
+        is_active: true
+      })
+    });
 
-    // Try Redis first
-    const redisCfg = redisConfig();
-    if (redisCfg) {
-      try {
-        await redisPipeline(redisCfg, [
-          ["HSET", "trazerr:jobs", jobId, JSON.stringify(job)],
-          ["ZADD", "trazerr:jobs:time", Date.now(), jobId],
-          ["EXPIRE", "trazerr:jobs", 30 * 24 * 60 * 60]
-        ]);
-        return res.status(201).json({ job, message: "Job posted successfully!" });
-      } catch (e) {
-        console.error("Redis save failed, trying Supabase:", e.message);
-      }
-    }
+    if (!jobRes.ok) throw new UserError(500, "Failed to create job posting.");
 
-    // Fall back to Supabase - try jobs table
-    const sbCfg = supabaseConfig();
-    console.log("Supabase config available:", !!sbCfg);
-    if (sbCfg && sbCfg.anon) {
-      try {
-        // Try job_postings table first
-        let url = sbCfg.url + "/rest/v1/job_postings";
-        console.log("Posting to Supabase job_postings:", url);
-        let r = await fetch(url, {
+    const jobData = await jobRes.json();
+    const jobId = jobData[0]?.id;
+    if (!jobId) throw new UserError(500, "Job created but ID not returned.");
+
+    // Generate Job DNA analysis
+    let jobDna = null;
+    try {
+      const dnaSystem = JOBDNA_SYSTEM;
+      const dnaContent = [{ type: "text", text: "Job posting:\n\n" + description + "\n\nReturn the JSON object." }];
+      const p = await askClaude(dnaSystem, dnaContent);
+
+      if (p && p.title) {
+        const jobDnaUrl = cfg.url + "/rest/v1/job_dna";
+        const dnaRes = await fetch(jobDnaUrl, {
           method: "POST",
-          headers: { apikey: sbCfg.anon, "Content-Type": "application/json", "Prefer": "return=minimal" },
+          headers: {
+            "Content-Type": "application/json",
+            apikey: cfg.key,
+            Authorization: "Bearer " + cfg.key,
+            "Prefer": "return=representation"
+          },
           body: JSON.stringify({
-            title,
-            company,
-            description,
-            location: location || "Remote",
-            status: "open"
+            job_id: jobId,
+            title: str(p.title, 120),
+            summary: str(p.summary, 400),
+            level: str(p.level, 80),
+            must_haves: p.mustHaves || [],
+            nice_to_haves: p.niceToHaves || [],
+            hidden_requirements: p.hidden || [],
+            evidence_markers: p.evidence || []
           })
         });
-        console.log("Supabase job_postings response status:", r.status);
-        const text = await r.text();
-        console.log("Supabase job_postings response:", text);
 
-        if (r.ok || r.status === 201) {
-          console.log("Job saved successfully to job_postings");
-          return res.status(201).json({ job, message: "Job posted successfully!" });
-        } else {
-          console.error("job_postings failed, trying jobs table. Error:", text);
-
-          // Try jobs table as alternative
-          url = sbCfg.url + "/rest/v1/jobs";
-          console.log("Posting to Supabase jobs table:", url);
-          r = await fetch(url, {
-            method: "POST",
-            headers: { apikey: sbCfg.anon, "Content-Type": "application/json", "Prefer": "return=minimal" },
-            body: JSON.stringify({ title, company, description, location: location || "Remote" })
-          });
-          console.log("Supabase jobs response status:", r.status);
-          const text2 = await r.text();
-          console.log("Supabase jobs response:", text2);
-
-          if (r.ok || r.status === 201) {
-            console.log("Job saved successfully to jobs table");
-            return res.status(201).json({ job, message: "Job posted successfully!" });
-          }
+        if (dnaRes.ok) {
+          const dnaData = await dnaRes.json();
+          jobDna = dnaData[0];
         }
-      } catch (sbError) {
-        console.error("Supabase fallback error:", sbError.message);
       }
-    } else {
-      console.log("Supabase not configured");
+    } catch (dnaError) {
+      console.error("Job DNA generation failed (job still saved):", dnaError.message);
     }
 
-    throw new UserError(503, "Job storage not available");
-  } catch (e) {
-    console.error("Job posting error", e.message);
+    return res.status(201).json({
+      job: jobData[0],
+      jobDna,
+      message: "Job posted successfully!"
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Job posting error:", err);
     throw new UserError(502, "Couldn't save the job. Try again.");
   }
 }
@@ -2694,6 +2701,123 @@ async function getmatches(req, res) {
   }
 }
 
+async function submitapplication(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Applications not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to apply.");
+
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const candidateId = user.id;
+
+  const body = getBody(req) || {};
+  const jobId = str(body.jobId, 36);
+  const message = str(body.message, 500);
+
+  if (!jobId) throw new UserError(400, "Job ID required.");
+
+  try {
+    const appData = {
+      candidate_id: candidateId,
+      job_id: jobId,
+      response_message: message || null,
+      status: 'submitted'
+    };
+
+    const appUrl = cfg.url + "/rest/v1/applications";
+    const appRes = await fetch(appUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.key,
+        Authorization: "Bearer " + cfg.key
+      },
+      body: JSON.stringify(appData)
+    });
+
+    if (!appRes.ok) throw new UserError(500, "Failed to submit application.");
+
+    return res.status(201).json({
+      message: "Application submitted successfully!"
+    });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Submit application error:", err);
+    throw new UserError(500, "Failed to submit application.");
+  }
+}
+
+async function getapplications(req, res) {
+  const cfg = supabaseConfig();
+  if (!cfg || !cfg.key) throw new UserError(503, "Applications not available.");
+
+  const auth = String(req.headers.authorization || "");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) throw new UserError(401, "Sign in to view applications.");
+
+  const userRes = await fetch(cfg.url + "/auth/v1/user", {
+    headers: { apikey: cfg.anon || cfg.key, Authorization: "Bearer " + token }
+  });
+  if (!userRes.ok) throw new UserError(401, "Session expired.");
+  const user = await userRes.json();
+  const employerId = user.id;
+
+  try {
+    // Get jobs for this employer
+    const jobUrl = cfg.url + "/rest/v1/job_postings?employer_id=eq." + employerId;
+    const jobRes = await fetch(jobUrl, {
+      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+    });
+
+    if (!jobRes.ok) throw new UserError(500, "Failed to fetch jobs.");
+    const jobs = await jobRes.json();
+    if (!jobs || jobs.length === 0) {
+      return res.status(200).json({ applications: [] });
+    }
+
+    const jobIds = jobs.map(j => j.id);
+    const applications = [];
+
+    // Get applications for all employer's jobs
+    for (const jobId of jobIds) {
+      const appUrl = cfg.url + "/rest/v1/applications?job_id=eq." + jobId + "&order=applied_at.desc";
+      const appRes = await fetch(appUrl, {
+        headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key }
+      });
+
+      if (appRes.ok) {
+        const apps = await appRes.json();
+        if (apps && apps.length > 0) {
+          for (const app of apps) {
+            const job = jobs.find(j => j.id === jobId);
+            applications.push({
+              id: app.id,
+              candidate_id: app.candidate_id,
+              job_id: jobId,
+              job_title: job.title,
+              status: app.status,
+              applied_at: app.applied_at,
+              response_message: app.response_message
+            });
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({ applications });
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    console.error("Get applications error:", err);
+    throw new UserError(500, "Failed to fetch applications.");
+  }
+}
+
 // Helper to safely parse JSON
 function tryParse(json) {
   if (!json) return null;
@@ -2706,13 +2830,13 @@ function tryParse(json) {
 
 /* ---------------- router ---------------- */
 
-const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, postjob, searchjobs, jobdelete, jobmatch, jobjsearch, appAlert, signup, uploadresume, getcareerdn, generatematch, unlockmatch, getmatches };
+const ACTIONS = { analyze, jobs, match, jobdna, path, tailor, feedback, waitlist, track, stats, dbstatus, authconfig, deleteaccount, clienterror, keepalive, health, sendalerts, unsubscribe, talentdraft, employerjoin, employerme, searchtalent, contactrequest, myrequests, respondrequest, adminemployers, postjob, searchjobs, jobdelete, jobmatch, jobjsearch, appAlert, signup, uploadresume, getcareerdn, generatematch, unlockmatch, getmatches, submitapplication, getapplications };
 
 export default async function handler(req, res) {
   const action = str(getQuery(req).action, 20);
   const run = ACTIONS[action];
   if (!run) return res.status(404).json({ error: "Unknown request." });
-  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health", "sendalerts", "searchjobs", "getcareerdn", "getmatches"].includes(action) ? "GET" : "POST";
+  const method = ["jobs", "stats", "dbstatus", "authconfig", "keepalive", "health", "sendalerts", "searchjobs", "getcareerdn", "getmatches", "getapplications"].includes(action) ? "GET" : "POST";
   const allowed = action === "unsubscribe" || action === "adminemployers" ? ["GET", "POST"] : [method];
   if (!allowed.includes(req.method)) {
     res.setHeader("Allow", method);
