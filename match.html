@@ -577,6 +577,31 @@ body {
     padding: 50px 0;
   }
 }
+
+/* Match state control */
+.match-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.loading {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(22, 93, 204, 0.2);
+  border-top: 2px solid var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#unlockBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
 </style>
 </head>
 <body>
@@ -608,9 +633,9 @@ body {
     <div class="match-card">
       <h2>Enter Match Code</h2>
       <p>Your unique code from the employer</p>
-      <input type="text" class="code-input" placeholder="e.g., TZ-2024-ABC123" maxlength="20">
-      <button class="btn">Unlock Match</button>
-      <p style="color: var(--muted); font-size: 13px; margin: 12px 0 0; text-align: center;">Takes about 30 seconds</p>
+      <input type="text" id="matchCodeInput" class="code-input" placeholder="e.g., TZ-2024-ABC123" maxlength="20">
+      <button class="btn" id="unlockBtn" onclick="unlockMatch()">Unlock Match</button>
+      <p id="codeStatus" style="color: var(--muted); font-size: 13px; margin: 12px 0 0; text-align: center;">Takes about 30 seconds</p>
     </div>
   </div>
 </section>
@@ -885,11 +910,130 @@ body {
     <h2>Ready to take the next step?</h2>
     <p>You're a strong match for this role. The employer is ready to learn more about you.</p>
     <div class="cta-btns">
-      <button class="btn">Respond to this match</button>
-      <button class="btn-secondary">Share feedback</button>
+      <button class="btn" id="respondBtn" onclick="respondToMatch()">Respond to this match</button>
+      <button class="btn-secondary" id="feedbackBtn" onclick="shareFeedback()">Share feedback</button>
     </div>
   </div>
 </section>
+
+<script>
+let currentMatchData = null;
+let matchUnlocked = false;
+
+function unlockMatch() {
+  const codeInput = document.getElementById('matchCodeInput');
+  const code = codeInput.value.trim().toUpperCase();
+  const statusEl = document.getElementById('codeStatus');
+  const btn = document.getElementById('unlockBtn');
+
+  if (!code) {
+    statusEl.textContent = '⚠️ Please enter a match code';
+    statusEl.style.color = '#a8322b';
+    return;
+  }
+
+  if (!code.match(/^[A-Z0-9]{3,}[-]?[A-Z0-9]{3,}$/)) {
+    statusEl.textContent = '⚠️ Invalid code format (e.g., TZ-2024-ABC123)';
+    statusEl.style.color = '#a8322b';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Unlocking...';
+  statusEl.textContent = 'Validating match code...';
+  statusEl.style.color = '#687286';
+
+  setTimeout(() => {
+    currentMatchData = {
+      matchCode: code,
+      jobId: 'job-' + Math.random().toString(36).substr(2, 9),
+      job: {
+        title: 'Regional Sales Manager',
+        company: 'TechVenture Inc',
+        location: 'San Francisco, CA',
+        description: 'Lead a high-performing sales team to drive revenue growth across the Western region. You\'ll manage a team of 8-12 reps, own the P&L, and develop long-term strategic partnerships with enterprise clients.',
+        salary: '$120K – $180K + commission',
+        posted: 'October 2, 2026'
+      },
+      matchScore: 82,
+      experienceScore: 8
+    };
+
+    matchUnlocked = true;
+    sessionStorage.setItem('matchCode', code);
+    sessionStorage.setItem('matchUnlocked', 'true');
+
+    statusEl.textContent = '✅ Match unlocked! Scroll down to see your fit.';
+    statusEl.style.color = '#165dcc';
+    btn.disabled = false;
+    btn.textContent = 'Match Unlocked ✓';
+
+    document.querySelectorAll('.step').forEach((step, idx) => {
+      step.classList.remove('active');
+      if (idx === 1) step.classList.add('active');
+    });
+
+    setTimeout(() => {
+      const preview = document.querySelector('.job-preview');
+      if (preview) preview.scrollIntoView({ behavior: 'smooth' });
+    }, 500);
+  }, 1500);
+}
+
+function respondToMatch() {
+  if (!matchUnlocked) {
+    alert('⚠️ Please unlock a match code first');
+    return;
+  }
+
+  const email = prompt('Enter your email to respond:\n\n');
+  if (email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('⚠️ Please enter a valid email');
+      return;
+    }
+
+    const jobTitle = currentMatchData?.job?.title || 'this position';
+    const matchCode = currentMatchData?.matchCode || '';
+
+    console.log('Response submitted:', { email, matchCode, job: jobTitle });
+    alert(`✅ Response submitted!\n\nEmail: ${email}\nMatch Code: ${matchCode}\nPosition: ${jobTitle}\n\nThe employer will contact you soon.`);
+  }
+}
+
+function shareFeedback() {
+  if (!matchUnlocked) {
+    alert('⚠️ Please unlock a match code first');
+    return;
+  }
+
+  const feedback = prompt('How can we improve your match experience?\n\n');
+  if (feedback && feedback.trim()) {
+    console.log('Feedback submitted:', feedback);
+    alert('✅ Thanks! Your feedback helps us make better matches.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const codeInput = document.getElementById('matchCodeInput');
+  const savedUnlocked = sessionStorage.getItem('matchUnlocked');
+  const savedCode = sessionStorage.getItem('matchCode');
+
+  if (savedUnlocked === 'true' && savedCode) {
+    codeInput.value = savedCode;
+    matchUnlocked = true;
+    document.getElementById('unlockBtn').textContent = 'Match Unlocked ✓';
+    document.getElementById('codeStatus').textContent = '✅ Match unlocked!';
+    document.getElementById('codeStatus').style.color = '#165dcc';
+  }
+
+  if (codeInput) {
+    codeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') unlockMatch();
+    });
+  }
+});
+</script>
 
 </body>
 </html>
