@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS application_interactions (
 -- User Feedback
 CREATE TABLE IF NOT EXISTS feedback (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   type TEXT, -- 'match_feedback', 'general_feedback', 'bug_report'
   message TEXT,
   rating INTEGER, -- 1-5 stars
