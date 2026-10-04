@@ -291,12 +291,10 @@
   <aside class="sidebar">
     <div class="sidebar-brand">🎯 Trazerr Match</div>
     <nav class="sidebar-nav">
-      <a href="#" class="nav-item active">📊 Dashboard</a>
+      <a href="/dashboard-candidate.html" class="nav-item active">📊 Dashboard</a>
       <a href="/upload-resume.html" class="nav-item">📤 Upload Resume</a>
       <a href="/match.html" class="nav-item">💼 My Matches</a>
-      <a href="#career-dna" class="nav-item">🧬 Career DNA</a>
-      <a href="#applications" class="nav-item">📝 Applications</a>
-      <a href="#profile" class="nav-item">👤 Profile</a>
+      <a href="/candidate-applications.html" class="nav-item">📝 Applications</a>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -432,7 +430,7 @@ function goToMatches() {
 }
 
 function goToApplications() {
-  alert('Applications page coming soon!');
+  window.location.href = '/candidate-applications.html';
 }
 
 function logout() {

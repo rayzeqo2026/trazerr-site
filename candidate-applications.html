@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Applications - Trazerr Match</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #12213f;
+      --blue: #165dcc;
+      --green: #22863a;
+      --ink: #17233b;
+      --muted: #687286;
+      --paper: #f7f6f1;
+      --border: #d9dce2;
+    }
+
+    body {
+      background: var(--paper);
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .navbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .navbar-menu a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .navbar-menu a:hover,
+    .navbar-menu a.active {
+      color: var(--navy);
+    }
+
+    .navbar-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #f9f9f9;
+      color: var(--navy);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .applications-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .application-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .application-info h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .application-info p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .application-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    .status-submitted {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-reviewed {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-shortlisted {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+
+    .status-rejected {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+
+    .status-accepted {
+      background: #c8e6c9;
+      color: #1b5e20;
+    }
+
+    .application-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
+    .btn-primary:hover {
+      background: #144bb8;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .empty-state h3 {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .response-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      background: #f9f9f9;
+      padding: 16px;
+      border-radius: 8px;
+    }
+
+    .response-label {
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .response-message {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">Trazerr Match</div>
+    <ul class="navbar-menu">
+      <li><a href="/dashboard-candidate.html">Dashboard</a></li>
+      <li><a href="/candidate-applications.html" class="active">My Applications</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span id="userEmail" style="color: var(--muted); font-size: 14px;"></span>
+      <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>My Applications</h1>
+      <p>Track your job applications and responses from employers</p>
+    </div>
+
+    <div id="applicationsList" class="applications-list">
+      <div class="empty-state">
+        <h3>No applications yet</h3>
+        <p>When you apply for jobs, your applications will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
+
+    const SUPABASE_URL = 'https://gkeykkisawohugfwptvr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdruWtrb2lzYXdvaHVnZndwdHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTM1NzAwMDAsImV4cCI6MTcwMDc0NjAwMH0.fake-key';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    window.addEventListener('load', checkAuth);
+
+    async function checkAuth() {
+      const token = sessionStorage.getItem('access_token');
+      const userEmail = sessionStorage.getItem('user_email');
+
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      document.getElementById('userEmail').textContent = userEmail;
+      await loadApplications();
+    }
+
+    async function loadApplications() {
+      const userId = sessionStorage.getItem('user_id');
+
+      try {
+        const { data, error } = await supabase
+          .from('applications')
+          .select(`
+            id,
+            status,
+            response_message,
+            match_score,
+            applied_at,
+            job_postings:job_id (
+              id,
+              title,
+              company,
+              location
+            )
+          `)
+          .eq('candidate_id', userId)
+          .order('applied_at', { ascending: false });
+
+        if (error) throw error;
+
+        displayApplications(data || []);
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    }
+
+    function displayApplications(applications) {
+      const list = document.getElementById('applicationsList');
+
+      if (!applications || applications.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <h3>No applications yet</h3>
+            <p>When you apply for jobs, your applications will appear here</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = applications.map(app => {
+        const job = app.job_postings;
+        return `
+          <div class="application-card">
+            <div>
+              <div class="application-info">
+                <h3>${escapeHtml(job.title || 'Job')}</h3>
+                <p>${escapeHtml(job.company || 'Company')}</p>
+                <p style="color: var(--muted); font-size: 13px;">${escapeHtml(job.location || 'Location')}</p>
+                <div class="application-meta">
+                  <span>Applied ${formatDate(app.applied_at)}</span>
+                  ${app.match_score ? `<span>Match score: ${app.match_score}%</span>` : ''}
+                </div>
+                <span class="status-badge status-${app.status}">${formatStatus(app.status)}</span>
+                ${app.response_message ? `
+                  <div class="response-section">
+                    <div class="response-label">Employer Response:</div>
+                    <div class="response-message">${escapeHtml(app.response_message)}</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Unknown';
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now - date;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (days === 0) return 'Today';
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return days + ' days ago';
+      if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+      return Math.floor(days / 30) + ' months ago';
+    }
+
+    function formatStatus(status) {
+      const map = {
+        'submitted': 'Submitted',
+        'reviewed': 'Under Review',
+        'shortlisted': 'Shortlisted',
+        'rejected': 'Rejected',
+        'accepted': 'Accepted'
+      };
+      return map[status] || status;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    window.logout = () => {
+      sessionStorage.clear();
+      window.location.href = '/login.html';
+    };
+  </script>
+</body>
+</html>

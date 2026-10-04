@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Applications - Trazerr Match</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #12213f;
+      --blue: #165dcc;
+      --green: #22863a;
+      --red: #a8322b;
+      --ink: #17233b;
+      --muted: #687286;
+      --paper: #f7f6f1;
+      --border: #d9dce2;
+    }
+
+    body {
+      background: var(--paper);
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .navbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .navbar-menu a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .navbar-menu a:hover,
+    .navbar-menu a.active {
+      color: var(--navy);
+    }
+
+    .navbar-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #144bb8;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    .btn-secondary:hover {
+      background: #f9f9f9;
+      color: var(--navy);
+    }
+
+    .btn-success {
+      background: var(--green);
+      color: white;
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    .btn-success:hover {
+      background: #1a6030;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .applications-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .application-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .application-header {
+      display: flex;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .application-avatar {
+      width: 56px;
+      height: 56px;
+      background: var(--paper);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--blue);
+    }
+
+    .application-info h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .application-info p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .application-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .job-title {
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 8px 0;
+    }
+
+    .status-submitted {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-reviewed {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-shortlisted {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+
+    .status-rejected {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+
+    .status-accepted {
+      background: #c8e6c9;
+      color: #1b5e20;
+    }
+
+    .application-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .empty-state h3 {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">Trazerr Match</div>
+    <ul class="navbar-menu">
+      <li><a href="/dashboard-employer.html">Dashboard</a></li>
+      <li><a href="/applications.html" class="active">Applications</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span id="userEmail" style="color: var(--muted); font-size: 14px;"></span>
+      <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Applications</h1>
+      <p>Review and manage applications from candidates</p>
+    </div>
+
+    <div class="filter-bar">
+      <select id="statusFilter" onchange="filterApplications()">
+        <option value="">All Status</option>
+        <option value="submitted">Submitted</option>
+        <option value="reviewed">Reviewed</option>
+        <option value="shortlisted">Shortlisted</option>
+        <option value="rejected">Rejected</option>
+        <option value="accepted">Accepted</option>
+      </select>
+    </div>
+
+    <div id="applicationsList" class="applications-list">
+      <div class="empty-state">
+        <h3>No applications yet</h3>
+        <p>Applications from candidates will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Respond to Application Modal -->
+  <div class="modal" id="respondModal">
+    <div class="modal-content">
+      <div class="modal-header">Respond to Application</div>
+      <form id="respondForm">
+        <div class="form-group">
+          <label>Response Message</label>
+          <textarea id="responseMessage" placeholder="Share feedback with the candidate..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Update Status</label>
+          <select id="responseStatus" required style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px;">
+            <option value="reviewed">Reviewed</option>
+            <option value="shortlisted">Shortlist</option>
+            <option value="rejected">Reject</option>
+            <option value="accepted">Accept</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeRespondModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Response</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
+
+    const SUPABASE_URL = 'https://gkeykkisawohugfwptvr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdruWtrb2lzYXdvaHVnZndwdHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTM1NzAwMDAsImV4cCI6MTcwMDc0NjAwMH0.fake-key';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allApplications = [];
+    let currentApplicationId = null;
+
+    window.addEventListener('load', checkAuth);
+    document.getElementById('respondForm').addEventListener('submit', handleRespond);
+
+    async function checkAuth() {
+      const token = sessionStorage.getItem('access_token');
+      const userEmail = sessionStorage.getItem('user_email');
+
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      document.getElementById('userEmail').textContent = userEmail;
+      await loadApplications();
+    }
+
+    async function loadApplications() {
+      const token = sessionStorage.getItem('access_token');
+
+      try {
+        const response = await fetch('/api/app?action=getapplications', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to load applications');
+
+        allApplications = data.applications || [];
+        displayApplications(allApplications);
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    }
+
+    function displayApplications(applications) {
+      const list = document.getElementById('applicationsList');
+
+      if (!applications || applications.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <h3>No applications yet</h3>
+            <p>Applications from candidates will appear here</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = applications.map(app => `
+        <div class="application-card">
+          <div>
+            <div class="job-title">${escapeHtml(app.job_title || 'Job')}</div>
+            <div class="application-header">
+              <div class="application-avatar">${(app.candidate_name || 'C').charAt(0).toUpperCase()}</div>
+              <div class="application-info">
+                <h3>${escapeHtml(app.candidate_name || 'Anonymous')}</h3>
+                <p>${escapeHtml(app.candidate_email || 'No email')}</p>
+                <div class="application-meta">
+                  <span>Applied ${formatDate(app.applied_at)}</span>
+                  <span class="status-badge status-${app.status}">${app.status}</span>
+                </div>
+                ${app.response_message ? `<p style="margin-top: 12px; color: var(--ink);">${escapeHtml(app.response_message)}</p>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="application-actions">
+            <button class="btn btn-secondary" onclick="viewCareerDNA('${escapeAttr(app.candidate_id)}')">View Profile</button>
+            <button class="btn btn-primary" onclick="openRespondModal('${escapeAttr(app.id)}')">Respond</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterApplications() {
+      const status = document.getElementById('statusFilter').value;
+      const filtered = status
+        ? allApplications.filter(app => app.status === status)
+        : allApplications;
+      displayApplications(filtered);
+    }
+
+    function openRespondModal(appId) {
+      currentApplicationId = appId;
+      document.getElementById('respondModal').classList.add('show');
+    }
+
+    function closeRespondModal() {
+      document.getElementById('respondModal').classList.remove('show');
+      document.getElementById('respondForm').reset();
+    }
+
+    async function handleRespond(e) {
+      e.preventDefault();
+
+      const message = document.getElementById('responseMessage').value.trim();
+      const status = document.getElementById('responseStatus').value;
+      const token = sessionStorage.getItem('access_token');
+
+      if (!message || !status) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      try {
+        // Update application status and response
+        const { error } = await supabase
+          .from('applications')
+          .update({
+            status,
+            response_message: message,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentApplicationId);
+
+        if (error) throw error;
+
+        closeRespondModal();
+        await loadApplications();
+      } catch (error) {
+        console.error('Error responding to application:', error);
+        alert('Failed to send response');
+      }
+    }
+
+    function viewCareerDNA(candidateId) {
+      // Navigate to candidate profile page (to be created)
+      alert('Candidate profile coming soon!');
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Unknown';
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now - date;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (days === 0) return 'Today';
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return days + ' days ago';
+      if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+      return Math.floor(days / 30) + ' months ago';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+      return String(text || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    }
+
+    window.openRespondModal = openRespondModal;
+    window.closeRespondModal = closeRespondModal;
+    window.viewCareerDNA = viewCareerDNA;
+    window.filterApplications = filterApplications;
+
+    window.logout = () => {
+      sessionStorage.clear();
+      window.location.href = '/login.html';
+    };
+  </script>
+</body>
+</html>
