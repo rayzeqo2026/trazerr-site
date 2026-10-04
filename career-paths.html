@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Career Paths - Trazerr Match</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #12213f;
+      --blue: #165dcc;
+      --green: #22863a;
+      --ink: #17233b;
+      --muted: #687286;
+      --paper: #f7f6f1;
+      --border: #d9dce2;
+    }
+
+    body {
+      background: var(--paper);
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      width: 260px;
+      min-width: 260px;
+    }
+
+    .sidebar-brand {
+      font-weight: 800;
+      font-size: 18px;
+      margin-bottom: 32px;
+      color: var(--navy);
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 40px;
+    }
+
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(22, 93, 204, 0.1);
+      color: var(--blue);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #f9f9f9;
+      color: var(--navy);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .dashboard {
+      display: flex;
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--navy);
+    }
+
+    .paths-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .path-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .path-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--navy);
+    }
+
+    .path-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: var(--blue);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    .step-content h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+
+    .step-content p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .step-time {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .path-skills {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .skills-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-tag {
+      background: rgba(22, 93, 204, 0.1);
+      color: var(--blue);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .empty-state h3 {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: #144bb8;
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">🎯 Trazerr Match</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard-candidate.html" class="nav-item">📊 Dashboard</a>
+      <a href="/upload-resume.html" class="nav-item">📤 Upload Resume</a>
+      <a href="/match.html" class="nav-item">💼 My Matches</a>
+      <a href="/career-paths.html" class="nav-item active">🗺️ Career Paths</a>
+      <a href="/candidate-applications.html" class="nav-item">📝 Applications</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Career Paths</h1>
+      <p>Explore recommended career progression based on your profile</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Suggested Paths for You</div>
+      <div id="pathsContainer" class="paths-grid">
+        <div class="loading">Loading career paths...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
+
+    const SUPABASE_URL = 'https://gkeykkisawohugfwptvr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdruWtrb2lzYXdvaHVnZndwdHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTM1NzAwMDAsImV4cCI6MTcwMDc0NjAwMH0.fake-key';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    window.addEventListener('load', checkAuth);
+
+    async function checkAuth() {
+      const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      await loadCareerPaths();
+    }
+
+    async function loadCareerPaths() {
+      const userId = sessionStorage.getItem('user_id');
+
+      try {
+        // Get Career DNA
+        const { data: careerDna, error: cdError } = await supabase
+          .from('career_dna')
+          .select('career_paths, headline, summary')
+          .eq('candidate_id', userId)
+          .single();
+
+        if (cdError || !careerDna) {
+          showEmpty();
+          return;
+        }
+
+        if (!careerDna.career_paths) {
+          showEmpty();
+          return;
+        }
+
+        const paths = Array.isArray(careerDna.career_paths)
+          ? careerDna.career_paths
+          : [careerDna.career_paths];
+
+        displayPaths(paths);
+      } catch (error) {
+        console.error('Error loading career paths:', error);
+        showEmpty();
+      }
+    }
+
+    function displayPaths(paths) {
+      if (!paths || paths.length === 0) {
+        showEmpty();
+        return;
+      }
+
+      const container = document.getElementById('pathsContainer');
+      container.innerHTML = paths.map((path, idx) => {
+        const steps = Array.isArray(path.steps) ? path.steps : [];
+        const skills = Array.isArray(path.skills) ? path.skills : [];
+
+        return `
+          <div class="path-card">
+            <div class="path-title">${escapeHtml(path.title || 'Career Path ' + (idx + 1))}</div>
+            <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">
+              ${escapeHtml(path.description || '')}
+            </p>
+
+            <div class="path-steps">
+              ${steps.map((step, stepIdx) => `
+                <div class="step">
+                  <div class="step-number">${stepIdx + 1}</div>
+                  <div class="step-content">
+                    <h4>${escapeHtml(step.role || 'Role ' + (stepIdx + 1))}</h4>
+                    <p>${escapeHtml(step.description || '')}</p>
+                    ${step.timeline ? `<div class="step-time">Timeline: ${escapeHtml(step.timeline)}</div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            ${skills.length > 0 ? `
+              <div class="path-skills">
+                <div class="skills-label">Key Skills to Develop</div>
+                <div class="skill-tags">
+                  ${skills.slice(0, 5).map(skill => `
+                    <span class="skill-tag">${escapeHtml(skill)}</span>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showEmpty() {
+      const container = document.getElementById('pathsContainer');
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column: 1/-1;">
+          <h3>Career paths coming soon</h3>
+          <p>Upload your resume to get personalized career path recommendations based on your profile</p>
+          <a href="/upload-resume.html" class="btn-primary">Upload Resume</a>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    window.logout = () => {
+      sessionStorage.clear();
+      window.location.href = '/login.html';
+    };
+  </script>
+</body>
+</html>
