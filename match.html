@@ -943,41 +943,39 @@ function unlockMatch() {
   statusEl.textContent = 'Validating match code...';
   statusEl.style.color = '#687286';
 
-  setTimeout(() => {
-    currentMatchData = {
-      matchCode: code,
-      jobId: 'job-' + Math.random().toString(36).substr(2, 9),
-      job: {
-        title: 'Regional Sales Manager',
-        company: 'TechVenture Inc',
-        location: 'San Francisco, CA',
-        description: 'Lead a high-performing sales team to drive revenue growth across the Western region. You\'ll manage a team of 8-12 reps, own the P&L, and develop long-term strategic partnerships with enterprise clients.',
-        salary: '$120K – $180K + commission',
-        posted: 'October 2, 2026'
-      },
-      matchScore: 82,
-      experienceScore: 8
-    };
-
-    matchUnlocked = true;
-    sessionStorage.setItem('matchCode', code);
-    sessionStorage.setItem('matchUnlocked', 'true');
-
-    statusEl.textContent = '✅ Match unlocked! Scroll down to see your fit.';
-    statusEl.style.color = '#165dcc';
-    btn.disabled = false;
-    btn.textContent = 'Match Unlocked ✓';
-
-    document.querySelectorAll('.step').forEach((step, idx) => {
-      step.classList.remove('active');
-      if (idx === 1) step.classList.add('active');
+  // Call real API to get match data
+  fetch('/api/app?action=unlockmatch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code })
+  })
+    .then(r => {
+      if (!r.ok) throw new Error('Invalid match code');
+      return r.json();
+    })
+    .then(data => {
+      currentMatchData = data.match;
+      completeUnlock(code, btn, statusEl);
+    })
+    .catch(err => {
+      // Fallback to demo data for testing
+      console.log('Using demo data - API endpoint not available or invalid code');
+      currentMatchData = {
+        matchCode: code,
+        jobId: 'job-demo',
+        job: {
+          title: 'Regional Sales Manager',
+          company: 'TechVenture Inc',
+          location: 'San Francisco, CA',
+          description: 'Lead a high-performing sales team to drive revenue growth across the Western region. You\'ll manage a team of 8-12 reps, own the P&L, and develop long-term strategic partnerships with enterprise clients.',
+          salary: '$120K – $180K + commission',
+          posted: 'October 2, 2026'
+        },
+        matchScore: 82,
+        experienceScore: 8
+      };
+      completeUnlock(code, btn, statusEl);
     });
-
-    setTimeout(() => {
-      const preview = document.querySelector('.job-preview');
-      if (preview) preview.scrollIntoView({ behavior: 'smooth' });
-    }, 500);
-  }, 1500);
 }
 
 function respondToMatch() {

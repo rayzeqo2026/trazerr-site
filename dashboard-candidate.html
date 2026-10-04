@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard - Trazerr Match</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    :root {
+      --navy: #12213f;
+      --blue: #165dcc;
+      --red: #a8322b;
+      --ink: #17233b;
+      --muted: #687286;
+      --paper: #f7f6f1;
+      --line: #d9dce2;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      background: var(--paper);
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--line);
+      padding: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      font-weight: 800;
+      font-size: 18px;
+      margin-bottom: 32px;
+      color: var(--navy);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 40px;
+    }
+
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(22, 93, 204, 0.05);
+      color: var(--blue);
+    }
+
+    .nav-item.active {
+      background: rgba(22, 93, 204, 0.1);
+      color: var(--blue);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--red);
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #fff0eb;
+      border-color: var(--red);
+    }
+
+    /* Main content */
+    .content {
+      padding: 40px;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--navy);
+    }
+
+    .header p {
+      color: var(--muted);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* Cards */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 8px 24px rgba(22, 93, 204, 0.1);
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .card-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+
+    .card-action {
+      padding: 8px 16px;
+      background: rgba(22, 93, 204, 0.1);
+      color: var(--blue);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .card-action:hover {
+      background: rgba(22, 93, 204, 0.15);
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--navy);
+    }
+
+    .matches-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .match-item {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+    }
+
+    .match-item:hover {
+      border-color: var(--blue);
+      box-shadow: 0 4px 16px rgba(22, 93, 204, 0.1);
+    }
+
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .match-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--navy);
+    }
+
+    .match-company {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .match-score {
+      background: rgba(22, 93, 204, 0.1);
+      color: var(--blue);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .match-action {
+      margin-top: 16px;
+      padding: 12px 20px;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .match-action:hover {
+      background: #1468db;
+      transform: translateY(-1px);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 60px;
+      margin-bottom: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 768px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">🎯 Trazerr Match</div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active">📊 Dashboard</a>
+      <a href="#matches" class="nav-item">💼 My Matches</a>
+      <a href="#career-dna" class="nav-item">🧬 Career DNA</a>
+      <a href="#applications" class="nav-item">📝 Applications</a>
+      <a href="#profile" class="nav-item">👤 Profile</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <h1>Welcome back! 👋</h1>
+      <p id="userGreeting">Loading...</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title">Career DNA</div>
+        <div class="card-value" id="careerDnaStatus">—</div>
+        <button class="card-action" onclick="goToCareerDna()">View or Generate</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Active Matches</div>
+        <div class="card-value" id="activeMatches">0</div>
+        <button class="card-action" onclick="goToMatches()">View Matches</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Applications</div>
+        <div class="card-value" id="applicationCount">0</div>
+        <button class="card-action" onclick="goToApplications()">View All</button>
+      </div>
+    </div>
+
+    <div class="section" id="matchesSection">
+      <h2 class="section-title">Your Recent Matches</h2>
+      <div id="matchesList" class="matches-list">
+        <div class="loading">Loading matches...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let currentUser = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuth();
+  loadDashboard();
+});
+
+function checkAuth() {
+  const userData = sessionStorage.getItem('user');
+  if (!userData) {
+    window.location.href = '/login.html';
+    return;
+  }
+  currentUser = JSON.parse(userData);
+  document.getElementById('userGreeting').textContent = `Your next perfect match is waiting, ${currentUser.name || 'there'}!`;
+}
+
+async function loadDashboard() {
+  try {
+    // Load career DNA status
+    const dnaResponse = await fetch('/api/app?action=getcareerdn', {
+      headers: { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` }
+    });
+
+    if (dnaResponse.ok) {
+      const dna = await dnaResponse.json();
+      document.getElementById('careerDnaStatus').textContent = '✅ Ready';
+    } else {
+      document.getElementById('careerDnaStatus').textContent = '⚠️ Pending';
+    }
+
+    // Load matches
+    loadMatches();
+  } catch (err) {
+    console.error('Error loading dashboard:', err);
+  }
+}
+
+async function loadMatches() {
+  try {
+    const response = await fetch('/api/app?action=getmatches', {
+      headers: { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` }
+    });
+
+    if (!response.ok) {
+      document.getElementById('matchesList').innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No matches yet. Check back soon!</p></div>';
+      return;
+    }
+
+    const { matches } = await response.json();
+    document.getElementById('activeMatches').textContent = matches.length;
+
+    if (matches.length === 0) {
+      document.getElementById('matchesList').innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No matches yet. We\'re finding the right opportunities for you.</p></div>';
+      return;
+    }
+
+    let html = '';
+    matches.forEach(match => {
+      html += `
+        <div class="match-item">
+          <div class="match-header">
+            <div>
+              <div class="match-title">${escapeHtml(match.job_title)}</div>
+              <div class="match-company">${escapeHtml(match.company)}</div>
+            </div>
+            <div class="match-score">${match.score}%</div>
+          </div>
+          <button class="match-action" onclick="viewMatch('${match.match_code}')">View Full Match →</button>
+        </div>
+      `;
+    });
+
+    document.getElementById('matchesList').innerHTML = html;
+  } catch (err) {
+    console.error('Error loading matches:', err);
+    document.getElementById('matchesList').innerHTML = '<div class="empty-state"><p>Error loading matches</p></div>';
+  }
+}
+
+function viewMatch(code) {
+  sessionStorage.setItem('matchCode', code);
+  window.location.href = '/match.html';
+}
+
+function goToCareerDna() {
+  window.location.href = '/career-dna.html';
+}
+
+function goToMatches() {
+  window.location.href = '/match.html';
+}
+
+function goToApplications() {
+  alert('Applications page coming soon!');
+}
+
+function logout() {
+  sessionStorage.clear();
+  window.location.href = '/login.html';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

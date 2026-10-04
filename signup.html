@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign Up - Trazerr Match</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    :root {
+      --navy: #12213f;
+      --blue: #165dcc;
+      --red: #a8322b;
+      --ink: #17233b;
+      --muted: #687286;
+      --paper: #f7f6f1;
+    }
+
+    body {
+      background: var(--paper);
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .auth-container {
+      max-width: 420px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    .auth-card {
+      background: white;
+      border: 1px solid #d9dce2;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .auth-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: var(--navy);
+    }
+
+    .auth-header p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d9dce2;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(22, 93, 204, 0.1);
+    }
+
+    .role-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .role-option {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid #d9dce2;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .role-option input {
+      display: none;
+    }
+
+    .role-option.selected {
+      border-color: var(--blue);
+      background: rgba(22, 93, 204, 0.05);
+    }
+
+    .role-option-label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .role-option-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: #1468db;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .auth-footer a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .error {
+      background: #fff0eb;
+      border: 1px solid #f5c6a1;
+      color: var(--red);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .success {
+      background: #f0f9ff;
+      border: 1px solid #a1d5f5;
+      color: #0369a1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Join Trazerr Match</h1>
+      <p>Find your perfect fit or hire the right person</p>
+    </div>
+
+    <div class="error" id="errorMsg"></div>
+    <div class="success" id="successMsg"></div>
+
+    <form id="signupForm">
+      <div class="form-group">
+        <label>I am a...</label>
+        <div class="role-selector">
+          <label class="role-option selected" data-role="candidate">
+            <input type="radio" name="role" value="candidate" checked>
+            <span class="role-option-label">👤 Candidate</span>
+            <span class="role-option-desc">Looking for jobs</span>
+          </label>
+          <label class="role-option" data-role="employer">
+            <input type="radio" name="role" value="employer">
+            <span class="role-option-label">🏢 Employer</span>
+            <span class="role-option-desc">Hiring talent</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required placeholder="you@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required placeholder="At least 8 characters">
+      </div>
+
+      <div class="form-group" id="nameGroup">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name">
+      </div>
+
+      <div class="form-group" id="companyGroup" style="display: none;">
+        <label for="company">Company Name</label>
+        <input type="text" id="company" name="company" placeholder="Your company">
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a href="/login.html">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Role selector
+document.querySelectorAll('.role-option').forEach(option => {
+  option.addEventListener('click', () => {
+    document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+    option.classList.add('selected');
+    option.querySelector('input').checked = true;
+
+    const role = option.dataset.role;
+    document.getElementById('nameGroup').style.display = role === 'candidate' ? 'block' : 'none';
+    document.getElementById('companyGroup').style.display = role === 'employer' ? 'block' : 'none';
+  });
+});
+
+// Form submission
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const role = document.querySelector('input[name="role"]:checked').value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const name = document.getElementById('name').value;
+  const company = document.getElementById('company').value;
+
+  const errorEl = document.getElementById('errorMsg');
+  const successEl = document.getElementById('successMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  if (password.length < 8) {
+    errorEl.textContent = 'Password must be at least 8 characters';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  if (role === 'candidate' && !name) {
+    errorEl.textContent = 'Please enter your name';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  if (role === 'employer' && !company) {
+    errorEl.textContent = 'Please enter your company name';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Creating account...';
+
+  try {
+    // This will be handled by your backend
+    const response = await fetch('/api/app?action=signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, email, password, name, company })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Signup failed');
+    }
+
+    successEl.textContent = 'Account created! Redirecting...';
+    successEl.style.display = 'block';
+
+    setTimeout(() => {
+      window.location.href = role === 'candidate' ? '/dashboard-candidate.html' : '/dashboard-employer.html';
+    }, 1500);
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Account';
+  }
+});
+</script>
+
+</body>
+</html>
