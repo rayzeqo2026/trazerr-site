@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS candidates (
   headline TEXT,
   about TEXT,
   avatar_url TEXT,
-  current_role TEXT,
+  "current_role" TEXT,
   years_experience INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
